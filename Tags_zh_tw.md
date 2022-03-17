@@ -1,4 +1,4 @@
-## [獸人小說頻道](https://t.me/FurryNovels)標籤  
+## [獸人小說頻道](https://t.me/FurryNovels)標籤
 
 由 [简体版](https://github.com/DowneyRem/DowneyRem/blob/main/FurryNovels/Tags_zh_cn.md) 经由OpenCC转换而成，不经常更新/添加标签
 
