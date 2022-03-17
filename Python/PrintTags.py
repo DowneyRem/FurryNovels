@@ -536,7 +536,7 @@ def openDocx4(path):
 					text += para.text + "\n"  # 除正文缩进外的其他所有
 			else:
 				break
-		textlist = text2List(text) 	# 写入txt，以readlines的方式再次读取，获得段落对应的list
+		textlist = text.split("\n")
 		return textlist
 	except IOError:
 		print("文件打开失败")
@@ -573,8 +573,8 @@ def openDocx(path):
 		
 
 def addTags(text): #添加靠谱的标签
-	list1 = ["邊", "變", "並", "從", "點", "東", "對", "發", "該", "個", "給", "關", "過", "還", "後", "歡", "會", "機", "幾", "間", "見", "將", "進", "經", "覺", "開", "來", "裡", "兩", "嗎", "麼", "沒", "們", "難", "讓", "時", "實", "說", "雖", "為", "問", "無", "現", "樣", "應", "於", "與", "則", "這", "種"]
-	list2 = ["边", "变", "并", "从", "点", "东", "对", "发", "该", "个", "给", "关", "过", "还", "后", "欢", "会", "机", "几", "间", "见", "将", "进", "经", "觉", "开", "来", "里", "两", "吗", "么", "没", "们", "难", "让", "时", "实", "说", "虽", "为", "问", "无", "现", "样", "应", "于", "与", "则", "这", "种"]
+	list1 = "邊 變 並 從 點 東 對 發 該 個 給 關 過 還 後 歡 會 機 幾 間 見 將 進 經 覺 開 來 裡 兩 嗎 麼 沒 們 難 讓 時 實 說 雖 為 問 無 現 樣 應 於 與 則 這 種".split(" ")
+	list2 = "边 变 并 从 点 东 对 发 该 个 给 关 过 还 后 欢 会 机 几 间 见 将 进 经 觉 开 来 里 两 吗 么 没 们 难 让 时 实 说 虽 为 问 无 现 样 应 于 与 则 这 种".split(" ")
 	#语料库来自 https://elearning.ling.sinica.edu.tw/cwordfreq.html
 	#从中选取前三百的繁体字部分，并在文章中随机检验，取存在率最高的前50个繁体字符
 	
@@ -591,36 +591,22 @@ def addTags(text): #添加靠谱的标签
 	chars = set2text(s)
 	k = len(list1) - j
 	
-	tags += "#txt #finished "
+	tags += " #txt #finished "
 	if j >= 0.2 * len(list1):
-		tags += "#zh_tw "
+		tags += "#zh_tw"
 		# print(k)  # 不存在的繁体字符数
 		# print(s)   #不存在的繁体字符
 	else:
-		tags += "#zh_cn "
+		tags += "#zh_cn"
 		if s2 !=set():
 			print(s2)  # 存在的繁体字符
 	return tags, chars
 
 
-def text2List(tags):  # 通过readlines，获得list对象
-	path = os.getcwd()
-	path = os.path.join(path, "tags.txt")
-	with open(path, "w", encoding="UTF8") as f:
-		f.write(tags)
-	with open(path, "r", encoding="UTF8") as f:
-		taglist = f.readlines()
-	try:
-		os.remove(path)
-	except IOError:
-		print("tags.txt 删除失败")
-	return taglist
-
-
 def translateTags(taglist):  # 获取英文标签
 	tags2 = "" ; s = set()
 	for i in range(0, len(taglist)):
-		tag = taglist[i].replace("\n", "")
+		tag = taglist[i]
 		tag = tag.replace("#", "")
 		tag = tag.replace(" ", "")
 		tag = tag.replace("　", "")
@@ -629,27 +615,30 @@ def translateTags(taglist):  # 获取英文标签
 		if tag != None:
 			s.add(tag)  # 获取到的标签利用set去重
 		else:
-			tag = taglist[i].replace("\n", "")
-			tag = tag.replace(" ", "")
-			tag = tag.replace("　", "")
+			tag = taglist[i]
 			tags2 += tag + " "
 	tags1 = sortTags(s)  #对转换后的标签排序
 	return tags1, tags2
 	
 
 def textFormat(textlist, newtags):
-	name = cc2.convert(textlist[0])
-	authro = "by #" + textlist[1].replace("作者：", "")
+	name = cc2.convert(textlist[0]) + "\n"
+	authro = textlist[1].replace("作者：", "")
+	authro = "by #" + authro + "\n"
+	
 	url = textlist[2].replace("网址：", "")
+	url = url.replace("網址：", "")
+	url = url.replace("链接：", "")
+	url = url + "\n"
 	
 	tags = textlist[3].replace("标签：", "")
+	tags = tags.replace("標簽：", "")
 	tags += newtags  #新增 #zh_tw 或 #zh_cn
-	tags = tags.replace(" ", "\n")
 	tags = cc1.convert(tags)  #转简体，只处理简体标签
-	list = text2List(tags)   #通过保存txt，将tag写入list
+	list = tags.split()
 	(tags1, tags2) = translateTags(list)  #获取已翻译/未翻译的标签
 	
-	text = name + authro + tags1 + "\n特殊：" + tags2 + "\n" + url + "\n"
+	text = name + authro + tags1 + "\n特殊：" + tags2 + "\n" + url #+ "\n"
 	print(text)   #格式化输出
 	return tags2  #输出不支持的标签
 
@@ -676,11 +665,11 @@ def printTags(path):
 				chars += char +"\n"*1
 				s.add(textFormat(textlist, newtags))
 	
-	saveTextDesktop("特殊标签.txt", s)
+	saveTextDesktop("tags.txt", s)
 	# saveTextDesktop("文字.txt", chars)
 	
 	if j != 0:
-		openNowDir()
+		# openNowDir()
 		pass
 	else:
 		print("本月 " + dirstr + " 无新文档")
