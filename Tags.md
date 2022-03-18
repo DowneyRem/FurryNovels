@@ -29,8 +29,8 @@
 | #Original | original |
 | #Doujin | 同人 |
 | #Doujin | doujin |
-| #Translated | 翻译 |
-| #Translated | translated |
+| #translated | 翻译 |
+| #translated | translated |
 | #SFW | sfw |
 | #R18 | R-18 |
 | #R18 | R18 |
@@ -57,7 +57,13 @@
 | #ScienceFiction | ScienceFiction |
 | #Fantasy | 奇幻 |
 | #Fantasy | 魔幻 |
-| #Fantasy | Fantasy |
+| #Fantasy | fantasy |
+| #Comedy | 喜剧 |
+| #Comedy | 糖 |
+| #Comedy | comedy |
+| #Tragedy | 悲剧 |
+| #Tragedy | 刀 |
+| #Tragedy | tragedy |
 | #bear | 熊 |
 | #bear | bear |
 | #panda | 熊猫 |
@@ -82,6 +88,8 @@
 | #dragon | dragon |
 | #long | 东方龙 |
 | #long | long |
+| #Lizard | 蜥蜴 |
+| #Lizard | lizard |
 | #dog | 狗 |
 | #dog | dog |
 | #wolf | 狼 |
