@@ -2,7 +2,7 @@
 ### 频道类型名称与链接：
 - 公开频道 ，便于搜索与获取关注
 - 兽人小说/獸人小説，方便搜索
-- [@FurryNovels](https://t.me/FurryNovels)
+- 频道链接：[@FurryNovels](https://t.me/FurryNovels)
 
 ### 频道定位：
 
