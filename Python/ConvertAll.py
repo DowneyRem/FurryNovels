@@ -27,7 +27,8 @@ def translateText(text, path1, path2):
 	j = 0
 	for i in range(len(list1)):
 		char = list1[i]
-		if char in text:
+		num = text.count(char)
+		if num >= 5:
 			j += 1
 	
 	if j >= 0.2 * len(list1):

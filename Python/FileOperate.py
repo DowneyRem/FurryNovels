@@ -123,6 +123,7 @@ def saveTextDesktop(name, text):
 	path = "D:\\Users\\Administrator\\Desktop"
 	path = os.path.join(path, name)
 	saveText(path, text)
+	print(name + "已保存")
 
 
 def monthNow():

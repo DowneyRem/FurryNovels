@@ -5,7 +5,8 @@ import pickle
 from FileOperate import saveText
 
 
-dict = {
+#适用于标签的标签关键词
+tagdict = {
 	"txt":"txt",
 	"docx":"docx",
 	"完结":"Finished",
@@ -398,13 +399,13 @@ dict = {
 }
 
 
-def cmp(a, b):  #按dict内部顺序进行排序
+def cmp1(a, b):  #按dict内部顺序进行排序
 	def getindex(a):
 		try:
-			li = list(dict.values())
+			li = list(tagdict.values())
 			index = li.index(a)
 		except:
-			li = list(dict.keys())
+			li = list(tagdict.keys())
 			index = li.index(a)
 		return index
 	a = getindex(a)
@@ -418,30 +419,30 @@ def cmp(a, b):  #按dict内部顺序进行排序
 	
 	
 def saveDict2Pkl():
-	path = os.path.join(os.getcwd(), "dict.pkl")
+	path = os.path.join(os.getcwd(), "tagdict.pkl")
 	with open(path, "wb") as f:
-		pickle.dump(dict, f)
+		pickle.dump(tagdict, f)
 	
 
 def getDictFormPkl():
-	path = os.path.join(os.getcwd(), "dict.pkl")
+	path = os.path.join(os.getcwd(), "tagdict.pkl")
 	with open(path, "rb") as f:
-		dict = pickle.load(f)
-	return dict
+		tagdict = pickle.load(f)
+	return tagdict
 
 
 def saveDict2Md():
 	text = "### 关键词标签表\n"
 	text = text + "\n| 标签 | 关键词 | "
 	text = text + "\n| -- | -- | "
-	list1 = list(dict.items())
+	list1 = list(tagdict.items())
 	for i in range(0, len(list1)):
 		(key, value) = list1[i]
 		if value != "":
 			value = "#" + value
 			text += "\n| " + value + " | " + key + " |"
 	
-	path = os.path.join(os.getcwd(), "Tags.md")
+	path = os.path.join(os.getcwd(), "NovelTags.md")
 	saveText(path, text)
 
 

@@ -1,8 +1,10 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
 from functools import cmp_to_key
-from Dictionary import dict, cmp
+from DictNovel import tagdict, cmp1
+from DictText import textdict, cmp2
 from FileOperate import *
+from GetTags import getTags
 
 from opencc import OpenCC
 cc1 = OpenCC('tw2sp')  #繁转简
@@ -18,7 +20,7 @@ def set2Text(set):
 	return text
 
 	
-def sortTags(set):  # 按dict内顺序对转换后的标签排序
+def sortTags(set, cmp):  # 按dict内顺序对转换后的标签排序
 	text = ""
 	li = list(set)
 	li.sort(key=cmp_to_key(cmp))
@@ -37,7 +39,8 @@ def addTags(text): #添加靠谱的标签
 	tags = "" ; j = 0 ; list3 = []
 	for i in range(len(list1)):
 		char = list1[i]
-		if char in text:
+		num = text.count(char)
+		if num >= 5 :
 			j += 1
 			list3.append(char)
 			
@@ -66,14 +69,14 @@ def translateTags(taglist):  # 获取英文标签
 		tag = tag.replace("#", "")
 		tag = tag.replace(" ", "")
 		tag = tag.replace("　", "")
-		tag = dict.get(tag)  #获取英文标签
+		tag = tagdict.get(tag)  #获取英文标签
 		
 		if tag != None:
 			s.add(tag)  # 获取到的标签利用set去重
 		else:
 			tag = taglist[i]
 			tags2 += tag + " "
-	tags1 = sortTags(s)  #对转换后的标签排序
+	tags1 = sortTags(s, cmp1)  #对转换后的标签排序
 	return tags1, tags2
 	
 
@@ -94,7 +97,7 @@ def textFormat(textlist, newtags):
 	list = tags.split()
 	(tags1, tags2) = translateTags(list)  #获取已翻译/未翻译的标签
 	
-	text = name + authro + tags1 + "\n特殊：" + tags2 + "\n" + url + "\n"
+	text = name + authro + tags1 + "\n特殊：" + tags2 + "\n" + url #+ "\n"
 	print(text)   #格式化输出
 	return tags2  #输出不支持的标签
 
@@ -117,14 +120,17 @@ def printTags(path):
 				text     = openText (path)
 				
 			if j >= 0:  #无用的if语句，保持上下几行缩进一致
-				newtags, char = addTags(text) #根据本文繁简添加标签
+				newtags, char = addTags(text)  #根据本文繁简添加标签
 				chars += char +"\n"*1
 				s.add(textFormat(textlist, newtags))
+				text = cc1.convert(text)       #转简体，只处理简体标签
+				getTags(text)
+	
 	
 	if j != 0:
 		openNowDir()
-		text = set2Text(s)
-		saveTextDesktop("tags.txt", text)
+		# text = set2Text(s)
+		# saveTextDesktop("tags.txt", text)
 		# saveTextDesktop("文字.txt", chars)
 	else:
 		print("本月 " + dirstr + " 无新文档")
