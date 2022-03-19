@@ -1,7 +1,6 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
 import os
-import re
 from DictText import textdict, cmp2
 from functools import cmp_to_key
 from FileOperate import findFile, openDocx
@@ -68,11 +67,11 @@ def getTags(text):  #获取不靠谱的标签
 	saveText(string)
 	s1 =sortTags(s1, cmp2)
 	s2 =sortTags(s2, cmp2)
-	print("可能符合原文的标签：")
+	print("可能存在的标签：")
 	print(s1)
 	print(s2)
 	print("\n"*2)
-
+	return s1, s2
 
 def getText(path):
 	list1 = findFile(path, ".docx")

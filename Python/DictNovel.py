@@ -395,7 +395,7 @@ tagdict = {
 	"肛门出产":"AnalBirth",
 	"analbirth":"AnalBirth",
 	
-	"小说":"",
+
 }
 
 
@@ -448,4 +448,3 @@ def saveDict2Md():
 
 if __name__ == '__main__':
 	saveDict2Md()
-	saveDict2Pkl()

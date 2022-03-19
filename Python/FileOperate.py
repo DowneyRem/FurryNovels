@@ -4,6 +4,8 @@ import os
 import time
 import shutil
 from docx.api import Document
+from win32com.client import DispatchEx
+from functools import wraps
 
 
 def timethis(func):
@@ -104,7 +106,26 @@ def removeFile(path):
 	if os.path.exists(path):
 		shutil.rmtree(path)
 	os.makedirs(path)
+
+
+def saveDocx(path, text):
+	word = DispatchEx('Word.Application')  # 独立进程
+	word.Visible = 1  # 0为后台运行
+	word.DisplayAlerts = 0  # 不显示，不警告
+	template = "D:\\Users\\Administrator\\Documents\\自定义 Office 模板\\小说.dotm"
+	docx = word.Documents.Add(template)  # 创建新的word文档
 	
+	s = word.Selection
+	s.Text = text  # 写入文本
+	docx.Application.Run("小说排版")  # 运行宏
+	
+	# 保存文档并退出word
+	name = os.path.split(path)[1]
+	docx.SaveAs2(path, 16)
+	print("【" + name + "】已保存")
+	docx.Close(True)
+	word.Quit()
+
 
 def saveText(path, text):
 	(dir, name) = os.path.split(path)  # 分离文件名和目录名
@@ -119,11 +140,16 @@ def saveText(path, text):
 		print("【" + name + "】保存失败")
 
 
+#for循环内部，使用a+模式，写入测试文件
 def saveTextDesktop(name, text):
 	path = "D:\\Users\\Administrator\\Desktop"
 	path = os.path.join(path, name)
-	saveText(path, text)
-	print(name + "已保存")
+	try:
+		with open(path, "a+", encoding="UTF8") as f:
+			f.write(text)
+		# print("【" + name + "】保存成功")
+	except IOError:
+		print("【" + name + "】保存失败")
 
 
 def monthNow():

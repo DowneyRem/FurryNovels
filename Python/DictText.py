@@ -2,7 +2,11 @@
 # -*- coding: UTF-8 -*-
 import os
 from FileOperate import saveText
+
 #适用于文本的标签关键词
+#key为关键词，value为对应标签，
+#关键词——标签可以一对多
+
 textdict = {
 	"同人":"Doujin",
 	"翻译":"translated",
@@ -224,6 +228,9 @@ textdict = {
 	"黑龟":"turtle",
 	"白龟":"turtle",
 	"灰龟":"turtle",
+	
+	"龙根":"dragon R18",
+	"龙棒":"dragon R18",
 	
 	
 	"兽族":"furry",

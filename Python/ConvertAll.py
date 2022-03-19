@@ -48,7 +48,7 @@ def convert(path):
 		(path0, path1, path2, name) = getPath(path)
 		if os.path.exists(path0):
 			i += 1
-			print("【" + name + "】在本次运行前已转换")
+			# print("【" + name + "】在本次运行前已转换")
 		else:
 			text = openDocx(path)
 			saveText(path0, text)  # 不区分繁简，存频道目录

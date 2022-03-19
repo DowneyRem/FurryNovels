@@ -4,8 +4,6 @@ from functools import cmp_to_key
 from DictNovel import tagdict, cmp1
 from DictText import textdict, cmp2
 from FileOperate import *
-from GetTags import getTags
-
 from opencc import OpenCC
 cc1 = OpenCC('tw2sp')  #繁转简
 cc2 = OpenCC('s2twp')  #簡轉繁
@@ -59,7 +57,7 @@ def addTags(text): #添加靠谱的标签
 		tags += "#zh_cn"
 		if s2 !=set():
 			print(s2)  # 存在的繁体字符
-	return tags, chars
+	return tags
 
 
 def translateTags(taglist):  # 获取英文标签
@@ -78,9 +76,30 @@ def translateTags(taglist):  # 获取英文标签
 			tags2 += tag + " "
 	tags1 = sortTags(s, cmp1)  #对转换后的标签排序
 	return tags1, tags2
-	
 
-def textFormat(textlist, newtags):
+
+def getTags(text):  # 获取可能存在的标签
+	string = ""; s1 = set(); s2 = set()
+	list1 = list(textdict.keys())
+	list2 = list(textdict.values())
+	for i in range(0, len(list1)):
+		a = list1[i]
+		num = text.count(a)
+		if num > 0:
+			b = list2[i]
+			# print((a, b, num))
+			string += a + "," + b + "," + str(num) + "\n"
+		if num > 5:
+			s1.add(list1[i])  # 汉字标签
+			s2.add(list2[i])  # 英文标签
+	
+	saveTextDesktop("1.txt", string) #保存标签次数
+	s1 = sortTags(s1, cmp2)
+	s2 = sortTags(s2, cmp2)
+	return s2, s1  #英文标签在前
+
+
+def getInfo(text, textlist):
 	name = cc2.convert(textlist[0]) + "\n"
 	authro = textlist[1].replace("作者：", "")
 	authro = "by #" + authro + "\n"
@@ -92,54 +111,61 @@ def textFormat(textlist, newtags):
 	
 	tags = textlist[3].replace("标签：", "")
 	tags = tags.replace("標簽：", "")
-	tags += newtags  #新增 #zh_tw 或 #zh_cn
+	tags += addTags(text)  #新增 #zh_tw 或 #zh_cn
 	tags = cc1.convert(tags)  #转简体，只处理简体标签
 	list = tags.split()
 	(tags1, tags2) = translateTags(list)  #获取已翻译/未翻译的标签
 	
-	text = name + authro + tags1 + "\n特殊：" + tags2 + "\n" + url #+ "\n"
-	print(text)   #格式化输出
-	return tags2  #输出不支持的标签
+	tags2save= tags2 + " "
+	tags2save= tags2save.replace(" ", "\n")
+	saveTextDesktop("tags.txt", tags2save) #保存不支持的标签
+	
+	text = cc1.convert(text)  # 按照简体文本处理标签
+	(unsuretag1, unsuretag2)= getTags(text)
+	unsuretag = "可能存在：" + unsuretag1 +"\n"+ unsuretag2
+	info = name + authro + tags1 +"\n特殊："+ tags2 +"\n"+ unsuretag +"\n"+ url +"\n"
+	return info
 
 
-def printTags(path):
-	pathlist = findFile(path, ".docx", ".txt")
+def printInfo(path):
+	(dir, name) = os.path.split(path)
+	(name, ext) = os.path.splitext(name)
+	if ext == ".docx":
+		textlist = openDocx4(path)
+		text = openDocx(path)
+	elif ext == ".txt":
+		textlist = openText4(path)
+		text = openText(path)
+		
+	if len(textlist) >=4:
+		info = getInfo(text, textlist)
+		print(info)   #格式化输出
+	else:
+		print("【"+ name +"】未处理")
+		print("")
+		
+
+def getPath(path):
+	j = 0
 	dirstr = monthNow()  # 只处理本月的文件
-	s = set() ; j = 0 ; chars =""
+	pathlist = findFile(path, ".docx", ".txt")
 	for i in range(0, len(pathlist)):
-		path = pathlist[i]
-		(dir, name) = os.path.split(path)
-		(name, ext) = os.path.splitext(name)
-		if dirstr in dir:  # 只处理本月的文件
+		filepath = pathlist[i]
+		if dirstr in filepath:
 			j += 1
-			if ext == ".docx":
-				textlist = openDocx4(path)
-				text     = openDocx (path)
-			elif ext == ".txt":
-				textlist = openText4(path)
-				text     = openText (path)
-				
-			if j >= 0:  #无用的if语句，保持上下几行缩进一致
-				newtags, char = addTags(text)  #根据本文繁简添加标签
-				chars += char +"\n"*1
-				s.add(textFormat(textlist, newtags))
-				text = cc1.convert(text)       #转简体，只处理简体标签
-				getTags(text)
-	
-	
+			printInfo(filepath)
 	if j != 0:
 		openNowDir()
-		# text = set2Text(s)
-		# saveTextDesktop("tags.txt", text)
-		# saveTextDesktop("文字.txt", chars)
+	# text = set2Text(s)
+	# saveTextDesktop("tags.txt", text)
+	# saveTextDesktop("文字.txt", chars)
 	else:
 		print("本月 " + dirstr + " 无新文档")
-	
-	
+
 def main():
 	print("本月文档如下：")
 	print("\n"*2)
-	printTags(path)
+	getPath(path)
 	
 	
 if __name__ == "__main__":

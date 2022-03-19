@@ -44,25 +44,19 @@
 装好第三方库，并在对应目录放置好文件后，或者你修改好对应目录后，就应该可以用了
 ```python
 pip install python-docx
+pip install pywin32
 pip install opencc-python-reimplemented
 或使用官方的OpenCC
 pip install opencc
 ```
 
-### ConvertAll.py
-需要开启 **正文缩进 / Normal Indent** 样式  
-可以使用 **小说.dotx** 或 **小说.dotm**作为模板  
-后者有**宏代码**，可以自行排版，但需要开启**开发工具**选项卡，并在**宏安全性**中启用宏  
+### 涉及到Word文档的内容
+需要开启 **正文缩进 / Normal Indent** 样式，具体方式请自行百度  
+可以使用 **小说.dotm**作为模板（模板中已开启此样式）  
+需要开启**开发工具**选项卡，并在**宏安全性**中启用宏  
+启用之后，即可使用VBA代码，自动按照相应进行排版
+### 配合 FileOperate.py 内的 saveDocx 可以做到写入文件后全自动排版
 
 如果你安装了` python-docx `模块也可以这样（见 Normal_Indent.py）开启正文缩进  
 就算你启用了正文缩进，也无法在python docx 里直接使用此样式  
-不如直接用设定好样式的模板来跑
-
-### PrintTags
-
-```
-pip install python-docx
-pip install opencc-python-reimplemented
-或使用官方的OpenCC
-pip install opencc
-```
+不如直接用设定好样式的模板
