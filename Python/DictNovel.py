@@ -6,7 +6,7 @@ from FileOperate import saveText
 
 
 #适用于标签的标签关键词
-tagdict = {
+noveldict = {
 	"txt":"txt",
 	"docx":"docx",
 	"完结":"Finished",
@@ -402,10 +402,10 @@ tagdict = {
 def cmp1(a, b):  #按dict内部顺序进行排序
 	def getindex(a):
 		try:
-			li = list(tagdict.values())
+			li = list(noveldict.values())
 			index = li.index(a)
 		except:
-			li = list(tagdict.keys())
+			li = list(noveldict.keys())
 			index = li.index(a)
 		return index
 	a = getindex(a)
@@ -419,23 +419,23 @@ def cmp1(a, b):  #按dict内部顺序进行排序
 	
 	
 def saveDict2Pkl():
-	path = os.path.join(os.getcwd(), "tagdict.pkl")
+	path = os.path.join(os.getcwd(), "noveldict.pkl")
 	with open(path, "wb") as f:
-		pickle.dump(tagdict, f)
+		pickle.dump(noveldict, f)
 	
 
 def getDictFormPkl():
-	path = os.path.join(os.getcwd(), "tagdict.pkl")
+	path = os.path.join(os.getcwd(), "noveldict.pkl")
 	with open(path, "rb") as f:
-		tagdict = pickle.load(f)
-	return tagdict
+		noveldict = pickle.load(f)
+	return noveldict
 
 
 def saveDict2Md():
 	text = "### 关键词标签表\n"
 	text = text + "\n| 标签 | 关键词 | "
 	text = text + "\n| -- | -- | "
-	list1 = list(tagdict.items())
+	list1 = list(noveldict.items())
 	for i in range(0, len(list1)):
 		(key, value) = list1[i]
 		if value != "":
