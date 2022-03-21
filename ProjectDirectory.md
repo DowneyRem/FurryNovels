@@ -45,6 +45,7 @@
 ```python
 pip install python-docx
 pip install pywin32
+pip install pixivpy
 pip install opencc-python-reimplemented
 或使用官方的OpenCC
 pip install opencc
