@@ -3,6 +3,7 @@
 import os
 import time
 import shutil
+import zipfile
 from docx.api import Document
 from win32com.client import DispatchEx
 from functools import wraps
@@ -21,18 +22,22 @@ def timethis(func):
 
 pathlist = []
 def findFile(path, *extnames):
+	## 省略 extnames 参数可以获取全部文件
 	for dir in os.listdir(path):
 		dir = os.path.join(path, dir)
 		if os.path.isdir(dir):
 			findFile(dir, *extnames)
 			
 		if os.path.isfile(dir):
-			for extname in extnames:
-				(name, ext) = os.path.splitext(dir)
-				if ext == extname:
-					pathlist.append(dir)
-					
+			if len(extnames) > 0 :
+				for extname in extnames:
+					(name, ext) = os.path.splitext(dir)
+					if ext == extname:
+						pathlist.append(dir)
+			elif len(extnames) == 0 :
+				pathlist.append(dir)
 	return pathlist
+
 
 def openText(path):
 	text = ""
@@ -170,6 +175,29 @@ def openNowDir():
 	text = monthNow()
 	path = os.path.join(path,text)
 	os.system('start explorer '+ path)
+
+
+def zipFile(path):
+	# 传入某文件或文件夹路径后，将其所在文件夹打包压缩
+	if os.path.isdir(path):
+		dir = path
+	elif os.path.isfile(path):
+		(dir, name) = os.path.split(path)
+	list = findFile(dir, ) ## 获取目录下所有文件
+	zippath = os.path.join(dir + ".zip")
+
+	z = zipfile.ZipFile(zippath, 'w', zipfile.ZIP_DEFLATED)
+	for i in range(len(list)):
+		path = list[i]
+		(filedir, name) = os.path.split(path)
+		filedir = filedir.replace(dir, "")
+		filedir = os.path.join(filedir, name)
+		# print(filedir)
+		z.write(filename=path, arcname=filedir)   #压缩的文件，zip内路径
+	z.close()
+	zipname = os.path.split(zippath)[1]
+	print("【"+ zipname +"】压缩完成")
+
 
 
 if __name__ == '__main__':

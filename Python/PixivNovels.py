@@ -4,7 +4,7 @@ import os
 import re
 import sys
 from pixivpy3 import AppPixivAPI
-from FileOperate import saveText #, saveDocx
+from FileOperate import zipFile, saveText #, saveDocx
 
 
 sys.dont_write_bytecode = True
@@ -71,15 +71,6 @@ def getSeriesFromNovel(novel_id):
 	except:
 		return None, None
 
-def getNovelInfo2(novel_id):
-	json_result = aapi.novel_detail(novel_id)
-	novel = json_result.novel
-	image_urls = novel.image_urls
-	text_length = novel.text_length
-	total_bookmarks = novel.total_bookmarks
-	total_view = novel.total_view
-	total_comments = novel.total_comments
-	
 	
 def getNovelInfo(novel_id):
 	json_result = aapi.novel_detail(novel_id)
@@ -87,8 +78,13 @@ def getNovelInfo(novel_id):
 	title = novel.title
 	author = getUserName(novel)[0]
 	caption = novel.caption
-	if caption != "":
-		caption = caption.replace("<br />", "//")
+	
+	image_urls = novel.image_urls
+	text_length = novel.text_length
+	total_bookmarks = novel.total_bookmarks
+	total_view = novel.total_view
+	total_comments = novel.total_comments
+	
 	return title, author, caption
 
 
@@ -104,20 +100,12 @@ def formatNovelInfo(novel_id):
 	
 	caption = novel.caption
 	if caption != "":
-		caption = "其他：" + novel.caption +"\n"
+		caption = "其他：" + caption +"\n"
 		caption = caption.replace("<br />", " //")
 		
 	string = title + authro + URL + tags + caption
 	# print(string)
 	return string
-
-
-def getNovelTitle(novel_id):
-	json_result = aapi.novel_detail(novel_id)
-	novel = json_result.novel
-	title = novel.title
-	# print(title)
-	return title
 
 
 def getNovelText(novel_id):
@@ -126,8 +114,7 @@ def getNovelText(novel_id):
 	series_prev = json_result.series_prev
 	series_next = json_result.series_next
 	
-	if "\n  "  in text: #段首两个半角空格替换成全角空格
-		text = text.replace("\n  ", "\n　　")
+	# text = text.replace("\n\n","\n")
 	if "　"not in text:  #添加全角空格
 		text = text.replace("\n","\n　　")
 	# print(text)
@@ -180,11 +167,9 @@ def getSeriesInfo(series_id):
 	json_result = aapi.novel_series(series_id, last_order=None)
 	detail = json_result.novel_series_detail
 	title = detail.title   #系列标题
-	authro = "作者：" + getUserName(detail)[0] +"\n"
-	caption = "其他：" + detail.caption +"\n" #系列简介
-	caption = caption.replace("\n\n", "\n")
-	caption = caption.replace("", "")
-	content_count = detail.content_count  #系列内小说数
+	authro = getUserName(detail)[0]
+	caption = detail.caption  # 系列简介
+	content_count = detail.content_count  # 系列内小说数
 	# print(title, authro, content_count, caption)
 	return title, authro, caption, content_count
 
@@ -192,9 +177,14 @@ def getSeriesInfo(series_id):
 def formatSeriesInfo(series_id):
 	(title, authro, caption, content_count) = getSeriesInfo(series_id)
 	info = "" ; s = set()
+	authro = "作者：" + authro + "\n"
 	info += title +"\n"+ authro
+	if caption != "":
+		caption = "其他：" + caption +"\n" #系列简介
+		caption = caption.replace("\n\n", "\n")
+		caption = caption.replace("", "")
+
 	list = getNovelIdFormSeries(series_id)
-	
 	print("系列：" + title + " 共有" + str(content_count) + "章")
 	if len(list) != content_count:
 		print("已获取"+ str(len(list)) + "章")
@@ -216,16 +206,14 @@ def getSeriesText(series_id):
 	list = getNovelIdFormSeries(series_id)
 	for i in range(len(list)):
 		id = list[i]
-		title = getNovelTitle(id) + "\n"
+		title = getNovelInfo(id)[0] + "\n"
 		if ("第"not in title) and ("章" not in title):
-			title = "第"+ str(i) + "章："+ title
+			title = "第"+ str(i) + "章 "+ title
 		text += title
 		text += getNovelText(id)
 		text += "\n" * 4
 	
-	text = text.replace("\n\n","\n")
-	if "\n  "  in text: #段首两个半角空格替换成全角空格
-		text = text.replace("\n  ", "\n　　")
+	# text = text.replace("\n\n","\n")
 	if "　"not in text:  #添加全角空格
 		text = text.replace("\n","\n　　")
 	# print(text)
@@ -263,10 +251,11 @@ def getUserInfo(user_id):
 	
 	profile = json_result.profile
 	webpage = profile.webpage
-	twitter_url = profile.twitter_url
+	twitter = profile.twitter_url
 	total_follow_users = profile.total_follow_users
 	total_illusts = profile.total_illusts
 	total_manga = profile.total_manga
+	
 	total_novels = profile.total_novels
 	total_series = profile.total_novel_series
 	string = name +"\n系列小说："+str(total_series)+"篇\n共计："+str(total_novels)+"篇"
@@ -304,7 +293,6 @@ def getSeriesList(novellist):
 		series_id = getSeriesFromNovel(novel_id)[0]
 		if series_id is not None:
 			s.add(series_id)
-
 	serieslist = list(s)
 	# print(serieslist)
 	return serieslist
@@ -328,7 +316,8 @@ def saveAll(user_id, path):
 	for i in range(len(serieslist)):
 		series_id = serieslist[i]
 		saveSeries(series_id, path)
-		
+	zipFile(path)
+
 
 def testSeries(id):
 	if getSeriesFromNovel(id)[0] is None:
@@ -363,8 +352,8 @@ def main():
 				testSeries(id)
 			elif "users" in string:
 				print("开始下载此作者的全部小说")
-				getUserInfo(user_id)
-				saveAll(user_id, path)
+				getUserInfo(id)
+				saveAll(id, path)
 			elif "artworks" in string:
 				print("不支持下载插画，请重新输入")
 				print("")
