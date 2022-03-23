@@ -6,7 +6,7 @@
 - 为使用 Telegram 的读者，推荐优质小说  
 - 为小说作者，增加一个宣传平台
 - 为想转移社交圈子的兽兽，增加一个转移的理由  
-- 
+
 ### 频道类型名称与链接：
 - 公开频道 ，便于搜索与获取关注
 - 兽人小说/獸人小説，方便搜索
@@ -27,17 +27,6 @@
 1. 简繁问题：决定于作者提供的版本，可提供转换后的版本   
 1. 更新频率：待定（每周1次起步）  
 
-### [项目目录](https://github.com/DowneyRem/FurryNovels/blob/main/Document.md)  &  [文档规范](https://github.com/DowneyRem/FurryNovels/blob/main/Document.md)  &  [群组规定](https://github.com/DowneyRem/FurryNovels/blob/main/GroupRule.md)
-
-### 标签系统
-
-标签顺序以此为标准：
-[标签表格版](https://github.com/DowneyRem/FurryNovels/blob/main/Tags.md) 
-
-便于人类和兽人阅读的版本：
-[简体标签](https://github.com/DowneyRem/FurryNovels/blob/main/Tags_zh_cn.md) &
-[繁體标签](https://github.com/DowneyRem/FurryNovels/blob/main/Tags_zh_tw.md)   
-
 ### 发展方向：伪自动化运营
 
 成型案例： [@zreadpush](https://t.me/zreadpush) & 
@@ -55,4 +44,16 @@
 1. 分享本频道所推荐的小说
 1. 提供你认为不错的兽人小说的链接或文件
 1. 为上述方向提供技术支持，当然你有更好的规划/实现方法也可以提出
+
+
+### [项目目录](https://github.com/DowneyRem/FurryNovels/blob/main/Document.md)  &  [文档规范](https://github.com/DowneyRem/FurryNovels/blob/main/Document.md)  &  [群组规定](https://github.com/DowneyRem/FurryNovels/blob/main/GroupRule.md)
+
+### 标签系统
+
+标签顺序以此为标准：
+[标签表格版](https://github.com/DowneyRem/FurryNovels/blob/main/Tags.md) 
+
+便于人类和兽人阅读的版本：
+[简体标签](https://github.com/DowneyRem/FurryNovels/blob/main/Tags_zh_cn.md) &
+[繁體标签](https://github.com/DowneyRem/FurryNovels/blob/main/Tags_zh_tw.md)   
 
