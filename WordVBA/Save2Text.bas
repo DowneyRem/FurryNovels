@@ -16,7 +16,20 @@ Desktop = CreateObject("WScript.Shell").SpecialFolders("Desktop") & "\"
     Selection.WholeStory
     Selection.Fields.Update
 
-    
+
+    ''新增空行
+    'Selection.Find.ClearFormatting
+    'Selection.Find.Replacement.ClearFormatting
+    'With Selection.Find
+	'	.Text = "^p"
+	'	.Replacement.Text = "^p^p"
+	'	.Forward = True
+	'	.Wrap = wdFindContinue
+	'	.MatchByte = True
+    'End With
+	'Selection.Find.Execute Replace:=wdReplaceAll
+
+	
     '获取文件路径，在桌面上另存为TXT/UTF8
     DocxPath = ActiveDocument.FullName
     TextPath = ActiveDocument.Paragraphs(1).Range.Text
