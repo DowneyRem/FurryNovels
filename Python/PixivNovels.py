@@ -109,8 +109,9 @@ def formatNovelInfo(novel_id):
 
 
 def getNovelText(novel_id):
+	text = "\n"
 	json_result = aapi.novel_text(novel_id)
-	text = json_result.novel_text
+	text += json_result.novel_text
 	series_prev = json_result.series_prev
 	series_next = json_result.series_next
 	
@@ -129,15 +130,16 @@ def saveNovel(novel_id, path):
 	name = text.split("\n")[0]
 	
 	try:
-		path = os.path.join(path, name + ".docx")
-		saveDocx(path, text)
+		filepath = os.path.join(path, name + ".docx")
+		saveDocx(filepath, text)
 		print("【" + name + ".docx】已保存")
 	except NameError:
-		path = path.replace(".docx", ".txt")
-		if not os.path.exists(path):
-			saveText(path, text)
+		filepath = filepath.replace(".docx", ".txt")
+		if not os.path.exists(filepath):
+			saveText(filepath, text)
 		print("【" + name + ".txt】已保存")
-		
+	return filepath
+	
 
 ### 【【【【系列小说】】】】
 def getNovelIdFormSeries(series_id):
@@ -226,15 +228,15 @@ def saveSeries(series_id, path):
 	text += getSeriesText(series_id)
 	
 	try:
-		path = os.path.join(path, name + ".docx")
-		saveDocx(path, text)
+		filepath = os.path.join(path, name + ".docx")
+		saveDocx(filepath, text)
 		print("【" + name + ".docx】已保存")
 	except NameError:
-		path = path.replace(".docx", ".txt")
-		# print(path)
-		if not os.path.exists(path):
-			saveText(path, text)
+		filepath = filepath.replace(".docx", ".txt")
+		if not os.path.exists(filepath):
+			saveText(filepath, text)
 		print("【" + name + ".txt】已保存")
+	return filepath
 
 
 
@@ -320,16 +322,23 @@ def saveAll(user_id, path):
 
 
 def testSeries(id):
-	if getSeriesFromNovel(id)[0] is None:
+	def saveSingleNovel(id, path):
 		print("开始下载单篇小说……")
 		print("")
 		saveNovel(id, path)
+		
+	if getSeriesFromNovel(id)[0] is not None:
+		print("是否按照系列小说进行下载？")
+		string = input("输入【 1 】即【按照系列小说下载】" + "\n" * 2)
+		if "1" in string:
+			print("开始下载系列小说……")
+			print("")
+			id = getSeriesFromNovel(id)[0]
+			saveSeries(id, path)
+		else:
+			saveSingleNovel(id, path)
 	else:
-		print("该小说为系列小说")
-		print("开始下载系列小说……")
-		print("")
-		id = getSeriesFromNovel(id)[0]
-		saveSeries(id, path)
+		saveSingleNovel(id, path)
 
 
 def wrongType():
@@ -340,29 +349,32 @@ def wrongType():
 	
 def main():
 	print("请输入Pixiv小说链接")
+	print("")
 	string = input()
 	if re.search("[0-9]+", string):
 		id = re.search("[0-9]+", string).group()
 		if "pixiv.net" in string:
 			if "novel/series" in string:
 				print("开始下载系列小说……")
-				print("")
 				saveSeries(id, path)
+				main()
 			elif "novel" in string:
 				testSeries(id)
+				main()
 			elif "users" in string:
 				print("开始下载此作者的全部小说")
 				getUserInfo(id)
 				saveAll(id, path)
+				main()
 			elif "artworks" in string:
 				print("不支持下载插画，请重新输入")
-				print("")
 				main()
 		elif re.search("[0-9]+", string):
 			id = re.search("[0-9]+", string).group()
 			if len(id) >= 5:
 				print("检测到纯数字，按照小说id解析")
 				testSeries(id)
+				main()
 			else:
 				wrongType()
 		else:

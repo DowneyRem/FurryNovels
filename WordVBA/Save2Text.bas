@@ -1,54 +1,43 @@
 Sub 另存为TXT()
-Dim file As String
-Dim filename As String
+Dim DocxPath As String
+Dim TextPath As String
+Dim Desktop As String
+Desktop = "D:\Users\Administrator\Desktop\"
+
+
+' 常见编码对应编号
+' GB 2312   936
+' GB18030 54936
+' BIG5      950
+' UTF8    65001
 
 
     '更新域
     Selection.WholeStory
     Selection.Fields.Update
-    
-    
-    '保存一次文件
-    ActiveDocument.Save
-    file = ActiveDocument.FullName
-    
-    
-    '编辑字数统计，表格转文字
-    Selection.EndKey Unit:=wdStory
-    Selection.MoveUp Unit:=wdLine, Count:=3, Extend:=wdExtend
-    Selection.Rows.ConvertToText Separator:=wdSeparateByTabs, NestedTables:=True
-    Selection.Style = ActiveDocument.Styles("正文")
 
     
-    '获取文件名，保存TXT/UTF8
-    filename = ActiveDocument.Paragraphs(1).Range.Text
-    filename = Left(filename, Len(filename) - 1) & ".txt"
-    ChangeFileOpenDirectory "C:\Users\Administrator\Desktop\"
-    ActiveDocument.SaveAs2 filename:=filename, FileFormat:=wdFormatText, Encoding:=65001
+    '获取文件路径，保存为TXT/UTF8
+    DocxPath = ActiveDocument.FullName
+    TextPath = ActiveDocument.Paragraphs(1).Range.Text
+    TextPath = Left(TextPath, Len(TextPath) - 1) & ".txt"
+    TextPath = Desktop & TextPath
+    
+    ChangeFileOpenDirectory Desktop
+    ActiveDocument.SaveAs2 filename:=TextPath, FileFormat:=wdFormatText, Encoding:=65001, _
+        AddToRecentFiles:=False, AllowSubstitutions:=False, LineEnding:=wdCRLF
     
     
-    '关闭TXT文档，打开DOCX文档
+    '在Word中关闭TXT文档，打开DOCX文档并保存
     ActiveDocument.Close 0
-    Documents.Open filename:=file
-    
-    
-    '编辑内容字数统计，文字转表格
-    Selection.EndKey Unit:=wdStory
-    Selection.MoveUp Unit:=wdLine, Count:=3, Extend:=wdExtend
-    
-    Selection.ConvertToTable Separator:=wdSeparateByTabs, NumColumns:=2, NumRows:=3
-    With Selection.Tables(1)
-        .Style = "网格型"
-        .ApplyStyleHeadingRows = True
-        .ApplyStyleLastRow = False
-        .ApplyStyleFirstColumn = True
-        .ApplyStyleLastColumn = False
-    End With
-    Selection.Tables(1).AutoFitBehavior (wdAutoFitContent)
-    
-    
-    '保存文件
+    Documents.Open TextPath:=DocxPath
     ActiveDocument.Save
+    
+    
+    '打开TXT文件
+    Shell ("notepad " & TextPath)
 
 
 End Sub
+
+

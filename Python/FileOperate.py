@@ -197,7 +197,7 @@ def zipFile(path):
 	z.close()
 	zipname = os.path.split(zippath)[1]
 	print("【"+ zipname +"】压缩完成")
-
+	return zippath
 
 
 if __name__ == '__main__':

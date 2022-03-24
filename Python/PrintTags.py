@@ -109,9 +109,9 @@ def getTags(text):  # 获取可能存在的标签
 
 
 def getInfo(text, textlist):
-	name = cc2.convert(textlist[0]) + "\n"
+	name = cc2.convert(textlist[0])
 	authro = textlist[1].replace("作者：", "")
-	authro = "by #" + authro + "\n"
+	authro = "by #" + authro
 	
 	url = textlist[2].replace("网址：", "")
 	url = url.replace("網址：", "")
