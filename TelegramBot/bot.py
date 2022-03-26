@@ -2,58 +2,75 @@
 # -*- coding: UTF-8 -*-
 import os
 import re
+
+import bot
 import telegram.bot
+from telebot import logger
 from telegram.ext import messagequeue as mq
-from telegram import (ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardMarkup, InlineKeyboardButton, MessageEntity)
+from telegram import (Document, ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardMarkup, InlineKeyboardButton, MessageEntity)
 from telegram.ext import (Updater, CommandHandler, MessageHandler, Filters, ConversationHandler, CallbackQueryHandler)
 from telegram.utils.request import Request
-from Novels import saveNovel, saveSeries, saveAll, getUserInfo, getSeriesFromNovel
+from functools import wraps
+from Novels import saveNovel, saveSeries, saveAuthor, getAuthorInfo, getSeriesId
 from PrintTags import printInfo
 
 
 ## 请将TOKEN换成自己的TOKEN
 ## 此ROKEN将在完全测试后注销
-# TOKEN = "5115165077:AAFlZXmA86PT6LiwU1hWbQYlwXTpCvpBnlI"
-
+TOKEN = "5115165077:AAFlZXmA86PT6LiwU1hWbQYlwXTpCvpBnlI"
 
 
 def start(update, context):
-	update.message.reply_text('请发送Pixiv小说链接',
-	                          reply_markup=ReplyKeyboardRemove())
+	update.message.reply_text("""
+请发送Pixiv小说链接以下载小说
+使用本bot默认你已同意将下载后的小说作为 @FurryReading @FurryNovels 的更新内容
+""", reply_markup=ReplyKeyboardRemove())
 
 
 def getIdFromURL(update, context):
 	def myprint(*text):
 		print(*text)
 		update.message.reply_text(*text)
-		
+	
+	def getUserName(update, context):
+		firstname = update.message.from_user.first_name  # 获取昵称
+		lastname = update.message.from_user.name  # 获取用户名
+		sharetext = "来自 {} 的分享".format(firstname)
+		return sharetext
+	
 	def upload(path, caption):
-		chatid = update.message.chat.id
-		messageid = update.message.message_id
-		myprint("开始上传")
-		
 		document = open(path, 'rb')
 		name = os.path.split(path)[1]
 		if caption == "":
 			caption = printInfo(path)
+		return document, name, caption
+	
+	def uploadToUser(path, caption):
+		chatid = update.message.chat.id
+		messageid = update.message.message_id
+		myprint("开始上传")
+		(document, name, caption) = upload(path, caption)
 		context.bot.send_document(chatid, document, name, caption)
+		context.bot.delete_message(chatid, messageid+0)
 		context.bot.delete_message(chatid, messageid+1)
 		context.bot.delete_message(chatid, messageid+2)
-		return messageid+3
+
+	def uploadToChannel(path, caption):
+		print("发送至频道")
+		(document, name, caption) = upload(path, caption)
+		caption += getUserName(update, context)
+		context.bot.send_document("@FurryReading", document, name, caption)
 		
 		
 	def testSeries(id):
-		if getSeriesFromNovel(id)[0] is None:
+		if getSeriesId(id)[0] is None:
 			myprint("开始下载单篇小说……")
 			filepath = saveNovel(id, path)
 		else:
-			myprint("该小说为系列小说")
 			myprint("开始下载系列小说……")
-			id = getSeriesFromNovel(id)[0]
+			id = getSeriesId(id)[0]
 			filepath = saveSeries(id, path)
 		return filepath
-		
-		
 		
 	def wrongType():
 		if "频道" in string or"頻道"in string:
@@ -63,33 +80,41 @@ def getIdFromURL(update, context):
 		else:
 			myprint("输入有误，请重新输入Pixiv小说网址")
 	
-	
-	caption = ""
-	string = update.message.text
-	if re.search("[0-9]+", string):
-		id = re.search("[0-9]+", string).group()
-		if "pixiv.net" in string:
-			if "novel/series" in string:
-				myprint("开始下载系列小说……")
-				filepath = saveSeries(id, path)
-			elif "novel" in string:
+	def getId(update, context):
+		caption = ""
+		if re.search("[0-9]+", string):
+			id = re.search("[0-9]+", string).group()
+			if "pixiv.net" in string:
+				if "novel/series" in string:
+					myprint("开始下载系列小说……")
+					filepath = saveSeries(id, path)
+				elif "novel" in string:
+					filepath = testSeries(id)
+				elif "users" in string:
+					myprint("开始下载此作者的全部小说")
+					caption = getAuthorInfo(id)
+					filepath = saveAuthor(id, path)
+				elif "artworks" in string:
+					myprint("不支持下载插画，请重新输入")
+			elif re.search("[0-9]+", string):
 				filepath = testSeries(id)
-			elif "users" in string:
-				myprint("开始下载此作者的全部小说")
-				caption = getUserInfo(id)
-				# myprint(caption)
-				filepath = saveAll(id, path)
-			elif "artworks" in string:
-				myprint("不支持下载插画，请重新输入")
-				
-		elif re.search("[0-9]+", string):
-			filepath = testSeries(id)
+			else:
+				wrongType()
+			return filepath ,caption
 		else:
 			wrongType()
-		upload(filepath, caption)  ##上传文件
-	else:
-		wrongType()
 
+
+	string = update.message.text
+	(filepath ,caption) = getId(update, context)
+	uploadToUser(filepath, caption)  ##上传文件
+	if not ".zip" in filepath:
+		uploadToChannel(filepath, caption)
+	print("")
+	
+
+def error(update, context):
+	logger.warning('Update "%s" caused error "%s"', update, context.error)
 
 def ping(update, context):
 	update.message.reply_text("chat_id: <code>%s</code>\nlanguage_code: <code>%s</code>" % (

@@ -218,5 +218,8 @@ def saveDict2Md(dict, name):
 
 
 if __name__ == '__main__':
+
+	
+	
 	saveDict2Md(textdict, "TextTags")
-	# saveDict2Md(racedict, "RaceTags")
+	saveDict2Md(racedict, "RaceTags")

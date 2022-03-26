@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
+import os
 from functools import cmp_to_key
 from DictNovel import noveldict, cmp1
 from DictText import textdict, cmp2
@@ -109,7 +110,6 @@ def getTags(text):  # 获取可能存在的标签
 
 
 def getInfo(text, textlist):
-	name = cc2.convert(textlist[0])
 	authro = textlist[1].replace("作者：", "")
 	authro = "by #" + authro
 	
@@ -125,14 +125,20 @@ def getInfo(text, textlist):
 	list = tags.split()
 	(tags1, tags2) = translateTags(list)  # 获取已翻译/未翻译的标签
 	
+	if "#zh_cn" in tags:
+		name = cc2.convert(textlist[0])
+	elif "#zh_tw" in tags:
+		name = cc1.convert(textlist[0])
+	
 	tags2save = tags2 + " "
 	tags2save = tags2save.replace(" ", "\n")
 	saveTextDesktop("tags.txt", tags2save)  # 保存不支持的标签
 	
 	text = cc1.convert(text)  # 按照简体文本处理标签
 	(unsuretag1, unsuretag2) = getTags(text)
-	unsuretag = "可能存在：" + unsuretag1  + unsuretag2
-	info = name + authro + tags1 + "\n特殊：" + tags2 + "\n" + unsuretag + "\n" + url + "\n"
+	if unsuretag1 != "" :
+		unsuretag = "可能存在：" + unsuretag1 + unsuretag2 + "\n"
+	info = name + authro + tags1 + "\n特殊：" + tags2 + "\n" + unsuretag + url
 	return info
 
 
@@ -148,7 +154,7 @@ def printInfo(path):
 	
 	if len(textlist) >= 4:
 		info = getInfo(text, textlist)
-		# print(info)  # 格式化输出
+		print(info)  # 格式化输出
 		return info
 	else:
 		print("【" + name + "】未处理")
@@ -157,22 +163,10 @@ def printInfo(path):
 	
 
 def getPath(path):
-	j = 0
-	dirstr = monthNow()  # 只处理本月的文件
 	pathlist = findFile(path, ".docx", ".txt")
 	for i in range(0, len(pathlist)):
 		filepath = pathlist[i]
-		if dirstr in filepath:
-			j += 1
-			printInfo(filepath)
-	if j != 0:
-		# openNowDir()
-	# text = set2Text(s)
-	# saveTextDesktop("tags.txt", text)
-	# saveTextDesktop("文字.txt", chars)
-		pass
-	else:
-		print("本月 " + dirstr + " 无新文档")
+		printInfo(filepath)
 
 
 def main():
@@ -182,4 +176,6 @@ def main():
 
 
 if __name__ == "__main__":
+	path = os.getcwd()
+	path = os.path.join(path, "Novels")
 	pass
