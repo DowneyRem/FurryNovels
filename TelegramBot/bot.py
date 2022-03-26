@@ -11,7 +11,7 @@ from telegram import (Document, ReplyKeyboardMarkup, ReplyKeyboardRemove, Inline
 from telegram.ext import (Updater, CommandHandler, MessageHandler, Filters, ConversationHandler, CallbackQueryHandler)
 from telegram.utils.request import Request
 from functools import wraps
-from Novels import saveNovel, saveSeries, saveAuthor, getAuthorInfo, getSeriesId
+from PixivNovels import saveNovel, saveSeries, saveAuthor, getAuthorInfo, getSeriesId
 from PrintTags import printInfo
 
 

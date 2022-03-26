@@ -24,7 +24,6 @@ _REQUESTS_KWARGS = {
 	# PAPI use https, an easy way is disable requests SSL verify
 }
 
-
 aapi = AppPixivAPI(**_REQUESTS_KWARGS)
 aapi.auth(refresh_token=_REFRESH_TOKEN)
 
@@ -51,7 +50,7 @@ def getTags(novel_id, set):
 	return set
 
 
-def getUserName(novel):
+def getAuthorName(novel):
 	#作者 昵称，id，账户，头像图片链接
 	name = novel.user.name
 	id = novel.user.id
@@ -60,7 +59,7 @@ def getUserName(novel):
 	return name, id
 
 
-def getSeriesFromNovel(novel_id):
+def getSeriesId(novel_id):
 	try:
 		json_result = aapi.novel_detail(novel_id)
 		series = json_result.novel.series
@@ -76,7 +75,7 @@ def getNovelInfo(novel_id):
 	json_result = aapi.novel_detail(novel_id)
 	novel = json_result.novel
 	title = novel.title
-	author = getUserName(novel)[0]
+	author = getAuthorName(novel)[0]
 	caption = novel.caption
 	
 	image_urls = novel.image_urls
@@ -93,7 +92,7 @@ def formatNovelInfo(novel_id):
 	json_result = aapi.novel_detail(novel_id)
 	novel = json_result.novel
 	title = novel.title + "\n"
-	authro = "作者："+ getUserName(novel)[0] + "\n"
+	author = "作者：" + getAuthorName(novel)[0] + "\n"
 	URL = "网址：https://www.pixiv.net/novel/show.php?id=" + str(novel_id) +"\n"
 	tags = set2Text(getTags(novel_id, s))
 	tags = "标签：" + tags+ "\n"
@@ -103,9 +102,72 @@ def formatNovelInfo(novel_id):
 		caption = "其他：" + caption +"\n"
 		caption = caption.replace("<br />", " //")
 		
-	string = title + authro + URL + tags + caption
+	string = title + author + URL + tags + caption
 	# print(string)
 	return string
+
+
+def formatNovelText(text):
+	text = text.replace(" ", "")
+	text = re.sub("\.{3,}", "……", text)
+	text = re.sub("。。。{3,}", "……", text)
+	
+	text = re.sub("\n{2,}", "\n\n", text)
+	text = re.sub("\n {1,}", "\n　　", text)
+	if "　　" not in text:  # 直接添加全角空格
+		text = text.replace("\n", "\n　　")
+	return text
+	
+	
+def formatPixivText(text, novel_id):
+	##处理Pixiv 标识符
+	# [newpage]  [chapter: 本章标题]
+	text = text.replace("[newpage]","\n\n")
+	a = re.findall("\[chapter:(.*)\]", text)
+	for i in range(len(a)):
+		string = a[i]
+		if "第" in string and "章" in string:
+			string = string.replace("章", "节")
+		elif re.search("[0-9]+", string):
+			string = "第{}节".format(string)
+		elif re.search("[二三四五六七八九]?[十]?[一二三四五六七八九十]", string):
+			string = "第{}节".format(string)
+		else:
+			string = "第{}节 {}".format(i+1, string)
+		text = re.sub("\[chapter:(.*)\]", string, text, 1)
+	
+	# [jump: 链接目标的页面编号]
+	a = re.findall("\[jump:(.*)\]", text)
+	for i in range(len(a)):
+		string = a[i]
+		string = "跳转至第{}节".format(string)
+		text = re.sub("\[jump:(.*)\]", string, text, 1)
+
+	# [pixivimage: 作品ID]
+	a = re.findall("\[pixivimage:(.*)\]", text)
+	for i in range(len(a)):
+		string = a[i]
+		string = "插图：https://www.pixiv.net/artworks/".format(string)
+		text = re.sub("\[pixivimage:(.*)\]", string, text, 1)
+		
+	# [[jumpuri: 标题 > 链接目标的URL]]
+	a = re.findall("\[{2}jumpuri: *(.*) > (.*)\]{2}", text)
+	for i in range(len(a)):
+		name = a[i][0]
+		link = a[i][1]
+		if link in name:
+			text = re.sub("\[{2}jumpuri: *(.*) > (.*)\]{2}", link, text, 1)
+		else:
+			string = "{}【{}】".format(name, link)
+			text = re.sub("\[{2}jumpuri: *(.*) > (.*)\]{2}", string, text, 1)
+	
+	# [uploadedimage: 自动生成的ID]
+	# 会被 pixivpy 自动转换成一下这一大串
+	stringpart ="jumpuri:If you would like to view illustrations, please use your desktop browser.>https://www.pixiv.net/n/"
+	autostring = "[[{}{}]]".format(stringpart, novel_id)
+	text = text.replace(autostring, "【此文内有插图，请在Pixv查看】")
+
+	return text
 
 
 def getNovelText(novel_id):
@@ -115,34 +177,27 @@ def getNovelText(novel_id):
 	series_prev = json_result.series_prev
 	series_next = json_result.series_next
 	
-	# text = text.replace("\n\n","\n")
-	if "　"not in text:  #添加全角空格
-		text = text.replace("\n","\n　　")
-	# print(text)
+	text = formatNovelText(text)
+	text = formatPixivText(text, novel_id)
+	# print (text)
 	return text
 
 
 def saveNovel(novel_id, path):
+	name = getNovelInfo(novel_id)[0]
+	filepath = os.path.join(path, name + ".txt")
+
 	text = formatNovelInfo(novel_id)
-	text += "\n"*2
+	text += "\n" * 2
 	text += getNovelText(novel_id)
 	# print(text)
-	name = text.split("\n")[0]
-	
-	try:
-		filepath = os.path.join(path, name + ".docx")
-		saveDocx(filepath, text)
-		print("【" + name + ".docx】已保存")
-	except NameError:
-		filepath = filepath.replace(".docx", ".txt")
-		if not os.path.exists(filepath):
-			saveText(filepath, text)
-		print("【" + name + ".txt】已保存")
+	saveText(filepath, text)
+	print("【" + name + ".txt】已保存")
 	return filepath
 	
 
 ### 【【【【系列小说】】】】
-def getNovelIdFormSeries(series_id):
+def getNovelsListFormSeries(series_id):
 	def addlist(json_result):
 		novels = json_result.novels
 		for i in range(len(novels)):
@@ -169,24 +224,24 @@ def getSeriesInfo(series_id):
 	json_result = aapi.novel_series(series_id, last_order=None)
 	detail = json_result.novel_series_detail
 	title = detail.title   #系列标题
-	authro = getUserName(detail)[0]
+	author = getAuthorName(detail)[0]
 	caption = detail.caption  # 系列简介
 	content_count = detail.content_count  # 系列内小说数
-	# print(title, authro, content_count, caption)
-	return title, authro, caption, content_count
+	# print(title, author, content_count, caption)
+	return title, author, caption, content_count
 
 	
 def formatSeriesInfo(series_id):
-	(title, authro, caption, content_count) = getSeriesInfo(series_id)
+	(title, author, caption, content_count) = getSeriesInfo(series_id)
 	info = "" ; s = set()
-	authro = "作者：" + authro + "\n"
-	info += title +"\n"+ authro
+	author = "作者：" + author + "\n"
+	info += title +"\n"+ author
 	if caption != "":
 		caption = "其他：" + caption +"\n" #系列简介
 		caption = caption.replace("\n\n", "\n")
 		caption = caption.replace("", "")
 
-	list = getNovelIdFormSeries(series_id)
+	list = getNovelsListFormSeries(series_id)
 	print("系列：" + title + " 共有" + str(content_count) + "章")
 	if len(list) != content_count:
 		print("已获取"+ str(len(list)) + "章")
@@ -205,43 +260,32 @@ def formatSeriesInfo(series_id):
 	
 def getSeriesText(series_id):
 	text = "\n"
-	list = getNovelIdFormSeries(series_id)
+	list = getNovelsListFormSeries(series_id)
 	for i in range(len(list)):
 		id = list[i]
 		title = getNovelInfo(id)[0] + "\n"
 		if ("第"not in title) and ("章" not in title):
-			title = "第"+ str(i) + "章 "+ title
+			title = "第"+ str(i+1) + "章 "+ title
 		text += title
 		text += getNovelText(id)
-		text += "\n" * 4
-	
-	# text = text.replace("\n\n","\n")
-	if "　"not in text:  #添加全角空格
-		text = text.replace("\n","\n　　")
-	# print(text)
+		text += "\n　　" * 3
 	return text
 
 
 def saveSeries(series_id, path):
 	name = getSeriesInfo(series_id)[0]
+	filepath = os.path.join(path, name + ".txt")
+
 	text = formatSeriesInfo(series_id)
 	text += getSeriesText(series_id)
+	saveText(filepath, text)
+	print("【" + name + ".txt】已保存")
 	
-	try:
-		filepath = os.path.join(path, name + ".docx")
-		saveDocx(filepath, text)
-		print("【" + name + ".docx】已保存")
-	except NameError:
-		filepath = filepath.replace(".docx", ".txt")
-		if not os.path.exists(filepath):
-			saveText(filepath, text)
-		print("【" + name + ".txt】已保存")
 	return filepath
 
 
-
 ### 【【【用户页面】】】
-def getUserInfo(user_id):
+def getAuthorInfo(user_id):
 	string = ""
 	json_result = aapi.user_detail(user_id)
 	user = json_result.user
@@ -260,12 +304,14 @@ def getUserInfo(user_id):
 	
 	total_novels = profile.total_novels
 	total_series = profile.total_novel_series
-	string = name +"\n系列小说："+str(total_series)+"篇\n共计："+str(total_novels)+"篇"
-	print(string)
-	return name, total_novels, total_series
+	string = "{}({})\n系列小说：{}篇\n共计：{}篇".format(name, id, total_series, total_novels)
+	
+	# print(string)
+	return string
+	# return name, total_novels, total_series
 	
 	
-def getNovelsList(user_id):
+def getNovelsListFromAuthor(user_id):
 	def addlist(json_result):
 		novels = json_result.novels
 		for i in range(len(novels)):
@@ -292,7 +338,7 @@ def getSeriesList(novellist):
 	s= set()
 	for i in range(len(novellist)):
 		novel_id = novellist[i]
-		series_id = getSeriesFromNovel(novel_id)[0]
+		series_id = getSeriesId(novel_id)[0]
 		if series_id is not None:
 			s.add(series_id)
 	serieslist = list(s)
@@ -300,56 +346,46 @@ def getSeriesList(novellist):
 	return serieslist
  
 
-def saveAll(user_id, path):
-	novelslist = getNovelsList(user_id)
+def saveAuthor(user_id, path):
+	novelslist = getNovelsListFromAuthor(user_id)
 	serieslist = getSeriesList(novelslist)
 	
 	novel_id = novelslist[0]
-	authro = getNovelInfo(novel_id)[1]
-	path = os.path.join(path, authro)
+	author = getNovelInfo(novel_id)[1]
+	path = os.path.join(path, author)
 	print("保存目录：" + path)
 	
 	for i in range(len(novelslist)):
 		novel_id = novelslist[i]
-		series_id = getSeriesFromNovel(novel_id)[0]
+		series_id = getSeriesId(novel_id)[0]
 		if series_id is None:
 			saveNovel(novel_id, path)
-			
+		
 	for i in range(len(serieslist)):
 		series_id = serieslist[i]
 		saveSeries(series_id, path)
-	zipFile(path)
+	zippath = zipFile(path)
+	return zippath
 
 
 def testSeries(id):
-	def saveSingleNovel(id, path):
+	if getSeriesId(id)[0] is None:
 		print("开始下载单篇小说……")
-		print("")
 		saveNovel(id, path)
-		
-	if getSeriesFromNovel(id)[0] is not None:
-		print("是否按照系列小说进行下载？")
-		string = input("输入【 1 】即【按照系列小说下载】" + "\n" * 2)
-		if "1" in string:
-			print("开始下载系列小说……")
-			print("")
-			id = getSeriesFromNovel(id)[0]
-			saveSeries(id, path)
-		else:
-			saveSingleNovel(id, path)
 	else:
-		saveSingleNovel(id, path)
+		print("该小说为系列小说")
+		print("开始下载系列小说……")
+		id = getSeriesId(id)[0]
+		saveSeries(id, path)
 
 
 def wrongType():
 	print("输入有误，请重新输入")
-	print("")
 	main()
-	
-	
+
+
 def main():
-	print("请输入Pixiv小说链接")
-	print("")
+	print("\n请输入Pixiv小说链接")
 	string = input()
 	if re.search("[0-9]+", string):
 		id = re.search("[0-9]+", string).group()
@@ -363,8 +399,8 @@ def main():
 				main()
 			elif "users" in string:
 				print("开始下载此作者的全部小说")
-				getUserInfo(id)
-				saveAll(id, path)
+				getAuthorInfo(id)
+				saveAuthor(id, path)
 				main()
 			elif "artworks" in string:
 				print("不支持下载插画，请重新输入")
@@ -374,7 +410,6 @@ def main():
 			if len(id) >= 5:
 				print("检测到纯数字，按照小说id解析")
 				testSeries(id)
-				main()
 			else:
 				wrongType()
 		else:
@@ -384,5 +419,6 @@ def main():
 
 
 if __name__ == '__main__':
-	path = "D:\\Users\\Administrator\\Desktop"
+	path = os.getcwd()
+	path = os.path.join(path, "Novels")
 	main()
