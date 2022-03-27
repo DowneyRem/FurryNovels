@@ -3,26 +3,16 @@
 import os
 from FileOperate import saveText
 
-# 适用于文本的标签关键词
-# key为关键词，value为对应标签，
+# 正文关键词对应标签
+# key为关键词，value为对应标签
 # 关键词——标签可以一对多
-# 正文标签
+
 textdict = {
-	"sfw":"SFW",
-	"R-18":"R18",
-	"R18":"R18",
-	"R-18G":"R18G",
-	"R18G":"R18G",
-	"BL":"Gay",
-	"腐向け":"Gay",
 	"腐向":"Gay",
 	"同志":"Gay",
 	"男同性恋":"Gay",
-	"GL":"Lesbian",
 	"百合":"Lesbian",
 	"女同性恋":"Lesbian",
-	"BG":"General",
-	"男女":"General",
 	"科幻":"ScienceFiction",
 	"奇幻":"Fantasy",
 	"魔幻":"Fantasy",
@@ -30,9 +20,9 @@ textdict = {
 	"悲剧":"Tragedy",
 	
 
-	
 	"龙根":"dragon R18",
-	"龙棒":"dragon R18",
+	"龙根":"dragon R18",
+	"兽奸":"furry R18",
 	
 
 	
@@ -169,17 +159,32 @@ textdict = {
 	"巨大化":"Macro",
 	"包茎":"Phimosis",
 	"吞食":"Vore",
+	"吞噬":"Vore",
 	"丸吞":"Vore",
-	"阴茎吞噬":"CockPhagia",
-	"肛门吞食":"AnalPhagia",
-	"尾巴吞食":"TailPhagia",
-	"出产":"Birth",
+	"阴茎吞噬":"CockVore",
+	"肛门吞食":"AnalVore",
+	"尾巴吞食":"TailVore",
+	
 	"生产":"Birth",
+	"妊娠":"Birth",
+	"雄妊娠":"MaleBirth",
 	"产卵":"Eggs",
 	"阴茎出产":"PenisBirth",
 	"肛门出产":"AnalBirth",
 	
+	
+	"血腥":"R18G Blood",
+	"流血":"R18G Blood",
+	"Blood":"R18G Blood",
+	"断肢":"R18G Mutilation",
+	"Mutilation":"R18G Mutilation",
+	"阉割":"R18G Castrated",
+	"Castrated":"R18G Castrated",
+	"性器破坏":"R18G Castrated",
+	
+	
 	}
+# 雄性妊娠与雌性堕落区别？
 
 
 def cmp2(a, b):  # 按dict内部顺序进行排序

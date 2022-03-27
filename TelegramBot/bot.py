@@ -13,6 +13,7 @@ from telegram.utils.request import Request
 from functools import wraps
 from PixivNovels import saveNovel, saveSeries, saveAuthor, getAuthorInfo, getSeriesId
 from PrintTags import printInfo
+from FileOperate import removeFile
 
 
 ## 请将TOKEN换成自己的TOKEN
@@ -103,13 +104,14 @@ def getIdFromURL(update, context):
 			return filepath ,caption
 		else:
 			wrongType()
-
-
+	
+	# removeFile(path)
 	string = update.message.text
 	(filepath ,caption) = getId(update, context)
 	uploadToUser(filepath, caption)  ##上传文件
 	if not ".zip" in filepath:
 		uploadToChannel(filepath, caption)
+		pass
 	print("")
 	
 
