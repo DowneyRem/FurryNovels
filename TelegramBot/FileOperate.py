@@ -104,14 +104,11 @@ def openDocx4(path):
 		print("文件打开失败")
 
 
-def makeDirs(path):
-	if not os.path.exists(path):
-		os.makedirs(path)
-
-def removeFile(path):
-	if os.path.exists(path):
-		shutil.rmtree(path)
-	os.makedirs(path)
+def openExcel(paths):  #打开软件手动操作
+	excel = DispatchEx('Excel.Application')  # 独立进程
+	excel.Visible = 1  # 0为后台运行
+	excel.DisplayAlerts = 0  # 不显示，不警告
+	xlsx = excel.Workbooks.Open(path)  # 打开文档
 
 
 def saveDocx(path, text):
@@ -158,6 +155,28 @@ def saveTextDesktop(name, text):
 		# print("【" + name + "】保存成功")
 	except IOError:
 		print("【" + name + "】保存失败")
+
+
+def saveCsv(path, text):
+	(dir, name) = os.path.split(path)  # 分离文件名和目录名
+	if not os.path.exists(dir):
+		os.makedirs(dir)
+	try:
+		with open(path, "w", encoding="UTF-8-sig") as f:
+			f.write(text)
+		print("已存为：" + name)
+	except IOError:
+		print("保存失败")
+
+
+def makeDirs(path):
+	if not os.path.exists(path):
+		os.makedirs(path)
+
+def removeFile(path):
+	if os.path.exists(path):
+		shutil.rmtree(path)
+	os.makedirs(path)
 
 
 def monthNow():

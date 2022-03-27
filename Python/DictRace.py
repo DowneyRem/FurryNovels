@@ -2,10 +2,12 @@
 # -*- coding: UTF-8 -*-
 import os
 from FileOperate import saveText
+
+# 正文种族，职业对应标签
 # 适用于文本的标签关键词
 # key为关键词，value为对应标签，
 # 关键词——标签可以一对多
-# 种族，职业标签
+
 racedict = {
 	"熊兽人":"bear",
 	"熊猫兽人":"panda",
@@ -48,7 +50,8 @@ racedict = {
 	"龟兽人":"turtle",
 	"鲨狗兽人":"sergal",
 	"鲨狗":"sergal",
-	
+	"鳄鱼":"Crocodile",
+	"crocodile":"Crocodile",
 	
 	"赤熊":"bear",
 	"橙熊":"bear",
@@ -219,26 +222,12 @@ racedict = {
 	"警察":"Police",
 	"特警":"Police",
 	"魔王":"DevilKing",
+	"恶魔":"Devil",
 	"勇者":"Brave",
 	"魅魔":"Succubus",
 	"医生":"Doctor",
 	
 }
-
-
-# var color = "赤 橙 黄 绿 青 蓝 紫 黑 白 灰";
-# """
-# 龙 dragon
-# 狼 wolf
-# 鹿 deer
-# """.split("\n").filter(function(e){
-# return e.trim().length;
-# }).foreach(function(race){
-# race = race.split(" ");
-# color.split(" ").foreach(function(e){
-#   racedict[e + race[0]] = race[1]
-# });
-# })
 
 
 def cmp3(a, b):  # 按dict内部顺序进行排序

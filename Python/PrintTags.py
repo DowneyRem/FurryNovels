@@ -2,8 +2,9 @@
 # -*- coding: UTF-8 -*-
 import os
 from functools import cmp_to_key
-from DictNovel import noveldict, cmp1
-from DictText import textdict, cmp2
+from DictNovel import noveldict, cmp1  #小说标签
+from DictText import textdict, cmp2    #正文关键词
+from DictRace import racedict, cmp3    #种族关键词
 from FileOperate import *
 from opencc import OpenCC
 
@@ -13,10 +14,10 @@ cc2 = OpenCC('s2twp')  # 簡轉繁
 
 def set2Text(set):
 	text = str(set)
-	text = text.replace("{'", "")
-	text = text.replace("'}", "")
-	text = text.replace("', '", " ")
-	text = text.replace(" ", "\n")
+	text = text.replace("{", " ")
+	text = text.replace("}", "")
+	text = text.replace("'", "")
+	text = text.replace(",", "")
 	return text
 
 
@@ -24,12 +25,13 @@ def sortTags(set, cmp):  # 按dict内顺序对转换后的标签排序
 	text = ""
 	li = list(set)
 	li.sort(key=cmp_to_key(cmp))
+	
 	for i in range(len(li)):
 		taglist = li[i].split()    # 一关键词匹配多标签
 		for j in range(len(taglist)):
 			tag = taglist[j]
 			# print(tag)
-			text += "#" + tag + " "
+			text += "#{} ".format(tag)
 	return text
 
 
@@ -41,9 +43,7 @@ def addTags(text):  # 添加靠谱的标签
 	# 语料库来自 https://elearning.ling.sinica.edu.tw/cwordfreq.html
 	# 从中选取前三百的繁体字部分，并在文章中随机检验，取存在率最高的前50个繁体字符
 	
-	tags = "";
-	j = 0;
-	list3 = []
+	tags = ""; j = 0; list3 = []
 	for i in range(len(list1)):
 		char = list1[i]
 		num = text.count(char)
@@ -54,14 +54,11 @@ def addTags(text):  # 添加靠谱的标签
 	s1 = set(list1)
 	s2 = set(list3)
 	s = s1.difference(s2)
-	chars = set2Text(s)
 	k = len(list1) - j
 	
 	tags += " #txt #finished "
 	if j >= 0.2 * len(list1):
 		tags += "#zh_tw"
-	# print(k)  # 不存在的繁体字符数
-	# print(s)   #不存在的繁体字符
 	else:
 		tags += "#zh_cn"
 		if s2 != set():
@@ -76,6 +73,7 @@ def translateTags(taglist):  # 获取英文标签
 		tag = tag.replace("#", "")
 		tag = tag.replace(" ", "")
 		tag = tag.replace("　", "")
+		
 		tag = noveldict.get(tag)  # 获取英文标签
 		
 		if tag != None:
@@ -83,8 +81,25 @@ def translateTags(taglist):  # 获取英文标签
 		else:
 			tag = taglist[i]
 			tags2 += tag + " "
-	tags1 = sortTags(s, cmp1)  # 对转换后的标签排序
-	return tags1, tags2
+	return s, tags2
+
+
+def getRaceTags(text):  # 获取可能存在的标签
+	textnum = len(text)
+	string = ""; s1 = set(); s2 = set()
+	list1 = list(racedict.keys())
+	list2 = list(racedict.values())
+	for i in range(0, len(list1)):
+		a = list1[i]
+		num = text.count(a)
+		if num > 5:
+			b = list2[i]
+			# print((a, b, num))
+			string += a + "," + b + "," + str(num) + "\n"
+		if 10000 * num/ textnum > 15:  #神奇的数据
+			s1.add(list1[i])  # 汉字标签
+			s2.add(list2[i])  # 英文标签
+	return s2, s1  # 英文标签在前
 
 
 def getTags(text):  # 获取可能存在的标签
@@ -103,8 +118,8 @@ def getTags(text):  # 获取可能存在的标签
 			s2.add(list2[i])  # 英文标签
 	
 	saveTextDesktop("1.txt", string)  # 保存标签次数
-	s1 = sortTags(s1, cmp2)
-	s2 = sortTags(s2, cmp2)
+	# s1 = sortTags(s1, cmp2)
+	# s2 = sortTags(s2, cmp2)
 	# print (s2, s1)
 	return s2, s1  # 英文标签在前
 
@@ -134,11 +149,27 @@ def getInfo(text, textlist):
 	tags2save = tags2save.replace(" ", "\n")
 	saveTextDesktop("tags.txt", tags2save)  # 保存不支持的标签
 	
-	text = cc1.convert(text)  # 按照简体文本处理标签
-	(unsuretag1, unsuretag2) = getTags(text)
-	if unsuretag1 != "" :
-		unsuretag = "可能存在：" + unsuretag1 + unsuretag2 + "\n"
-	info = name + authro + tags1 + "\n特殊：" + tags2 + "\n" + unsuretag + url
+	text = cc1.convert(text)  # 按照简体文本处理关键词获取对应标签
+	(unsure1, unsure2) = getRaceTags(text)
+	(unsure3, unsure4) = getTags(text)
+	s1 = unsure1.union(unsure3)
+	s2 = unsure2.union(unsure4)
+	
+	unsuretag = ""
+	if s1 != set():
+		s1 = set2Text(s1)	    #去除可能标签与确切标签的重复部分
+		s1 = s1.split()         #允许一关键词对多标签，并拆分成处理
+		s1 = set(s1)
+		s1 = s1.difference(tags1)
+		
+		s1 = sortTags(s1, cmp1)
+		s2 = sortTags(s2, cmp1)
+		unsuretag = "可能存在："+ s1 + s2 + "\n"
+	
+	tags1 = sortTags(tags1, cmp1)
+	if tags2 != "":
+		tags2 = "特殊："+ tags2 + "\n"
+	info = "{}{}{}\n{}{}{}".format(name, authro, tags1, tags2, unsuretag, url)
 	return info
 
 
@@ -154,6 +185,7 @@ def printInfo(path):
 	
 	if len(textlist) >= 4:
 		info = getInfo(text, textlist)
+		# print(len(text))
 		print(info)  # 格式化输出
 		return info
 	else:
@@ -179,3 +211,6 @@ if __name__ == "__main__":
 	path = os.getcwd()
 	path = os.path.join(path, "Novels")
 	pass
+	
+	path = "D:\\Users\\Administrator\\Desktop\\Novels"
+	getPath(path)

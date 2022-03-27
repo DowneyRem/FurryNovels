@@ -3,10 +3,13 @@
 import os
 import pickle
 from FileOperate import saveText
+from DictText import textdict   #正文关键词
+from DictRace import racedict   #种族关键词
 
 
 #适用于标签的标签关键词
-noveldict = {
+
+dict = {
 	"txt":"txt",
 	"docx":"docx",
 	"完结":"Finished",
@@ -25,14 +28,11 @@ noveldict = {
 	"正体中文":"zh_tw",
 	"繁中":"zh_tw",
 	"zh_tw":"zh_tw",
-	"中文":"Chinese",
-	"汉语":"Chinese",
-	"中国语":"Chinese",
-	"中国语注意":"Chinese",
-	"chinese":"Chinese",
 	"原创":"Original",
 	"original":"Original",
 	"同人":"Doujin",
+	"二次创作":"Doujin",
+	"二创":"Doujin",
 	"doujin":"Doujin",
 	"翻译":"translated",
 	"translated":"translated",
@@ -43,12 +43,17 @@ noveldict = {
 	"R-18G":"R18G",
 	"R18G":"R18G",
 	"BL":"Gay",
+	"bl":"Gay",
 	"腐向け":"Gay",
 	"腐向":"Gay",
 	"同志":"Gay",
 	"男同性恋":"Gay",
 	"gay":"Gay",
+	"ゲイ":"Gay",
+	"ホモ":"Gay",
+	"ケモホモ":"Gay",
 	"GL":"Lesbian",
+	"gl":"Lesbian",
 	"百合":"Lesbian",
 	"yuri":"Lesbian",
 	"女同性恋":"Lesbian",
@@ -61,6 +66,7 @@ noveldict = {
 	"romance":"Romance",
 	"科幻":"ScienceFiction",
 	"ScienceFiction":"ScienceFiction",
+	"玄幻":"Fantasy",
 	"奇幻":"Fantasy",
 	"魔幻":"Fantasy",
 	"fantasy":"Fantasy",
@@ -91,6 +97,7 @@ noveldict = {
 	"tiger":"tiger",
 	"西方龙":"dragon",
 	"龙":"dragon",
+	"竜":"dragon",
 	"龙人":"dragon",
 	"dragon":"dragon",
 	"东方龙":"long",
@@ -139,6 +146,9 @@ noveldict = {
 	"kemono":"Furry",
 	"獣人":"Furry",
 	"furry":"Furry",
+	"Furry":"Furry",
+	"ケモノ":"Furry",
+	
 	"纯兽":"non-anthro",
 	"non-anthro":"non-anthro",
 	"人类":"Human",
@@ -150,6 +160,7 @@ noveldict = {
 	"史莱姆":"Slime",
 	"slime":"Slime",
 	"触手":"Tentacles",
+	"触手play":"Tentacles",
 	"tentacles":"Tentacles",
 	"吸血鬼":"Vampire",
 	"vampire":"Vampire",
@@ -177,6 +188,7 @@ noveldict = {
 	"肛交":"Anal",
 	"后入":"Anal",
 	"anal":"Anal",
+	"69":"69 BlowJob",
 	"口交":"BlowJob",
 	"blowjob":"BlowJob",
 	"生殖腔":"Cloaca",
@@ -221,6 +233,8 @@ noveldict = {
 	"乱伦":"Incest",
 	"incest":"Incest",
 	"群交":"Group",
+	"3p":"Group",
+	"np":"Group",
 	"群p":"Group",
 	"轮奸":"Group",
 	"group":"Group",
@@ -307,6 +321,7 @@ noveldict = {
 	"petrification":"Petrification",
 	"堕落":"corruption",
 	"恶堕":"corruption",
+	"恶坠":"corruption",
 	"corruption":"corruption",
 	"催眠":"Hypnosis",
 	"hypnosis":"Hypnosis",
@@ -328,6 +343,7 @@ noveldict = {
 	"genderbender":"GenderBender",
 	"灵魂交换":"BodySwap",
 	"身体交换":"BodySwap",
+	"交换身体":"BodySwap",
 	"bodyswap":"BodySwap",
 	"机械奸":"Machine",
 	"machine":"Machine",
@@ -374,18 +390,21 @@ noveldict = {
 	"hyper":"Hyper",
 	"巨大化":"Macro",
 	"macro":"Macro",
+	"体型差":"SizeDifferent",
+	"体格差":"SizeDifferent",
 	"包茎":"Phimosis",
 	"phimosis":"Phimosis",
-	"吞食":"Vore",
-	"丸吞":"Vore",
+	"吸收":"Assimilate",
+	"assimilate":"Assimilate",
 	"vore":"Vore",
-	"阴茎吞噬":"CockPhagia",
-	"cockphagia":"CockPhagia",
-	"肛门吞食":"AnalPhagia",
-	"analphagia":"AnalPhagia",
-	"尾巴吞食":"TailPhagia",
-	"tailphagia":"TailPhagia",
-	"出产":"Birth",
+	"吞食":"Vore",
+	"吞噬":"Vore",
+	"丸吞":"Vore",
+	"阴茎吞噬":"CockVore",
+	"肛门吞食":"AnalVore",
+	"尾巴吞食":"TailVore",
+	"妊娠":"Birth",
+	"怀孕":"Birth",
 	"生产":"Birth",
 	"birth":"Birth",
 	"产卵":"Eggs",
@@ -394,9 +413,30 @@ noveldict = {
 	"penisbirth":"PenisBirth",
 	"肛门出产":"AnalBirth",
 	"analbirth":"AnalBirth",
-	
 
-}
+	"雄妊娠":"MaleBirth",
+	"雌堕":"FemaleCorruption",
+	"精神雌堕":"FemaleCorruption",
+	"雌化":"CuntBoy",
+	"雄化":"DickGirl",
+	
+	
+	
+	"小说":"",
+	"中文":"",
+	"中国语":"",
+	"中国语注意":"",
+	"chinese":"",
+	"Chinese":"",
+	
+	}
+
+noveldict = {}
+noveldict.update(dict)
+noveldict.update(racedict)
+noveldict.update(textdict)
+
+
 
 
 def cmp1(a, b):  #按dict内部顺序进行排序
@@ -406,7 +446,10 @@ def cmp1(a, b):  #按dict内部顺序进行排序
 			index = li.index(a)
 		except:
 			li = list(noveldict.keys())
+			li = [i.lower() for i in li ]
+			a = a.replace("#", "").lower()
 			index = li.index(a)
+
 		return index
 	a = getindex(a)
 	b = getindex(b)
@@ -447,4 +490,5 @@ def saveDict2Md():
 
 
 if __name__ == '__main__':
+	print(noveldict)
 	saveDict2Md()
