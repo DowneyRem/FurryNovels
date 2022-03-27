@@ -186,7 +186,7 @@ def printInfo(path):
 	if len(textlist) >= 4:
 		info = getInfo(text, textlist)
 		# print(len(text))
-		print(info)  # 格式化输出
+		# print(info)  # 格式化输出
 		return info
 	else:
 		print("【" + name + "】未处理")

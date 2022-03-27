@@ -7,7 +7,7 @@ import bot
 import telegram.bot
 from telebot import logger
 from telegram.ext import messagequeue as mq
-from telegram import (Document, ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardMarkup, InlineKeyboardButton, MessageEntity)
+from telegram import (bot, ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardMarkup, InlineKeyboardButton, MessageEntity)
 from telegram.ext import (Updater, CommandHandler, MessageHandler, Filters, ConversationHandler, CallbackQueryHandler)
 from telegram.utils.request import Request
 from functools import wraps
@@ -39,6 +39,8 @@ def getIdFromURL(update, context):
 		sharetext = "来自 {} 的分享".format(firstname)
 		return sharetext
 	
+	
+	
 	def upload(path, caption):
 		document = open(path, 'rb')
 		name = os.path.split(path)[1]
@@ -52,7 +54,7 @@ def getIdFromURL(update, context):
 		myprint("开始上传")
 		(document, name, caption) = upload(path, caption)
 		context.bot.send_document(chatid, document, name, caption)
-		context.bot.delete_message(chatid, messageid+0)
+		# context.bot.delete_message(chatid, messageid+0)
 		context.bot.delete_message(chatid, messageid+1)
 		context.bot.delete_message(chatid, messageid+2)
 
@@ -83,7 +85,7 @@ def getIdFromURL(update, context):
 	
 	def getId(update, context):
 		caption = ""
-		if re.search("[0-9]+", string):
+		if re.search("[0-9]{5,}", string):
 			id = re.search("[0-9]+", string).group()
 			if "pixiv.net" in string:
 				if "novel/series" in string:
@@ -97,8 +99,6 @@ def getIdFromURL(update, context):
 					filepath = saveAuthor(id, path)
 				elif "artworks" in string:
 					myprint("不支持下载插画，请重新输入")
-			elif re.search("[0-9]+", string):
-				filepath = testSeries(id)
 			else:
 				wrongType()
 			return filepath ,caption
@@ -114,7 +114,7 @@ def getIdFromURL(update, context):
 		pass
 	print("")
 	
-
+	
 def error(update, context):
 	logger.warning('Update "%s" caused error "%s"', update, context.error)
 
