@@ -4,8 +4,8 @@ import os
 import time
 import shutil
 import zipfile
-from docx.api import Document
-from win32com.client import DispatchEx
+# from docx.api import Document
+# from win32com.client import DispatchEx
 from functools import wraps
 
 

@@ -2,11 +2,9 @@
 # -*- coding: UTF-8 -*-
 import os
 import re
-
 import signal
 import bot
 import telegram.bot
-from telebot import logger
 from telegram.ext import messagequeue as mq
 from telegram import ( ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardMarkup, InlineKeyboardButton, MessageEntity)
 from telegram.ext import (Updater, CommandHandler, MessageHandler, Filters, ConversationHandler, CallbackQueryHandler)
@@ -14,12 +12,13 @@ from telegram.utils.request import Request
 from functools import wraps
 from PixivNovels import saveNovel, saveSeries, saveAuthor, getAuthorInfo, getSeriesId
 from PrintTags import printInfo
+from FileOperate import removeFile
 from Convert import translate
 from config import *
 
 
 REQUESTS_KWARGS = {
-		'proxy_url': 'HTTPS://127.0.0.1:10808/'
+		# 'proxy_url': 'HTTPS://127.0.0.1:10808/'
 		}
 
 
@@ -83,7 +82,6 @@ def getIdFromURL(update, context):
 		else:
 			myprint("输入有误，请重新输入Pixiv小说网址")
 	
-	
 	def getId(update, context):
 		caption = ""
 		if re.search("[0-9]{5,}", string):
@@ -106,7 +104,6 @@ def getIdFromURL(update, context):
 		else:
 			wrongType()
 	
-	
 	# removeFile(path)
 	string = update.message.text
 	(filepath ,caption) = getId(update, context)
@@ -118,9 +115,9 @@ def getIdFromURL(update, context):
 	filepath = translate(filepath, language)
 	uploadToUser(filepath, caption)  ##上传文件
 	print("")
-	
-	
-	
+    
+    
+    
 def error(update, context):
 	logger.warning('Update "%s" caused error "%s"', update, context.error)
 
@@ -131,10 +128,7 @@ def ping(update, context):
 		update.message.from_user.language_code
 		), parse_mode="HTML")
 
-def handler_stop_signals(signum, frame):
-	sys.exit(0)
-	
-	
+
 def main():
 	updater = Updater(BOT_TOKEN, use_context=True, request_kwargs=REQUESTS_KWARGS)
 	
@@ -142,11 +136,16 @@ def main():
 	dispatcher.add_handler(CommandHandler("start", start))
 	dispatcher.add_handler(CommandHandler("ping", ping))
 	dispatcher.add_handler(MessageHandler(Filters.text, getIdFromURL))
-	# dispatcher.add_handler(MessageHandler(Filters.document , getIdFromURL))
 	dispatcher.add_error_handler(error)
 	
-
-	updater.start_polling()
+	updater.start_webhook(
+		listen="0.0.0.0",
+		port=int(os.environ.get('PORT', 5000)),
+		url_path=BOT_TOKEN,
+		webhook_url=f"https://{heroku_app_name}.herokuapp.com/{BOT_TOKEN}")
+	#updater.bot.set_webhook(f"https://{heroku_app_name}.herokuapp.com/{BOT_TOKEN}")
+	
+	signal.signal(signal.SIGTERM, handler_stop_signals)
 	updater.idle()
 
 
