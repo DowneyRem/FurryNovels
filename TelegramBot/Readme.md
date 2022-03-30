@@ -4,7 +4,7 @@
 请使用 **本目录** （而非主目录）下的脚本
 ~~反向替代应该没什么问题~~
 ```
-Novels.py
+PixivNovels.py
 PrintTags.py
 FileOperate.py
 ```
