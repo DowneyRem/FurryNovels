@@ -1,14 +1,5 @@
-## Telegram Bot 目录
-
-### 部分脚本为bot调用做了优化  
-请使用 **本目录** （而非主目录）下的脚本
-~~反向替代应该没什么问题~~
-```
-PixivNovels.py
-PrintTags.py
-FileOperate.py
-```
-
+## Telegram Bot 公开版
+请根据不同平台调整并部署
 
 ### 依赖：
 
