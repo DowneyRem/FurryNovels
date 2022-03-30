@@ -14,9 +14,9 @@ _TEST_WRITE = False
 # If a special network environment is meet, please configure requests as you need.
 # Otherwise, just keep it empty.
 REQUESTS_KWARGS = {
-	# 'proxies': {
-	# 	'https': 'http://127.0.0.1:10808',
-	# },
+	'proxies': {
+		'https': 'http://127.0.0.1:10808',
+	},
 	# 'verify': False,
 	# PAPI use https, an easy way is disable requests SSL verify
 }
