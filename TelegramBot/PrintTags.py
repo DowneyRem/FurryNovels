@@ -11,7 +11,7 @@ from config import cc1, cc2
 
 def set2Text(set):
 	text = str(set)
-	text = text.replace("{", " ")
+	text = text.replace("{", "")
 	text = text.replace("}", "")
 	text = text.replace("'", "")
 	text = text.replace(",", "")
@@ -98,6 +98,13 @@ def getTags(text):  # 获取可能存在的标签
 	return s2, s1  # 英文标签在前
 
 
+def setSpilt(s1):
+	s1 = set2Text(s1)
+	s1 = s1.split(" ")  # 允许一关键词对多标签，并拆分成处理
+	s1 = set(s1)
+	return s1
+
+
 def getInfo(text, textlist):
 	authro = textlist[1].replace("作者：", "")
 	authro = "by #" + authro
@@ -113,7 +120,7 @@ def getInfo(text, textlist):
 	tags = cc1.convert(tags)  # 转简体，只处理简体标签
 	list = tags.split()
 	(tags1, tags2) = translateTags(list)  # 获取已翻译/未翻译的标签
-	
+
 	if "#zh_cn" in tags:
 		name = cc2.convert(textlist[0])
 	elif "#zh_tw" in tags:
@@ -127,9 +134,8 @@ def getInfo(text, textlist):
 	
 	unsuretag = ""
 	if s1 != set():
-		s1 = set2Text(s1)	    #去除可能标签与确切标签的重复部分
-		s1 = s1.split()         #允许一关键词对多标签，并拆分成处理
-		s1 = set(s1)
+		s1 = setSpilt(s1)
+		tags1 = setSpilt(tags1)    #拆分一关键词对多个标签
 		s1 = s1.difference(tags1)  #去重，获取作者未标注的标签
 		s1 = sortTags(s1, cmp)
 		s2 = sortTags(s2, cmp)

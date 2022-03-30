@@ -115,7 +115,7 @@ def getIdFromURL(update, context):
 		uploadToChannel(filepath, caption)
 		
 	language = update.message.from_user.language_code
-	# filepath = translate(filepath, language)
+	filepath = translate(filepath, language)
 	uploadToUser(filepath, caption)  ##上传文件
 	print("")
 	
