@@ -2,14 +2,11 @@
 # -*- coding: UTF-8 -*-
 import os
 from functools import cmp_to_key
-from DictNovel import noveldict, cmp1  #小说标签
-from DictText import textdict, cmp2    #正文关键词
-from DictRace import racedict, cmp3    #种族关键词
-from FileOperate import *
-from opencc import OpenCC
-
-cc1 = OpenCC('tw2sp')  # 繁转简
-cc2 = OpenCC('s2twp')  # 簡轉繁
+from DictNovel import noveldict, cmp   #小说标签
+from DictText import textdict          #正文关键词
+from DictRace import racedict          #种族关键词
+from FileOperate import findFile, openText, openText4, openDocx, openDocx4
+from config import cc1, cc2
 
 
 def set2Text(set):
@@ -36,33 +33,24 @@ def sortTags(set, cmp):  # 按dict内顺序对转换后的标签排序
 
 
 def addTags(text):  # 添加靠谱的标签
-	list1 = "邊 變 並 從 點 東 對 發 該 個 給 關 過 還 後 歡 會 機 幾 間 見 將 進 經 覺 開 來 裡 兩 嗎 麼 沒 們 難 讓 時 實 說 雖 為 問 無 現 樣 應 於 與 則 這 種".split(
-		" ")
-	list2 = "边 变 并 从 点 东 对 发 该 个 给 关 过 还 后 欢 会 机 几 间 见 将 进 经 觉 开 来 里 两 吗 么 没 们 难 让 时 实 说 虽 为 问 无 现 样 应 于 与 则 这 种".split(
-		" ")
+	list1 = "邊 變 並 從 點 東 對 發 該 個 給 關 過 還 後 歡 會 機 幾 間 見 將 進 經 覺 開 來 裡 兩 嗎 麼 沒 們 難 讓 時 實 說 雖 為 問 無 現 樣 應 於 與 則 這 種".split(" ")
+	list3 = "边 变 并 从 点 东 对 发 该 个 给 关 过 还 后 欢 会 机 几 间 见 将 进 经 觉 开 来 里 两 吗 么 没 们 难 让 时 实 说 虽 为 问 无 现 样 应 于 与 则 这 种".split(" ")
 	# 语料库来自 https://elearning.ling.sinica.edu.tw/cwordfreq.html
 	# 从中选取前三百的繁体字部分，并在文章中随机检验，取存在率最高的前50个繁体字符
 	
-	tags = ""; j = 0; list3 = []
+	tags = ""; j = 0; list2 = []
 	for i in range(len(list1)):
 		char = list1[i]
 		num = text.count(char)
 		if num >= 5:
 			j += 1
-			list3.append(char)
-	
-	s1 = set(list1)
-	s2 = set(list3)
-	s = s1.difference(s2)
-	k = len(list1) - j
+			list2.append(char)
 	
 	tags += " #txt #finished "
 	if j >= 0.2 * len(list1):
 		tags += "#zh_tw"
 	else:
 		tags += "#zh_cn"
-		if s2 != set():
-			print(s2)  # 存在的繁体字符
 	return tags
 
 
@@ -73,7 +61,6 @@ def translateTags(taglist):  # 获取英文标签
 		tag = tag.replace("#", "")
 		tag = tag.replace(" ", "")
 		tag = tag.replace("　", "")
-		
 		tag = noveldict.get(tag)  # 获取英文标签
 		
 		if tag != None:
@@ -85,42 +72,29 @@ def translateTags(taglist):  # 获取英文标签
 
 
 def getRaceTags(text):  # 获取可能存在的标签
+	s1 = set(); s2 = set()
 	textnum = len(text)
-	string = ""; s1 = set(); s2 = set()
 	list1 = list(racedict.keys())
 	list2 = list(racedict.values())
 	for i in range(0, len(list1)):
 		a = list1[i]
 		num = text.count(a)
-		if num > 5:
-			b = list2[i]
-			# print((a, b, num))
-			string += a + "," + b + "," + str(num) + "\n"
-		if 10000 * num/ textnum > 15:  #神奇的数据
+		if 10000 * num / textnum > 15:  #神奇的数据
 			s1.add(list1[i])  # 汉字标签
 			s2.add(list2[i])  # 英文标签
 	return s2, s1  # 英文标签在前
 
 
 def getTags(text):  # 获取可能存在的标签
-	string = ""; s1 = set(); s2 = set()
+	s1 = set(); s2 = set()
 	list1 = list(textdict.keys())
 	list2 = list(textdict.values())
 	for i in range(0, len(list1)):
 		a = list1[i]
 		num = text.count(a)
-		if num > 0:
-			b = list2[i]
-			# print((a, b, num))
-			string += a + "," + b + "," + str(num) + "\n"
-		if num > 5:
+		if num > 5:        #数据未测试
 			s1.add(list1[i])  # 汉字标签
 			s2.add(list2[i])  # 英文标签
-	
-	saveTextDesktop("1.txt", string)  # 保存标签次数
-	# s1 = sortTags(s1, cmp2)
-	# s2 = sortTags(s2, cmp2)
-	# print (s2, s1)
 	return s2, s1  # 英文标签在前
 
 
@@ -145,10 +119,6 @@ def getInfo(text, textlist):
 	elif "#zh_tw" in tags:
 		name = cc1.convert(textlist[0])
 	
-	tags2save = tags2 + " "
-	tags2save = tags2save.replace(" ", "\n")
-	saveTextDesktop("tags.txt", tags2save)  # 保存不支持的标签
-	
 	text = cc1.convert(text)  # 按照简体文本处理关键词获取对应标签
 	(unsure1, unsure2) = getRaceTags(text)
 	(unsure3, unsure4) = getTags(text)
@@ -160,16 +130,15 @@ def getInfo(text, textlist):
 		s1 = set2Text(s1)	    #去除可能标签与确切标签的重复部分
 		s1 = s1.split()         #允许一关键词对多标签，并拆分成处理
 		s1 = set(s1)
-		s1 = s1.difference(tags1)
-		
-		s1 = sortTags(s1, cmp1)
-		s2 = sortTags(s2, cmp1)
-		unsuretag = "可能存在："+ s1 + s2 + "\n"
+		s1 = s1.difference(tags1)  #去重，获取作者未标注的标签
+		s1 = sortTags(s1, cmp)
+		s2 = sortTags(s2, cmp)
+		unsuretag = "可能存在："+ s1 #+ s2
 	
-	tags1 = sortTags(tags1, cmp1)
+	tags1 = sortTags(tags1, cmp)
 	if tags2 != "":
-		tags2 = "特殊："+ tags2 + "\n"
-	info = "{}{}{}\n{}{}{}".format(name, authro, tags1, tags2, unsuretag, url)
+		tags2 = "特殊：{}\n".format(tags2)
+	info = "{}{}{}\n{}{}\n{}".format(name, authro, tags1, tags2, unsuretag, url)
 	return info
 
 
@@ -185,14 +154,13 @@ def printInfo(path):
 	
 	if len(textlist) >= 4:
 		info = getInfo(text, textlist)
-		# print(len(text))
 		# print(info)  # 格式化输出
-		return info
 	else:
-		print("【" + name + "】未处理")
+		info = "【{}】未处理".format(name)
+		print(info)
 		print("")
-		return None
-	
+	return info
+
 
 def getPath(path):
 	pathlist = findFile(path, ".docx", ".txt")
@@ -211,6 +179,3 @@ if __name__ == "__main__":
 	path = os.getcwd()
 	path = os.path.join(path, "Novels")
 	pass
-	
-	path = "D:\\Users\\Administrator\\Desktop\\Novels"
-	getPath(path)

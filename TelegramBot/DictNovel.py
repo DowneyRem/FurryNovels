@@ -437,9 +437,7 @@ noveldict.update(racedict)
 noveldict.update(textdict)
 
 
-
-
-def cmp1(a, b):  #按dict内部顺序进行排序
+def cmp(a, b):  #按dict内部顺序进行排序
 	def getindex(a):
 		try:
 			li = list(noveldict.values())
@@ -449,7 +447,6 @@ def cmp1(a, b):  #按dict内部顺序进行排序
 			li = [i.lower() for i in li ]
 			a = a.replace("#", "").lower()
 			index = li.index(a)
-
 		return index
 	a = getindex(a)
 	b = getindex(b)
@@ -461,34 +458,20 @@ def cmp1(a, b):  #按dict内部顺序进行排序
 		return 0
 	
 	
-def saveDict2Pkl():
-	path = os.path.join(os.getcwd(), "noveldict.pkl")
-	with open(path, "wb") as f:
-		pickle.dump(noveldict, f)
-	
-
-def getDictFormPkl():
-	path = os.path.join(os.getcwd(), "noveldict.pkl")
-	with open(path, "rb") as f:
-		noveldict = pickle.load(f)
-	return noveldict
-
-
-def saveDict2Md():
+def saveDict2Md(dict, name):
 	text = "### 关键词标签表\n"
 	text = text + "\n| 标签 | 关键词 | "
 	text = text + "\n| -- | -- | "
-	list1 = list(noveldict.items())
+	list1 = list(dict.items())
 	for i in range(0, len(list1)):
 		(key, value) = list1[i]
 		if value != "":
 			value = "#" + value
 			text += "\n| " + value + " | " + key + " |"
 	
-	path = os.path.join(os.getcwd(), "NovelTags.md")
+	path = os.path.join(os.getcwd(), name)
 	saveText(path, text)
 
 
 if __name__ == '__main__':
-	print(noveldict)
-	saveDict2Md()
+	pass

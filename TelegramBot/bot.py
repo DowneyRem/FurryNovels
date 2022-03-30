@@ -7,18 +7,19 @@ import bot
 import telegram.bot
 from telebot import logger
 from telegram.ext import messagequeue as mq
-from telegram import (bot, ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardMarkup, InlineKeyboardButton, MessageEntity)
+from telegram import ( ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardMarkup, InlineKeyboardButton, MessageEntity)
 from telegram.ext import (Updater, CommandHandler, MessageHandler, Filters, ConversationHandler, CallbackQueryHandler)
 from telegram.utils.request import Request
 from functools import wraps
 from PixivNovels import saveNovel, saveSeries, saveAuthor, getAuthorInfo, getSeriesId
 from PrintTags import printInfo
 from FileOperate import removeFile
+from config import *
 
 
-## 请将TOKEN换成自己的TOKEN
-## 此ROKEN将在完全测试后注销
-TOKEN = "5115165077:AAFlZXmA86PT6LiwU1hWbQYlwXTpCvpBnlI"
+REQUESTS_KWARGS = {
+		# 'proxy_url': 'HTTPS://127.0.0.1:10808/'
+		}
 
 
 def start(update, context):
@@ -38,8 +39,6 @@ def getIdFromURL(update, context):
 		lastname = update.message.from_user.name  # 获取用户名
 		sharetext = "来自 {} 的分享".format(firstname)
 		return sharetext
-	
-	
 	
 	def upload(path, caption):
 		document = open(path, 'rb')
@@ -118,6 +117,7 @@ def getIdFromURL(update, context):
 def error(update, context):
 	logger.warning('Update "%s" caused error "%s"', update, context.error)
 
+
 def ping(update, context):
 	update.message.reply_text("chat_id: <code>%s</code>\nlanguage_code: <code>%s</code>" % (
 		update.message.chat.id,
@@ -126,18 +126,32 @@ def ping(update, context):
 
 
 def main():
-	updater = Updater(TOKEN, use_context=True, request_kwargs={
-		'proxy_url': 'HTTPS://127.0.0.1:10808/'
-		})
+	updater = Updater(BOT_TOKEN, use_context=True, request_kwargs=REQUESTS_KWARGS)
 	
 	dispatcher = updater.dispatcher
 	dispatcher.add_handler(CommandHandler("start", start))
 	dispatcher.add_handler(CommandHandler("ping", ping))
 	dispatcher.add_handler(MessageHandler(Filters.text, getIdFromURL))
-
-	
 	dispatcher.add_error_handler(error)
-	updater.start_polling()
+	
+	
+	if force_use_polling:
+		updater.start_polling()
+	elif heroku:
+		updater.start_webhook(
+			listen="0.0.0.0",
+			port=int(os.environ.get('PORT', 5000)),
+			url_path=bot_token)
+		updater.bot.set_webhook(f"https://{heroku_app_name}.herokuapp.com/{bot_token}")
+	else:
+		updater.start_webhook(
+			listen=webhook_listen,
+			port=webhook_port,
+			key=webhook_key,
+			cert=webhook_cert,
+			webhook_url=webhook_url)
+	
+	signal.signal(signal.SIGTERM, handler_stop_signals)
 	updater.idle()
 
 

@@ -1,0 +1,5 @@
+python-telegram-bot
+pixivpy
+opencc
+opencc-python-reimplemented
+python-docx

@@ -4,28 +4,25 @@ import os
 import re
 import sys
 from pixivpy3 import AppPixivAPI
-from FileOperate import zipFile, saveText #, saveDocx
+from FileOperate import zipFile, saveText
+from config import REFRESH_TOKEN
 
 
 sys.dont_write_bytecode = True
-
-# get your refresh_token, and replace _REFRESH_TOKEN
-# https://github.com/upbit/pixivpy/issues/158#issuecomment-778919084
-_REFRESH_TOKEN = "0zeYA-PllRYp1tfrsq_w3vHGU1rPy237JMf5oDt73c4"
 _TEST_WRITE = False
 
 # If a special network environment is meet, please configure requests as you need.
 # Otherwise, just keep it empty.
-_REQUESTS_KWARGS = {
-	'proxies': {
-		'https': 'http://127.0.0.1:10808',
-	},
+REQUESTS_KWARGS = {
+	# 'proxies': {
+	# 	'https': 'http://127.0.0.1:10808',
+	# },
 	# 'verify': False,
 	# PAPI use https, an easy way is disable requests SSL verify
 }
 
-aapi = AppPixivAPI(**_REQUESTS_KWARGS)
-aapi.auth(refresh_token=_REFRESH_TOKEN)
+aapi = AppPixivAPI(**REQUESTS_KWARGS)
+aapi.auth(refresh_token=REFRESH_TOKEN)
 
 
 def set2Text(set):
@@ -92,14 +89,15 @@ def formatNovelInfo(novel_id):
 	json_result = aapi.novel_detail(novel_id)
 	novel = json_result.novel
 	title = novel.title + "\n"
-	author = "作者：" + getAuthorName(novel)[0] + "\n"
-	URL = "网址：https://www.pixiv.net/novel/show.php?id=" + str(novel_id) +"\n"
+	author = "作者：{}\n".format(getAuthorName(novel)[0])
+	URL = "网址：https://www.pixiv.net/novel/show.php?id={}\n".format(novel_id)
+	
 	tags = set2Text(getTags(novel_id, s))
 	tags = "标签：" + tags+ "\n"
 	
 	caption = novel.caption
 	if caption != "":
-		caption = "其他：" + caption +"\n"
+		caption = "其他：{}\n".format(caption)
 		caption = caption.replace("<br />", " //")
 		
 	string = title + author + URL + tags + caption
@@ -166,7 +164,6 @@ def formatPixivText(text, novel_id):
 	stringpart ="jumpuri:If you would like to view illustrations, please use your desktop browser.>https://www.pixiv.net/n/"
 	autostring = "[[{}{}]]".format(stringpart, novel_id)
 	text = text.replace(autostring, "【此文内有插图，请在Pixv查看】")
-
 	return text
 
 
@@ -234,25 +231,25 @@ def getSeriesInfo(series_id):
 def formatSeriesInfo(series_id):
 	(title, author, caption, content_count) = getSeriesInfo(series_id)
 	info = "" ; s = set()
-	author = "作者：" + author + "\n"
+	author = "作者：{}\n".format(author)
 	info += title +"\n"+ author
 	if caption != "":
-		caption = "其他：" + caption +"\n" #系列简介
+		caption = "其他：{}\n".format(caption)    #系列简介
 		caption = caption.replace("\n\n", "\n")
 		caption = caption.replace("", "")
 
 	list = getNovelsListFormSeries(series_id)
-	print("系列：" + title + " 共有" + str(content_count) + "章")
+	print("系列：{} 共有{}章".format(title, content_count))
 	if len(list) != content_count:
-		print("已获取"+ str(len(list)) + "章")
+		print("已获取{}章".format(len(list)))
 	
 	for i in range(len(list)):
 		id = list[i]
 		s = getTags(id, s)
 	
-	url = "https://www.pixiv.net/novel/show.php?id=" + str(list[0])
-	info += "网址：" + url +"\n"
-	info += "标签：" + set2Text(s)+"\n"
+	url = "https://www.pixiv.net/novel/show.php?id={}".format(list[0])
+	info += "网址：{}\n".format(url)
+	info += "标签：{}\n".format(set2Text(s))
 	info += caption + "\n"*2
 	# print(info)
 	return info
@@ -265,7 +262,7 @@ def getSeriesText(series_id):
 		id = list[i]
 		title = getNovelInfo(id)[0] + "\n"
 		if ("第"not in title) and ("章" not in title):
-			title = "第"+ str(i+1) + "章 "+ title
+			title = "第{}章 {}".format(i+1, title)
 		text += title
 		text += getNovelText(id)
 		text += "\n　　" * 3
@@ -279,7 +276,7 @@ def saveSeries(series_id, path):
 	text = formatSeriesInfo(series_id)
 	text += getSeriesText(series_id)
 	saveText(filepath, text)
-	print("【" + name + ".txt】已保存")
+	print("【{}.txt】已保存".format(name))
 	
 	return filepath
 
