@@ -86,8 +86,7 @@ recommend += numlist[x,y] + y/2
 
 
 也可能将推荐指数调整为5.5
-![评定表2](https://raw.githubusercontent.com/DowneyRem/FurryNovels/main/TelegramBot/Recommend2.png)
-
+![评定表2](https://raw.githubusercontent.com/DowneyRem/FurryNovels/main/TelegramBot/Recommend.png)
 
 
 
