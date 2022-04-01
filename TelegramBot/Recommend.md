@@ -84,10 +84,9 @@ recommend += numlist[x,y] + y/2
 **基本上符合 Pixiv 用户对优秀的定义**
 
 
-
 也可能将推荐指数调整为5.5
-![评定表2](https://raw.githubusercontent.com/DowneyRem/FurryNovels/main/TelegramBot/Recommend.png)
 
+![评定表2](https://raw.githubusercontent.com/DowneyRem/FurryNovels/main/TelegramBot/Recommend2.png)
 
 
 #### Q&A
