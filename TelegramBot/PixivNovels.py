@@ -444,8 +444,9 @@ def analyse(novel_id):
 			x = 8
 		if y >= 10:
 			y = 9
-		recommend += numlist[x,y] + x/2 + y/2
-		# print(numlist[x,y], x/2, y/2)
+		recommend += numlist[x,y] + y/2
+		# print(numlist[x,y], y/2)
+	
 	print("推荐指数：{}".format(recommend))
 	return recommend
 
