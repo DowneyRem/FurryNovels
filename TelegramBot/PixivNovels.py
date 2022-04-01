@@ -3,7 +3,10 @@
 import os
 import re
 import sys
+import math
+import numpy as np
 from pixivpy3 import AppPixivAPI
+from platform import platform
 from FileOperate import zipFile, saveText
 from config import REFRESH_TOKEN
 
@@ -11,18 +14,16 @@ from config import REFRESH_TOKEN
 sys.dont_write_bytecode = True
 _TEST_WRITE = False
 
-# If a special network environment is meet, please configure requests as you need.
-# Otherwise, just keep it empty.
-REQUESTS_KWARGS = {
-	# 'proxies': {
-	# 	'https': 'http://127.0.0.1:10808',
-	# },
-	# 'verify': False,
-	# PAPI use https, an easy way is disable requests SSL verify
-}
 
-aapi = AppPixivAPI(**REQUESTS_KWARGS)
-aapi.auth(refresh_token=REFRESH_TOKEN)
+if "Windows" in platform():
+	REQUESTS_KWARGS = {'proxies':{'https':'http://127.0.0.1:10808', }}
+elif "Linux" in platform():
+	REQUESTS_KWARGS = {}
+try:
+	aapi = AppPixivAPI(**REQUESTS_KWARGS)
+	aapi.auth(refresh_token=REFRESH_TOKEN)
+except:
+	print("请检查网络可用性或更换REFRESH_TOKEN")
 
 
 def set2Text(set):
@@ -74,14 +75,13 @@ def getNovelInfo(novel_id):
 	title = novel.title
 	author = getAuthorName(novel)[0]
 	caption = novel.caption
+	view = novel.total_view
+	bookmarks = novel.total_bookmarks
+	comments = novel.total_comments
 	
 	image_urls = novel.image_urls
 	text_length = novel.text_length
-	total_bookmarks = novel.total_bookmarks
-	total_view = novel.total_view
-	total_comments = novel.total_comments
-	
-	return title, author, caption
+	return title, author, caption, view, bookmarks, comments
 
 
 def formatNovelInfo(novel_id):
@@ -223,9 +223,9 @@ def getSeriesInfo(series_id):
 	title = detail.title   #系列标题
 	author = getAuthorName(detail)[0]
 	caption = detail.caption  # 系列简介
-	content_count = detail.content_count  # 系列内小说数
-	# print(title, author, content_count, caption)
-	return title, author, caption, content_count
+	count = detail.content_count  # 系列内小说数
+	# print(title, author, count, caption)
+	return title, author, caption, count
 
 	
 def formatSeriesInfo(series_id):
@@ -392,6 +392,7 @@ def main():
 				saveSeries(id, path)
 				main()
 			elif "novel" in string:
+				analyse(id)
 				testSeries(id)
 				main()
 			elif "users" in string:
@@ -413,6 +414,40 @@ def main():
 			wrongType()
 	else:
 		wrongType()
+
+
+def analyse(novel_id):
+	(view, bookmarks, comments) = getNovelInfo(novel_id)[3:6]
+	rate = 100 * bookmarks / view
+	recommend = 0   # 推荐指数
+	
+	if comments >= 1: # 根据评论量增加推荐指数
+		i = math.log2(comments)
+		recommend += round(i, 1)
+		# print(round(i, 1))
+
+	if view >= 0:  # 根据阅读量和收藏率增加推荐指数
+		a = -5 ; numlist = []
+		while a <= 3:
+			b = np.arange(a, a+10, 1)
+			b = list(b)
+			numlist += b
+			a += 1
+		# 以2000+点击量，5%收藏率为准入门槛，设置为3
+		numlist = np.asarray([numlist])
+		numlist = numlist.reshape(9, 10)
+		# print(numlist)
+		
+		x = view // 500
+		y = int(rate // 1) - 1
+		if x >= 9:
+			x = 8
+		if y >= 10:
+			y = 9
+		recommend += numlist[x,y] + x/2 + y/2
+		# print(numlist[x,y], x/2, y/2)
+	print("推荐指数：{}".format(recommend))
+	return recommend
 
 
 if __name__ == '__main__':
