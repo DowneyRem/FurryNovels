@@ -84,34 +84,69 @@ def getNovelInfo(novel_id):
 	return title, author, caption, view, bookmarks, comments
 
 
+def formatCaption(caption):
+	# pattern = r'<a href="pixiv://(illusts|novels|users)/[0-9]{5,}">(illust|novel|user)/[0-9]{5,}</a>'
+	# 不清楚为什么用完整的表达式反而会匹配不了，不得已拆成了3份
+	
+	#<a href="pixiv://illusts/12345">illust/12345</a>
+	pattern = '<a href="pixiv://illusts/[0-9]{5,}">illust/[0-9]{5,}</a>'
+	a = re.findall(pattern, caption)
+	for i in range(len(a)):
+		string = a[i]
+		# print(string)
+		id = re.search("[0-9]{5,}", string).group()
+		link = "https://www.pixiv.net/artworks/{}".format(id)
+		caption = caption.replace(string, link)
+		
+	#<a href="pixiv://novels/12345">novel/12345</a>
+	pattern = '<a href="pixiv://novels/[0-9]{5,}">novel/[0-9]{5,}</a>'
+	a = re.findall(pattern, caption)
+	for i in range(len(a)):
+		string = a[i]
+		id = re.search("[0-9]{5,}", string).group()
+		link = "https://www.pixiv.net/novel/show.php?id={}".format(id)
+		caption = caption.replace(string, link)
+	
+	#<a href="pixiv://users/12345">user/12345</a>
+	pattern = '<a href="pixiv://users/[0-9]{5,}">user/[0-9]{5,}</a>'
+	a = re.findall(pattern, caption)
+	for i in range(len(a)):
+		string = a[i]
+		id = re.search("[0-9]{5,}", string).group()
+		link = "https://www.pixiv.net/users/{}".format(id)
+		caption = caption.replace(string, link)
+	return caption
+
+
 def formatNovelInfo(novel_id):
-	s = set()
-	json_result = aapi.novel_detail(novel_id)
-	novel = json_result.novel
-	title = novel.title + "\n"
-	author = "作者：{}\n".format(getAuthorName(novel)[0])
+	(title, author, caption) = getNovelInfo(novel_id)[0:3]
+	title = title + "\n"
+	author = "作者：{}\n".format(author)
 	URL = "网址：https://www.pixiv.net/novel/show.php?id={}\n".format(novel_id)
 	
+	s = set()
 	tags = set2Text(getTags(novel_id, s))
 	tags = "标签：" + tags+ "\n"
 	
-	caption = novel.caption
 	if caption != "":
 		caption = "其他：{}\n".format(caption)
-		caption = caption.replace("<br />", " //")
+		caption = caption.replace("<br />", "\n")
+		caption = caption.replace("<strong>", "")
+		caption = caption.replace("</strong>", "")
+		caption = formatCaption(caption)
 		
 	string = title + author + URL + tags + caption
-	# print(string)
+	print(string)
 	return string
 
 
 def formatNovelText(text):
 	text = text.replace(" ", "")
-	text = re.sub("\.{3,}", "……", text)
+	text = re.sub("\.{3,}", "……", text)  #省略号标准化
 	text = re.sub("。。。{3,}", "……", text)
 	
 	text = re.sub("\n{2,}", "\n\n", text)
-	text = re.sub("\n {1,}", "\n　　", text)
+	text = re.sub("\n {1,}", "\n　　", text) #半角空格换成全角空格
 	if "　　" not in text:  # 直接添加全角空格
 		text = text.replace("\n", "\n　　")
 	return text
@@ -149,17 +184,17 @@ def formatPixivText(text, novel_id):
 		text = re.sub("\[pixivimage:(.*)\]", string, text, 1)
 		
 	# [[jumpuri: 标题 > 链接目标的URL]]
-	a = re.findall("\[{2}jumpuri: *(.*) > (.*)\]{2}", text)
+	a = re.findall("\[{2}jumpuri: *(.*) *> *(.*)\]{2}", text)
 	for i in range(len(a)):
 		name = a[i][0]
 		link = a[i][1]
 		if link in name:
-			text = re.sub("\[{2}jumpuri: *(.*) > (.*)\]{2}", link, text, 1)
+			text = re.sub("\[{2}jumpuri: *(.*) *> *(.*)\]{2}", link, text, 1)
 		else:
 			string = "{}【{}】".format(name, link)
-			text = re.sub("\[{2}jumpuri: *(.*) > (.*)\]{2}", string, text, 1)
+			text = re.sub("\[{2}jumpuri: *(.*) *> *(.*)\]{2}", string, text, 1)
 	
-	# [uploadedimage: 自动生成的ID]
+	# [uploadedimage: 上传图片自动生成的ID]
 	# 会被 pixivpy 自动转换成一下这一大串
 	stringpart ="jumpuri:If you would like to view illustrations, please use your desktop browser.>https://www.pixiv.net/n/"
 	autostring = "[[{}{}]]".format(stringpart, novel_id)
@@ -455,3 +490,5 @@ if __name__ == '__main__':
 	path = os.getcwd()
 	path = os.path.join(path, "Novels")
 	main()
+	
+
