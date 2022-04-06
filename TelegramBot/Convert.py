@@ -20,12 +20,20 @@ def translate(path, language):
 	
 	if "zh_tw" in info and language == "zh-hans":
 		text1 = cc1.convert(text)  # 繁体文件，转简体
+		text1 = text1.replace("「" , "“")
+		text1 = text1.replace("」" , "”")
+		text1 = text1.replace("『" , "‘")
+		text1 = text1.replace("』" , "’")
 		saveText(path1, text1)     # 转简体，存简体目录
 		info = cc1.convert(info)
 		return path1 #, info
 	
 	elif "zh_cn" in info and language == "zh-hant":
 		text2 = cc2.convert(text)  # 简体文件，转繁体
+		text2 = text2.replace("“" , "「")
+		text2 = text2.replace("”" , "」")
+		text2 = text2.replace("‘" , "『")
+		text2 = text2.replace("’" , "』")
 		saveText(path2, text2)     # 转繁体，存繁体目录
 		info = cc2.convert(info)
 		return path2 #, info
@@ -37,4 +45,3 @@ def translate(path, language):
 if __name__ == "__main__":
 	path = os.getcwd()
 	path = os.path.join(path, "Novels")
-	
