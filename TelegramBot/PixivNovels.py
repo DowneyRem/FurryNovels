@@ -35,7 +35,7 @@ def set2Text(set):
 
 
 def formatName(text):
-	list = '/ \ : * " < > |'.split(" ")
+	list = '/ \ : * " < > | ?'.split(" ")
 	for i in range(len(list)):
 		a = list[i]
 		text = text.replace(a, " ")
