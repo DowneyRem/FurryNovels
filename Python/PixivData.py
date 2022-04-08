@@ -94,7 +94,7 @@ def getUserInfo(user_id):
  
 	novels = profile.total_novels
 	series = profile.total_novel_series
-	illusts = profile.total_illust
+	illusts = profile.total_illusts
 	manga = profile.total_manga
  
 	string = "{}\n系列小说：{}篇，共计：{}篇\n插画：{}张，漫画：{}章".format(name, series, novels, illusts, manga )
@@ -265,14 +265,12 @@ def main():
 				fliepath = saveAsXlsx(id, path)
 			except:
 				fliepath = saveAsCsv(id, path)
-			
 			openExcel(fliepath)
 			# main()
 		else:
 			wrong()
 	else:
 		wrong()
-
 
 
 if __name__ == '__main__':
