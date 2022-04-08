@@ -34,6 +34,14 @@ def set2Text(set):
 	return text
 
 
+def formatName(text):
+	list = '/ \ : * " < > |'.split(" ")
+	for i in range(len(list)):
+		a = list[i]
+		text = text.replace(a, " ")
+	return text
+
+
 def getTags(novel_id, set):
 	#set 去重复标签，支持系列小说
 	json_result = aapi.novel_detail(novel_id)
@@ -217,6 +225,7 @@ def getNovelText(novel_id):
 
 def saveNovel(novel_id, path):
 	name = getNovelInfo(novel_id)[0]
+	name = formatName(name)
 	filepath = os.path.join(path, name + ".txt")
 
 	text = formatNovelInfo(novel_id)
@@ -306,13 +315,13 @@ def getSeriesText(series_id):
 
 def saveSeries(series_id, path):
 	name = getSeriesInfo(series_id)[0]
+	name = formatName(name)
 	filepath = os.path.join(path, name + ".txt")
 
 	text = formatSeriesInfo(series_id)
 	text += getSeriesText(series_id)
 	saveText(filepath, text)
 	print("【{}.txt】已保存".format(name))
-	
 	return filepath
 
 
@@ -384,6 +393,7 @@ def saveAuthor(user_id, path):
 	
 	novel_id = novelslist[0]
 	author = getNovelInfo(novel_id)[1]
+	author = formatName(author)
 	path = os.path.join(path, author)
 	print("保存目录：" + path)
 	
@@ -401,6 +411,7 @@ def saveAuthor(user_id, path):
 
 
 def testSeries(id):
+	# saveNovel(id, path)
 	if getSeriesId(id)[0] is None:
 		print("开始下载单篇小说……")
 		saveNovel(id, path)
@@ -490,5 +501,5 @@ if __name__ == '__main__':
 	path = os.getcwd()
 	path = os.path.join(path, "Novels")
 	main()
-	
+
 
