@@ -30,7 +30,7 @@ import math
 
 if comments >= 1: # 根据评论量增加推荐指数
 	i = math.log2(comments)
-	recommend += round(i, 1)
+	recommend += round(i, 2)
 ```
 
 #### 第二部分：点击量与收藏率
@@ -38,34 +38,20 @@ if comments >= 1: # 根据评论量增加推荐指数
 下表中，首列为点击量，首行为收藏率，去掉首行首列的数据部分则为`numlist`
 
 由点击量与收藏率则可以确定相应条件下的推荐指数
+![推荐指数1](https://raw.githubusercontent.com/DowneyRem/FurryNovels/main/TelegramBot/Recommend1.png)
 
-```
-        1  2  3  4  5  6  7  8  9 10 
-   0 [[-5 -4 -3 -2 -1  0  1  2  3  4]
- 500  [-4 -3 -2 -1  0  1  2  3  4  5]
-1000  [-3 -2 -1  0  1  2  3  4  5  6]
-1500  [-2 -1  0  1  2  3  4  5  6  7]
-2000  [-1  0  1  2  3  4  5  6  7  8]
-2500  [ 0  1  2  3  4  5  6  7  8  9]
-3000  [ 1  2  3  4  5  6  7  8  9 10]
-3500  [ 2  3  4  5  6  7  8  9 10 11]
-4000  [ 3  4  5  6  7  8  9 10 11 12]]
-```
-比如一篇 ` view=2365, bookmarks=203 即 rate=8.5 ` 的小说，推荐指数为 ` recommend=6 `
+
+比如一篇 ` view=2365, bookmarks=203 即 rate=8.5 ` 的小说，推荐指数为 ` recommend=6.5 `
 
 #### 第三部分：收藏率-矫正部分
 
 在实际测试中，仅通过上述两个方法获得的推荐指数较小，故添加收藏率作为矫正数据
 
 ```
-rate = 100 * bookmarks / view
-x = view // 500
-y = int(rate // 1) - 1
-if x >= 9:
-	x = 8
-if y >= 10:
-	y = 9
-recommend += numlist[x,y] + y/2
+	rate = 100 * bookmarks / view
+	if rate >= 0:
+		i = (rate - 3)/2
+		recommend += round(i, 2)
 ```
 
 ### 最终评定
@@ -76,17 +62,13 @@ recommend += numlist[x,y] + y/2
 以橙色部分（点击量 2000+，收藏率5%+）为基准
 绿色部分，即推荐指数>=5的部分，是算法认为的优质小说（不考虑评论的前提下）
 
-![评定表1](https://raw.githubusercontent.com/DowneyRem/FurryNovels/main/TelegramBot/Recommend.png)
+![最终评定表](https://raw.githubusercontent.com/DowneyRem/FurryNovels/main/TelegramBot/Recommend2.png)
 
 还是这篇 ` view=2365, bookmarks=203 即 rate=8.5 ` 的小说  
-推荐指数为 ` recommend= 6 + 3.5 = 9.5 `  
+推荐指数为 ` recommend= 6.5 + 2.75 = 9.25 `  
 
 **基本上符合 Pixiv 用户对优秀的定义**
 
-
-也可能将推荐指数调整为5.5
-
-![评定表2](https://raw.githubusercontent.com/DowneyRem/FurryNovels/main/TelegramBot/Recommend2.png)
 
 
 #### Q&A

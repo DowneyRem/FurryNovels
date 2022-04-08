@@ -7,7 +7,7 @@ import math
 import numpy as np
 from pixivpy3 import AppPixivAPI
 from platform import platform
-from FileOperate import zipFile, saveText
+from FileOperate import zipFile, saveText, formatName
 from config import REFRESH_TOKEN
 
 
@@ -217,6 +217,7 @@ def getNovelText(novel_id):
 
 def saveNovel(novel_id, path):
 	name = getNovelInfo(novel_id)[0]
+	name = formatName(name)
 	filepath = os.path.join(path, name + ".txt")
 
 	text = formatNovelInfo(novel_id)
@@ -306,13 +307,13 @@ def getSeriesText(series_id):
 
 def saveSeries(series_id, path):
 	name = getSeriesInfo(series_id)[0]
+	name = formatName(name)
 	filepath = os.path.join(path, name + ".txt")
 
 	text = formatSeriesInfo(series_id)
 	text += getSeriesText(series_id)
 	saveText(filepath, text)
 	print("【{}.txt】已保存".format(name))
-	
 	return filepath
 
 
@@ -384,6 +385,7 @@ def saveAuthor(user_id, path):
 	
 	novel_id = novelslist[0]
 	author = getNovelInfo(novel_id)[1]
+	author = formatName(author)
 	path = os.path.join(path, author)
 	print("保存目录：" + path)
 	
@@ -401,6 +403,7 @@ def saveAuthor(user_id, path):
 
 
 def testSeries(id):
+	# saveNovel(id, path)
 	if getSeriesId(id)[0] is None:
 		print("开始下载单篇小说……")
 		saveNovel(id, path)
@@ -454,35 +457,38 @@ def main():
 def analyse(novel_id):
 	(view, bookmarks, comments) = getNovelInfo(novel_id)[3:6]
 	rate = 100 * bookmarks / view
+	# print(view, bookmarks, comments, round(rate, 2))
 	recommend = 0   # 推荐指数
 	
-	if comments >= 1: # 根据评论量增加推荐指数
+	if comments >= 1:  # 根据评论量增加推荐指数
 		i = math.log2(comments)
-		recommend += round(i, 1)
-		# print(round(i, 1))
+		recommend += round(i, 2)
+		# print(round(i, 2))
 
+	if rate >= 0:
+		i = (rate - 3)/2
+		recommend += round(i, 2)
+		# print(round(i, 2))
+		
 	if view >= 0:  # 根据阅读量和收藏率增加推荐指数
-		a = -5 ; numlist = []
-		while a <= 3:
-			b = np.arange(a, a+10, 1)
-			b = list(b)
-			numlist += b
-			a += 1
-		# 以2000+点击量，5%收藏率为准入门槛，设置为3
-		numlist = np.asarray([numlist])
-		numlist = numlist.reshape(9, 10)
+		numlist = []
+		for a in np.arange(-6, 3, 1):    #生成首列数据
+			step = 0.5
+			b = np.arange(a, a +21*step, step)  #生成首行数据
+			numlist.append(list(b))
+		numlist = np.asarray(numlist)
 		# print(numlist)
 		
-		x = view // 500
-		y = int(rate // 1) - 1
-		if x >= 9:
-			x = 8
-		if y >= 10:
-			y = 9
-		recommend += numlist[x,y] + y/2
-		# print(numlist[x,y], y/2)
+		x = int(view // 500)
+		y = int(rate // 0.5)
+		if x >= len(numlist):
+			x = len(numlist) - 1
+		if y >= len(numlist[0]):
+			y = len(numlist[0]) - 1
+		recommend += numlist[x,y]
+		# print(numlist[x,y])
 	
-	print("推荐指数：{}".format(recommend))
+	print("推荐指数：{:.2f}".format(recommend))
 	return recommend
 
 
@@ -490,5 +496,3 @@ if __name__ == '__main__':
 	path = os.getcwd()
 	path = os.path.join(path, "Novels")
 	main()
-	
-
