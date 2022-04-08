@@ -1,8 +1,5 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
-import os
-from FileOperate import saveText
-
 # 正文关键词对应标签
 # key为关键词，value为对应标签
 # 关键词——标签可以一对多
@@ -185,46 +182,3 @@ textdict = {
 	
 	}
 # 雄性妊娠与雌性堕落区别？
-
-
-def cmp2(a, b):  # 按dict内部顺序进行排序
-	def getindex(a):
-		try:
-			li = list(textdict.values())
-			index = li.index(a)
-		except:
-			li = list(textdict.keys())
-			index = li.index(a)
-		return index
-	
-	a = getindex(a)
-	b = getindex(b)
-	if a > b:
-		return 1
-	elif a < b:
-		return -1
-	else:
-		return 0
-	
-	
-def saveDict2Md(dict, name):
-	text = "### 关键词标签表\n"
-	text = text + "\n| 标签 | 关键词 | "
-	text = text + "\n| -- | -- | "
-	list1 = list(textdict.items())
-	for i in range(0, len(list1)):
-		(key, value) = list1[i]
-		if value != "":
-			value = "#" + value
-			text += "\n| " + value + " | " + key + " |"
-	
-	path = os.path.join(os.getcwd(), name + ".md")
-	saveText(path, text)
-
-
-if __name__ == '__main__':
-
-	
-	
-	saveDict2Md(textdict, "TextTags")
-	saveDict2Md(racedict, "RaceTags")

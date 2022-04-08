@@ -3,29 +3,27 @@
 import os
 import re
 import sys
+import math
+import numpy as np
 from pixivpy3 import AppPixivAPI
-from FileOperate import zipFile, saveText #, saveDocx
+from platform import platform
+from FileOperate import zipFile, saveText
+from config import REFRESH_TOKEN
 
 
 sys.dont_write_bytecode = True
-
-# get your refresh_token, and replace _REFRESH_TOKEN
-# https://github.com/upbit/pixivpy/issues/158#issuecomment-778919084
-_REFRESH_TOKEN = "0zeYA-PllRYp1tfrsq_w3vHGU1rPy237JMf5oDt73c4"
 _TEST_WRITE = False
 
-# If a special network environment is meet, please configure requests as you need.
-# Otherwise, just keep it empty.
-_REQUESTS_KWARGS = {
-	'proxies': {
-		'https': 'http://127.0.0.1:10808',
-	},
-	# 'verify': False,
-	# PAPI use https, an easy way is disable requests SSL verify
-}
 
-aapi = AppPixivAPI(**_REQUESTS_KWARGS)
-aapi.auth(refresh_token=_REFRESH_TOKEN)
+if "Windows" in platform():
+	REQUESTS_KWARGS = {'proxies':{'https':'http://127.0.0.1:10808', }}
+elif "Linux" in platform():
+	REQUESTS_KWARGS = {}
+try:
+	aapi = AppPixivAPI(**REQUESTS_KWARGS)
+	aapi.auth(refresh_token=REFRESH_TOKEN)
+except:
+	print("请检查网络可用性或更换REFRESH_TOKEN")
 
 
 def set2Text(set):
@@ -77,43 +75,78 @@ def getNovelInfo(novel_id):
 	title = novel.title
 	author = getAuthorName(novel)[0]
 	caption = novel.caption
+	view = novel.total_view
+	bookmarks = novel.total_bookmarks
+	comments = novel.total_comments
 	
 	image_urls = novel.image_urls
 	text_length = novel.text_length
-	total_bookmarks = novel.total_bookmarks
-	total_view = novel.total_view
-	total_comments = novel.total_comments
+	return title, author, caption, view, bookmarks, comments
+
+
+def formatCaption(caption):
+	# pattern = r'<a href="pixiv://(illusts|novels|users)/[0-9]{5,}">(illust|novel|user)/[0-9]{5,}</a>'
+	# 不清楚为什么用完整的表达式反而会匹配不了，不得已拆成了3份
 	
-	return title, author, caption
+	#<a href="pixiv://illusts/12345">illust/12345</a>
+	pattern = '<a href="pixiv://illusts/[0-9]{5,}">illust/[0-9]{5,}</a>'
+	a = re.findall(pattern, caption)
+	for i in range(len(a)):
+		string = a[i]
+		# print(string)
+		id = re.search("[0-9]{5,}", string).group()
+		link = "https://www.pixiv.net/artworks/{}".format(id)
+		caption = caption.replace(string, link)
+		
+	#<a href="pixiv://novels/12345">novel/12345</a>
+	pattern = '<a href="pixiv://novels/[0-9]{5,}">novel/[0-9]{5,}</a>'
+	a = re.findall(pattern, caption)
+	for i in range(len(a)):
+		string = a[i]
+		id = re.search("[0-9]{5,}", string).group()
+		link = "https://www.pixiv.net/novel/show.php?id={}".format(id)
+		caption = caption.replace(string, link)
+	
+	#<a href="pixiv://users/12345">user/12345</a>
+	pattern = '<a href="pixiv://users/[0-9]{5,}">user/[0-9]{5,}</a>'
+	a = re.findall(pattern, caption)
+	for i in range(len(a)):
+		string = a[i]
+		id = re.search("[0-9]{5,}", string).group()
+		link = "https://www.pixiv.net/users/{}".format(id)
+		caption = caption.replace(string, link)
+	return caption
 
 
 def formatNovelInfo(novel_id):
+	(title, author, caption) = getNovelInfo(novel_id)[0:3]
+	title = title + "\n"
+	author = "作者：{}\n".format(author)
+	URL = "网址：https://www.pixiv.net/novel/show.php?id={}\n".format(novel_id)
+	
 	s = set()
-	json_result = aapi.novel_detail(novel_id)
-	novel = json_result.novel
-	title = novel.title + "\n"
-	author = "作者：" + getAuthorName(novel)[0] + "\n"
-	URL = "网址：https://www.pixiv.net/novel/show.php?id=" + str(novel_id) +"\n"
 	tags = set2Text(getTags(novel_id, s))
 	tags = "标签：" + tags+ "\n"
 	
-	caption = novel.caption
 	if caption != "":
-		caption = "其他：" + caption +"\n"
-		caption = caption.replace("<br />", " //")
+		caption = "其他：{}\n".format(caption)
+		caption = caption.replace("<br />", "\n")
+		caption = caption.replace("<strong>", "")
+		caption = caption.replace("</strong>", "")
+		caption = formatCaption(caption)
 		
 	string = title + author + URL + tags + caption
-	# print(string)
+	print(string)
 	return string
 
 
 def formatNovelText(text):
 	text = text.replace(" ", "")
-	text = re.sub("\.{3,}", "……", text)
+	text = re.sub("\.{3,}", "……", text)  #省略号标准化
 	text = re.sub("。。。{3,}", "……", text)
 	
 	text = re.sub("\n{2,}", "\n\n", text)
-	text = re.sub("\n {1,}", "\n　　", text)
+	text = re.sub("\n {1,}", "\n　　", text) #半角空格换成全角空格
 	if "　　" not in text:  # 直接添加全角空格
 		text = text.replace("\n", "\n　　")
 	return text
@@ -151,22 +184,21 @@ def formatPixivText(text, novel_id):
 		text = re.sub("\[pixivimage:(.*)\]", string, text, 1)
 		
 	# [[jumpuri: 标题 > 链接目标的URL]]
-	a = re.findall("\[{2}jumpuri: *(.*) > (.*)\]{2}", text)
+	a = re.findall("\[{2}jumpuri: *(.*) *> *(.*)\]{2}", text)
 	for i in range(len(a)):
 		name = a[i][0]
 		link = a[i][1]
 		if link in name:
-			text = re.sub("\[{2}jumpuri: *(.*) > (.*)\]{2}", link, text, 1)
+			text = re.sub("\[{2}jumpuri: *(.*) *> *(.*)\]{2}", link, text, 1)
 		else:
 			string = "{}【{}】".format(name, link)
-			text = re.sub("\[{2}jumpuri: *(.*) > (.*)\]{2}", string, text, 1)
+			text = re.sub("\[{2}jumpuri: *(.*) *> *(.*)\]{2}", string, text, 1)
 	
-	# [uploadedimage: 自动生成的ID]
+	# [uploadedimage: 上传图片自动生成的ID]
 	# 会被 pixivpy 自动转换成一下这一大串
 	stringpart ="jumpuri:If you would like to view illustrations, please use your desktop browser.>https://www.pixiv.net/n/"
 	autostring = "[[{}{}]]".format(stringpart, novel_id)
 	text = text.replace(autostring, "【此文内有插图，请在Pixv查看】")
-
 	return text
 
 
@@ -226,33 +258,33 @@ def getSeriesInfo(series_id):
 	title = detail.title   #系列标题
 	author = getAuthorName(detail)[0]
 	caption = detail.caption  # 系列简介
-	content_count = detail.content_count  # 系列内小说数
-	# print(title, author, content_count, caption)
-	return title, author, caption, content_count
+	count = detail.content_count  # 系列内小说数
+	# print(title, author, count, caption)
+	return title, author, caption, count
 
 	
 def formatSeriesInfo(series_id):
 	(title, author, caption, content_count) = getSeriesInfo(series_id)
 	info = "" ; s = set()
-	author = "作者：" + author + "\n"
+	author = "作者：{}\n".format(author)
 	info += title +"\n"+ author
 	if caption != "":
-		caption = "其他：" + caption +"\n" #系列简介
+		caption = "其他：{}\n".format(caption)    #系列简介
 		caption = caption.replace("\n\n", "\n")
 		caption = caption.replace("", "")
 
 	list = getNovelsListFormSeries(series_id)
-	print("系列：" + title + " 共有" + str(content_count) + "章")
+	print("系列：{} 共有{}章".format(title, content_count))
 	if len(list) != content_count:
-		print("已获取"+ str(len(list)) + "章")
+		print("已获取{}章".format(len(list)))
 	
 	for i in range(len(list)):
 		id = list[i]
 		s = getTags(id, s)
 	
-	url = "https://www.pixiv.net/novel/show.php?id=" + str(list[0])
-	info += "网址：" + url +"\n"
-	info += "标签：" + set2Text(s)+"\n"
+	url = "https://www.pixiv.net/novel/show.php?id={}".format(list[0])
+	info += "网址：{}\n".format(url)
+	info += "标签：{}\n".format(set2Text(s))
 	info += caption + "\n"*2
 	# print(info)
 	return info
@@ -265,7 +297,7 @@ def getSeriesText(series_id):
 		id = list[i]
 		title = getNovelInfo(id)[0] + "\n"
 		if ("第"not in title) and ("章" not in title):
-			title = "第"+ str(i+1) + "章 "+ title
+			title = "第{}章 {}".format(i+1, title)
 		text += title
 		text += getNovelText(id)
 		text += "\n　　" * 3
@@ -279,7 +311,7 @@ def saveSeries(series_id, path):
 	text = formatSeriesInfo(series_id)
 	text += getSeriesText(series_id)
 	saveText(filepath, text)
-	print("【" + name + ".txt】已保存")
+	print("【{}.txt】已保存".format(name))
 	
 	return filepath
 
@@ -395,6 +427,7 @@ def main():
 				saveSeries(id, path)
 				main()
 			elif "novel" in string:
+				analyse(id)
 				testSeries(id)
 				main()
 			elif "users" in string:
@@ -418,7 +451,44 @@ def main():
 		wrongType()
 
 
+def analyse(novel_id):
+	(view, bookmarks, comments) = getNovelInfo(novel_id)[3:6]
+	rate = 100 * bookmarks / view
+	recommend = 0   # 推荐指数
+	
+	if comments >= 1: # 根据评论量增加推荐指数
+		i = math.log2(comments)
+		recommend += round(i, 1)
+		# print(round(i, 1))
+
+	if view >= 0:  # 根据阅读量和收藏率增加推荐指数
+		a = -5 ; numlist = []
+		while a <= 3:
+			b = np.arange(a, a+10, 1)
+			b = list(b)
+			numlist += b
+			a += 1
+		# 以2000+点击量，5%收藏率为准入门槛，设置为3
+		numlist = np.asarray([numlist])
+		numlist = numlist.reshape(9, 10)
+		# print(numlist)
+		
+		x = view // 500
+		y = int(rate // 1) - 1
+		if x >= 9:
+			x = 8
+		if y >= 10:
+			y = 9
+		recommend += numlist[x,y] + y/2
+		# print(numlist[x,y], y/2)
+	
+	print("推荐指数：{}".format(recommend))
+	return recommend
+
+
 if __name__ == '__main__':
 	path = os.getcwd()
 	path = os.path.join(path, "Novels")
 	main()
+	
+

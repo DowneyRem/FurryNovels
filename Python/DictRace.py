@@ -1,8 +1,5 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
-import os
-from FileOperate import saveText
-
 # 正文种族，职业对应标签
 # 适用于文本的标签关键词
 # key为关键词，value为对应标签，
@@ -228,23 +225,3 @@ racedict = {
 	"医生":"Doctor",
 	
 }
-
-
-def cmp3(a, b):  # 按dict内部顺序进行排序
-	def getindex(a):
-		try:
-			li = list(racedict.values())
-			index = li.index(a)
-		except:
-			li = list(racedict.keys())
-			index = li.index(a)
-		return index
-	
-	a = getindex(a)
-	b = getindex(b)
-	if a > b:
-		return 1
-	elif a < b:
-		return -1
-	else:
-		return 0
