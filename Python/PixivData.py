@@ -4,6 +4,7 @@ import os
 import re
 import sys
 import time
+import pandas as pd
 from functools import wraps
 from platform import platform
 from pixivpy3 import AppPixivAPI
@@ -35,6 +36,14 @@ def timethis(func):
 		print('{}.{} : {}'.format(func.__module__, func.__name__, end - start))
 		return r
 	return wrapper
+
+
+def formatName(text):
+	list = '/ \ : * " < > | ?'.split(" ")
+	for i in range(len(list)):
+		a = list[i]
+		text = text.replace(a, " ")
+	return text
 
 
 def getNovelInfo(novel_id):
@@ -85,10 +94,11 @@ def getUserInfo(user_id):
  
 	novels = profile.total_novels
 	series = profile.total_novel_series
-	illusts = profile.total_illusts
+	illusts = profile.total_illust
 	manga = profile.total_manga
  
 	string = "{}\n系列小说：{}篇，共计：{}篇\n插画：{}张，漫画：{}章".format(name, series, novels, illusts, manga )
+	string = string.replace("None", "0")
 	print(string)
 	return name, novels, series, illusts, manga
 	
@@ -144,7 +154,7 @@ def getIllustsList(user_id):
 
 
 @timethis
-def formatData(user_id):
+def formatForCsv(user_id):
 	print("\n获取Pixiv数据中……")
 	text = "序号,名称,日期,点击,点赞,评论\n"  #获取到点赞其实是收藏，而不是"赞！"
 	novelslist = getNovelsList(user_id)
@@ -158,10 +168,9 @@ def formatData(user_id):
 		
 	for i in range(len(illustslist)):
 		id = illustslist[i]
-		num = len(novelslist) + i
+		num = len(novelslist) + len(illustslist) - i
 		(title, datetime, view, bookmarks, comments) = getIllustInfo(id)
 		text += "{},{},{},{},{},{}\n".format(num, title ,datetime , view, bookmarks, comments)
-		
 	return text
 
 
@@ -177,22 +186,54 @@ def saveCsv(path, text):
 		print("保存失败")
 
 
-def formatName(text):
-	list = '/ \ : * " < > |'.split(" ")
-	for i in range(len(list)):
-		a = list[i]
-		text = text.replace(a, " ")
-	return text
-
-
-def SaveAsCsv(user_id, path):
+def saveAsCsv(user_id, path):
 	authro = getUserInfo(user_id)[0]
 	authro = formatName(authro)
 	path = os.path.join(path, authro + ".csv")
 	# print(path)
-	text = formatData(user_id)
+	text = formatForCsv(user_id)
 	saveCsv(path, text)
 	return path
+
+
+@timethis
+def formatForDataFrame(user_id):
+	li = []
+	print("\n获取Pixiv数据中……")
+	novelslist = getNovelsList(user_id)
+	illustslist = getIllustsList(user_id)
+	
+	for i in range(len(novelslist)):
+		id = novelslist[i]
+		(title, datetime, view, bookmarks, comments) = getNovelInfo(id)
+		li.append([title, datetime, view, bookmarks, comments])
+	
+	for i in range(len(illustslist)):
+		id = illustslist[i]
+		(title, datetime, view, bookmarks, comments) = getIllustInfo(id)
+		li.append([title, datetime, view, bookmarks, comments])
+	return li
+
+
+def saveAsXlsx(user_id, path):
+	data = formatForDataFrame(user_id)
+	col = "名称,日期,点击,点赞,评论".split(",")
+	df = pd.DataFrame(data, columns=col)
+	df = df.sort_values(by="日期")
+	df.index = range(1, len(df) + 1)
+	# print(df)
+	
+	authro = getUserInfo(user_id)[0]
+	authro = formatName(authro)
+	path = os.path.join(path, authro + ".xlsx")
+	try:
+		df.to_excel(path, sheet_name="数据")
+		name = os.path.split(path)[1]
+		print("已存为：【{}】".format(name))
+		return path
+	except:
+		print("保存失败")
+		return None
 
 
 # @timethis
@@ -204,13 +245,13 @@ def openExcel(path):
 		xlsx = excel.Workbooks.Open(path)  # 打开文档
 		print("打开Excel……")
 	except:
-		print("文件打开失败")
+		print("文件打开失败或文件不存在")
 
 
 def wrong():
 	print("输入错误，请重新输入")
 	main()
-
+	
 
 # @timethis
 def main():
@@ -220,8 +261,12 @@ def main():
 		id = re.search("[0-9]+", string).group()
 		if "pixiv.net" in string and "users" in string:
 			print("开始获取作者相关数据")
-			fliepath = SaveAsCsv(id, path)
-			# openExcel(fliepath)
+			try:
+				fliepath = saveAsXlsx(id, path)
+			except:
+				fliepath = saveAsCsv(id, path)
+			
+			openExcel(fliepath)
 			# main()
 		else:
 			wrong()
@@ -229,12 +274,8 @@ def main():
 		wrong()
 
 
+
 if __name__ == '__main__':
 	path = os.getcwd()
 	main()
-
-	# path = "D:\\Users\\Administrator\\Desktop"
-	# path2 = "D:\\OneDrive - yangtzeu.edu.cn\\Office Documents\\WPS Cloud Files\\唐门小说点赞统计.xlsx"
-	# path1 = SaveAsCsv(16721009, path)
-	# openExcel(path1)
-	# openExcel(path2)
+	
