@@ -415,10 +415,7 @@ def novelAnalyse(novel_id):
 	# print(round(i, 2))
 	
 	if view >= 0:  # 根据阅读量和收藏率增加推荐指数
-		numlist = [];
-		a = -7.75;
-		step1 = 1;
-		step2 = 0.75
+		numlist = [] ; a = -7.75 ; step1 = 1 ; step2 = 0.75
 		for a in np.arange(a, a + 9 * step1, step1):  # 生成首列数据
 			b = np.arange(a, a + 21 * step2, step2)  # 生成首行数据
 			numlist.append(list(b))
