@@ -32,7 +32,7 @@ def sortTags(set, cmp):  # 按dict内顺序对转换后的标签排序
 	return text
 
 
-def addTags(text):  # 添加靠谱的标签
+def addTags(text):  # 添加繁简标签
 	list1 = "邊 變 並 從 點 東 對 發 該 個 給 關 過 還 後 歡 會 機 幾 間 見 將 進 經 覺 開 來 裡 兩 嗎 麼 沒 們 難 讓 時 實 說 雖 為 問 無 現 樣 應 於 與 則 這 種".split(" ")
 	list3 = "边 变 并 从 点 东 对 发 该 个 给 关 过 还 后 欢 会 机 几 间 见 将 进 经 觉 开 来 里 两 吗 么 没 们 难 让 时 实 说 虽 为 问 无 现 样 应 于 与 则 这 种".split(" ")
 	# 语料库来自 https://elearning.ling.sinica.edu.tw/cwordfreq.html
@@ -47,7 +47,7 @@ def addTags(text):  # 添加靠谱的标签
 			list2.append(char)
 	
 	tags += " #txt #finished "
-	if j >= 0.2 * len(list1):
+	if j >= 0.2 * len(list1):  # 神奇的数据，可容错
 		tags += "#zh_tw"
 	else:
 		tags += "#zh_cn"
@@ -71,6 +71,22 @@ def translateTags(taglist):  # 获取英文标签
 	return s, tags2
 
 
+def getTags(text):  # 获取可能存在的标签
+	# 引入总字数作基数的话，如何避免无法获得剧情向小说色情标签？
+	# 优势，色情标签过少可以添加 #剧情向标签
+	
+	s1 = set() ; s2 = set()
+	list1 = list(textdict.keys())
+	list2 = list(textdict.values())
+	for i in range(0, len(list1)):
+		a = list1[i]
+		num = text.count(a)
+		if num > 5:  # 数据未测试
+			s1.add(list1[i])  # 汉字标签
+			s2.add(list2[i])  # 英文标签
+	return s2, s1  # 英文标签在前
+
+
 def getRaceTags(text):  # 获取可能存在的标签
 	s1 = set(); s2 = set()
 	textnum = len(text)
@@ -85,24 +101,11 @@ def getRaceTags(text):  # 获取可能存在的标签
 	return s2, s1  # 英文标签在前
 
 
-def getTags(text):  # 获取可能存在的标签
-	s1 = set(); s2 = set()
-	list1 = list(textdict.keys())
-	list2 = list(textdict.values())
-	for i in range(0, len(list1)):
-		a = list1[i]
-		num = text.count(a)
-		if num > 5:        #数据未测试
-			s1.add(list1[i])  # 汉字标签
-			s2.add(list2[i])  # 英文标签
-	return s2, s1  # 英文标签在前
-
-
-def setSpilt(s1):
-	s1 = set2Text(s1)
-	s1 = s1.split(" ")  # 允许一关键词对多标签，并拆分成处理
-	s1 = set(s1)
-	return s1
+def setSpilt(s):
+	s = set2Text(s)
+	s = s.split(" ")  # 允许一关键词对多标签，并拆分成处理
+	s = set(s)
+	return s
 
 
 def getInfo(text, textlist):
@@ -160,11 +163,10 @@ def printInfo(path):
 	
 	if len(textlist) >= 4:
 		info = getInfo(text, textlist)
-		# print(info)  # 格式化输出
 	else:
 		info = "【{}】未处理".format(name)
-		print(info)
-		print("")
+		
+	print(info)
 	return info
 
 

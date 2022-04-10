@@ -6,7 +6,7 @@ from PrintTags import printInfo
 from config import cc1, cc2
 
 
-def getPath(path):
+def setPath(path):
 	(path, name) = os.path.split(path)
 	path1 = os.path.join(path, "简体版" , cc1.convert(name))  # 简体目录
 	path2 = os.path.join(path, "繁體版" , cc2.convert(name))  # 繁体目录
@@ -16,7 +16,7 @@ def getPath(path):
 def translate(path, language):
 	text = openText(path)
 	info = printInfo(path)
-	(path1, path2, name) = getPath(path)
+	(path1, path2, name) = setPath(path)
 	
 	if "zh_tw" in info and language == "zh-hans":
 		text1 = cc1.convert(text)  # 繁体文件，转简体

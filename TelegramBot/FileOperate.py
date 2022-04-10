@@ -111,6 +111,15 @@ def openExcel(paths):  #打开软件手动操作
 	xlsx = excel.Workbooks.Open(path)  # 打开文档
 
 
+#暂未加入保存函数内，如何加入？
+def formatName(text):
+	list = '/ \ : * " < > | ?'.split(" ")
+	for i in range(len(list)):
+		a = list[i]
+		text = text.replace(a, " ")
+	return text
+
+
 def saveDocx(path, text):
 	(dir, name) = os.path.split(path)  # 分离文件名和目录名
 	if not os.path.exists(dir):
