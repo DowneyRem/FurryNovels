@@ -49,11 +49,13 @@ if comments >= 1: # 根据评论量增加推荐指数
 ### 最终评定
 
 #### 直观表述
-不同阅读量档位，有其对应的收藏率，达到对应收藏率，即被认为这是一篇较为优秀的小说
+不同阅读量档位，有其对应的收藏率
 
 ![收藏率变化表](https://raw.githubusercontent.com/DowneyRem/FurryNovels/main/TelegramBot/Recommend2.png)
 
-最后是不同阅读量对应的收藏量的统计图。  
+不同阅读量乘以不同的收藏率，就有不同的收藏量。达到对应收藏量，即被认为这是一篇较为优秀的小说
+
+下图是阅读量每增加100对应的收藏量
 
 ![收藏率变化表](https://raw.githubusercontent.com/DowneyRem/FurryNovels/main/TelegramBot/Recommend3.png)
 
