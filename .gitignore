@@ -1,4 +1,6 @@
 TelegramBot/.idea
+TelegramBot/__pycache__
 TelegramBot/Novels
 TelegramBot/config.py
+Python/.idea
 Python/__pycache__
