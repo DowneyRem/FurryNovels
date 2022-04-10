@@ -7,9 +7,6 @@
 ## 必需
 pip install pixivpy
 pip install python-telegram-bot
-
-pip install opencc-python-reimplemented
-## 或使用官方的OpenCC
 pip install opencc
 
 ## 非必需

@@ -7,7 +7,7 @@ import math
 import numpy as np
 from pixivpy3 import AppPixivAPI
 from platform import platform
-from FileOperate import zipFile, saveText
+from FileOperate import zipFile, saveText, formatName, monthNow
 from config import REFRESH_TOKEN
 
 
@@ -217,6 +217,7 @@ def getNovelText(novel_id):
 
 def saveNovel(novel_id, path):
 	name = getNovelInfo(novel_id)[0]
+	name = formatName(name)
 	filepath = os.path.join(path, name + ".txt")
 
 	text = formatNovelInfo(novel_id)
@@ -285,8 +286,8 @@ def formatSeriesInfo(series_id):
 	url = "https://www.pixiv.net/novel/show.php?id={}".format(list[0])
 	info += "网址：{}\n".format(url)
 	info += "标签：{}\n".format(set2Text(s))
-	info += caption + "\n"*2
-	# print(info)
+	info += caption
+	print(info)
 	return info
 
 	
@@ -306,13 +307,13 @@ def getSeriesText(series_id):
 
 def saveSeries(series_id, path):
 	name = getSeriesInfo(series_id)[0]
+	name = formatName(name)
 	filepath = os.path.join(path, name + ".txt")
 
-	text = formatSeriesInfo(series_id)
+	text = formatSeriesInfo(series_id) + "\n"*2
 	text += getSeriesText(series_id)
 	saveText(filepath, text)
 	print("【{}.txt】已保存".format(name))
-	
 	return filepath
 
 
@@ -384,6 +385,7 @@ def saveAuthor(user_id, path):
 	
 	novel_id = novelslist[0]
 	author = getNovelInfo(novel_id)[1]
+	author = formatName(author)
 	path = os.path.join(path, author)
 	print("保存目录：" + path)
 	
@@ -400,15 +402,80 @@ def saveAuthor(user_id, path):
 	return zippath
 
 
-def testSeries(id):
-	if getSeriesId(id)[0] is None:
-		print("开始下载单篇小说……")
-		saveNovel(id, path)
+### 【【【【数据统计部分】】】】
+def novelAnalyse(novel_id):
+	(view, bookmarks, comments) = getNovelInfo(novel_id)[3:6]
+	rate = 100 * bookmarks / view
+	# print(view, bookmarks, comments, round(rate, 2))
+	recommend = 0  # 推荐指数
+	
+	if comments >= 1:  # 根据评论量增加推荐指数
+		i = math.log2(comments)
+		recommend += round(i, 2)
+	# print(round(i, 2))
+	
+	if view >= 0:  # 根据阅读量和收藏率增加推荐指数
+		numlist = [];
+		a = -7.75;
+		step1 = 1;
+		step2 = 0.75
+		for a in np.arange(a, a + 9 * step1, step1):  # 生成首列数据
+			b = np.arange(a, a + 21 * step2, step2)  # 生成首行数据
+			numlist.append(list(b))
+		numlist = np.asarray(numlist)
+		# print(numlist)
+		
+		x = int(view // 500)
+		y = int(rate // 0.5)
+		if x >= len(numlist):
+			x = len(numlist) - 1
+		if y >= len(numlist[0]):
+			y = len(numlist[0]) - 1
+		recommend += numlist[x, y]
+	# print(numlist[x,y])
+	
+	print("推荐指数：{:.2f}".format(recommend))
+	return recommend
+
+
+def seriesAnalyse(series_id):
+	novel_id = getNovelsListFormSeries(series_id)[0]
+	recommend = novelAnalyse(novel_id)  # 系列取第一篇进行统计
+	return recommend
+
+
+def testSeriesAnalyse(novel_id):
+	if getSeriesId(novel_id)[0] is None:
+		recommend = novelAnalyse(novel_id)
 	else:
-		print("该小说为系列小说")
+		series_id = getSeriesId(novel_id)[0]
+		recommend = seriesAnalyse(series_id)
+	return recommend
+
+
+def setPath(id, path):
+	try:
+		recommend = testSeriesAnalyse(id)
+	except:
+		recommend = seriesAnalyse(id)
+	finally:
+		if recommend >= 5:
+			dir = "备用" #monthNow()
+		else:
+			dir = "备用\\不推荐"
+		path = os.path.join(path, dir)
+		return path
+
+
+def testSeries(novel_id, path):
+	path = setPath(path)
+	if getSeriesId(novel_id)[0] is None:
+		print("开始下载单篇小说……")
+		saveNovel(novel_id, path)
+	else:
 		print("开始下载系列小说……")
-		id = getSeriesId(id)[0]
-		saveSeries(id, path)
+		series_id = getSeriesId(novel_id)[0]
+		saveSeries(series_id, path)
 
 
 def wrongType():
@@ -424,14 +491,15 @@ def main():
 		if "pixiv.net" in string:
 			if "novel/series" in string:
 				print("开始下载系列小说……")
+				path = setPath(path)
 				saveSeries(id, path)
 				main()
 			elif "novel" in string:
-				analyse(id)
-				testSeries(id)
+				testSeries(id, path)
 				main()
 			elif "users" in string:
 				print("开始下载此作者的全部小说")
+				path = os.path.join(path, "作者")
 				getAuthorInfo(id)
 				saveAuthor(id, path)
 				main()
@@ -451,44 +519,9 @@ def main():
 		wrongType()
 
 
-def analyse(novel_id):
-	(view, bookmarks, comments) = getNovelInfo(novel_id)[3:6]
-	rate = 100 * bookmarks / view
-	recommend = 0   # 推荐指数
-	
-	if comments >= 1: # 根据评论量增加推荐指数
-		i = math.log2(comments)
-		recommend += round(i, 1)
-		# print(round(i, 1))
-
-	if view >= 0:  # 根据阅读量和收藏率增加推荐指数
-		a = -5 ; numlist = []
-		while a <= 3:
-			b = np.arange(a, a+10, 1)
-			b = list(b)
-			numlist += b
-			a += 1
-		# 以2000+点击量，5%收藏率为准入门槛，设置为3
-		numlist = np.asarray([numlist])
-		numlist = numlist.reshape(9, 10)
-		# print(numlist)
-		
-		x = view // 500
-		y = int(rate // 1) - 1
-		if x >= 9:
-			x = 8
-		if y >= 10:
-			y = 9
-		recommend += numlist[x,y] + y/2
-		# print(numlist[x,y], y/2)
-	
-	print("推荐指数：{}".format(recommend))
-	return recommend
-
-
 if __name__ == '__main__':
 	path = os.getcwd()
-	path = os.path.join(path, "Novels")
+	path = path.replace("\工具", "")
+	dir = "备用"
+	path = os.path.join(path, dir)
 	main()
-	
-

@@ -4,7 +4,7 @@ import os
 from win32com.client import DispatchEx
 
 
-def createDocx(path, text):
+def saveDocx(path, text):
 	word = DispatchEx('Word.Application')  # 独立进程
 	word.Visible = 1  # 0为后台运行
 	word.DisplayAlerts = 0  # 不显示，不警告

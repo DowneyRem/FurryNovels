@@ -25,6 +25,7 @@
 对评论量取对数（而非取余数），则可以有效避免过多的评论造成的推荐指数过大
 
 `log2(32) = 5` 而 `32/2 = 16`
+
 ```
 import math
 
@@ -39,35 +40,22 @@ if comments >= 1: # 根据评论量增加推荐指数
 
 ![推荐指数1](https://raw.githubusercontent.com/DowneyRem/FurryNovels/main/TelegramBot/Recommend1.png)
 
-比如一篇 ` view=2365, bookmarks=203 即 rate=8.5 ` 的小说，推荐指数为 ` recommend=6.5 `
-
-#### 第三部分：收藏率-矫正部分
-
-在实际测试中，仅通过上述两个方法获得的推荐指数较小，故添加收藏率作为矫正数据
-
-```
-	rate = 100 * bookmarks / view
-	if rate >= 0:
-		i = (rate - 3)/2
-		recommend += round(i, 2)
-```
-
-### 最终评定
-
-#### 直观表述
-
-下表中，首列为点击量，首行为收藏率
-以橙色部分（点击量 2000+，收藏率5%+）为基准
-绿色部分，即推荐指数>=5的部分，可以认为是优质小说（不考虑评论的前提下）
-
-![最终评定表](https://raw.githubusercontent.com/DowneyRem/FurryNovels/main/TelegramBot/Recommend2.png)
-
-还是这篇 ` view=2365, bookmarks=203 即 rate=8.5 ` 的小说  
-推荐指数为 ` recommend= 6.5 + 2.75 = 9.25 `  
+比如一篇 ` view=2365, bookmarks=203 即 rate=8.5 ` 的小说，推荐指数为 ` recommend=8.75 `
 
 **基本上符合 Pixiv 用户对优秀的定义**
 
 
+
+### 最终评定
+
+#### 直观表述
+不同阅读量档位，有其对应的收藏率，达到对应收藏率，即被认为这是一篇较为优秀的小说
+
+![收藏率变化表](https://raw.githubusercontent.com/DowneyRem/FurryNovels/main/TelegramBot/Recommend2.png)
+
+最后是不同阅读量对应的收藏量的统计图。  
+
+![收藏率变化表](https://raw.githubusercontent.com/DowneyRem/FurryNovels/main/TelegramBot/Recommend3.png)
 
 #### Q&A
 

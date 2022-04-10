@@ -402,16 +402,62 @@ def saveAuthor(user_id, path):
 	return zippath
 
 
-def testSeries(id):
-	# saveNovel(id, path)
-	if getSeriesId(id)[0] is None:
-		print("开始下载单篇小说……")
-		saveNovel(id, path)
+### 【【【【数据统计部分】】】】
+def novelAnalyse(novel_id):
+	(view, bookmarks, comments) = getNovelInfo(novel_id)[3:6]
+	rate = 100 * bookmarks / view
+	# print(view, bookmarks, comments, round(rate, 2))
+	recommend = 0  # 推荐指数
+	
+	if comments >= 1:  # 根据评论量增加推荐指数
+		i = math.log2(comments)
+		recommend += round(i, 2)
+	# print(round(i, 2))
+	
+	if view >= 0:  # 根据阅读量和收藏率增加推荐指数
+		numlist = [] ; a = -7.75 ; step1 = 1 ; step2 = 0.75
+		for a in np.arange(a, a + 9*step1, step1):  # 生成首列数据
+			b = np.arange(a, a + 21*step2, step2)  # 生成首行数据
+			numlist.append(list(b))
+		numlist = np.asarray(numlist)
+		# print(numlist)
+		
+		x = int(view // 500)
+		y = int(rate // 0.5)
+		if x >= len(numlist):
+			x = len(numlist) - 1
+		if y >= len(numlist[0]):
+			y = len(numlist[0]) - 1
+		recommend += numlist[x, y]
+	# print(numlist[x,y])
+	
+	print("推荐指数：{:.2f}".format(recommend))
+	return recommend
+
+
+def seriesAnalyse(series_id):
+	novel_id = getNovelsListFormSeries(series_id)[0]
+	recommend = novelAnalyse(novel_id)  # 系列取第一篇进行统计
+	return recommend
+
+
+def testSeriesAnalyse(novel_id):
+	if getSeriesId(novel_id)[0] is None:
+		recommend = novelAnalyse(novel_id)
 	else:
-		print("该小说为系列小说")
+		series_id = getSeriesId(novel_id)[0]
+		recommend = seriesAnalyse(series_id)
+	return recommend
+
+
+def testSeries(novel_id, path):
+	if getSeriesId(novel_id)[0] is None:
+		print("开始下载单篇小说……")
+		saveNovel(novel_id, path)
+	else:
 		print("开始下载系列小说……")
-		id = getSeriesId(id)[0]
-		saveSeries(id, path)
+		series_id = getSeriesId(novel_id)[0]
+		saveSeries(series_id, path)
 
 
 def wrongType():
@@ -430,7 +476,6 @@ def main():
 				saveSeries(id, path)
 				main()
 			elif "novel" in string:
-				analyse(id)
 				testSeries(id)
 				main()
 			elif "users" in string:
@@ -452,44 +497,6 @@ def main():
 			wrongType()
 	else:
 		wrongType()
-
-
-def analyse(novel_id):
-	(view, bookmarks, comments) = getNovelInfo(novel_id)[3:6]
-	rate = 100 * bookmarks / view
-	# print(view, bookmarks, comments, round(rate, 2))
-	recommend = 0   # 推荐指数
-	
-	if comments >= 1:  # 根据评论量增加推荐指数
-		i = math.log2(comments)
-		recommend += round(i, 2)
-		# print(round(i, 2))
-
-	if rate >= 0:
-		i = (rate - 3)/2
-		recommend += round(i, 2)
-		# print(round(i, 2))
-		
-	if view >= 0:  # 根据阅读量和收藏率增加推荐指数
-		numlist = []
-		for a in np.arange(-6, 3, 1):    #生成首列数据
-			step = 0.5
-			b = np.arange(a, a +21*step, step)  #生成首行数据
-			numlist.append(list(b))
-		numlist = np.asarray(numlist)
-		# print(numlist)
-		
-		x = int(view // 500)
-		y = int(rate // 0.5)
-		if x >= len(numlist):
-			x = len(numlist) - 1
-		if y >= len(numlist[0]):
-			y = len(numlist[0]) - 1
-		recommend += numlist[x,y]
-		# print(numlist[x,y])
-	
-	print("推荐指数：{:.2f}".format(recommend))
-	return recommend
 
 
 if __name__ == '__main__':
