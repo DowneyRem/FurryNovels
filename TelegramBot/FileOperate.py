@@ -70,6 +70,7 @@ def openText4(path):
 	finally:
 		return textlist
 
+
 def openDocx(path):
 	try:
 		docx = Document(path)
@@ -87,18 +88,17 @@ def openDocx(path):
 def openDocx4(path):
 	try:
 		docx = Document(path)
-		text = "";
-		j = 1
+		text = "" ; j = 1
 		for para in docx.paragraphs:
 			if j < 5:  # 只读取前4行内容
 				j += 1
 				if para.style.name == "Normal Indent":  # 正文缩进
-					text += "　　" + para.text + "\n"
+					text += "　　" + para.text + "\n\t"
 				else:
-					text += para.text + "\n"  # 除正文缩进外的其他所有
+					text += "" + para.text + "\n\t"  # 除正文缩进外的其他所有
 			else:
 				break
-		textlist = text.split("\n")
+		textlist = text.split("\t")  #保留行尾换行符
 		return textlist
 	except IOError:
 		print("文件打开失败")
