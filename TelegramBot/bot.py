@@ -82,6 +82,7 @@ def getIdFromURL(update, context):
 		else:
 			myprint("输入有误，请重新输入Pixiv小说网址")
 	
+	
 	def getId(update, context):
 		caption = ""
 		if re.search("[0-9]{5,}", string):
@@ -104,6 +105,7 @@ def getIdFromURL(update, context):
 		else:
 			wrongType()
 	
+	
 	# removeFile(path)
 	string = update.message.text
 	(filepath ,caption) = getId(update, context)
@@ -115,9 +117,9 @@ def getIdFromURL(update, context):
 	filepath = translate(filepath, language)
 	uploadToUser(filepath, caption)  ##上传文件
 	print("")
-    
-    
-    
+ 
+ 
+ 
 def error(update, context):
 	logger.warning('Update "%s" caused error "%s"', update, context.error)
 
