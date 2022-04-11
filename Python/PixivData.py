@@ -1,30 +1,49 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import os
+import re
 import sys
+import time
+import pandas as pd
+from functools import wraps
+from platform import platform
 from pixivpy3 import AppPixivAPI
+from win32com.client import DispatchEx
 
-
-sys.dont_write_bytecode = True
 
 # get your refresh_token, and replace _REFRESH_TOKEN
 # https://github.com/upbit/pixivpy/issues/158#issuecomment-778919084
-_REFRESH_TOKEN = "0zeYA-PllRYp1tfrsq_w3vHGU1rPy237JMf5oDt73c4"
+REFRESH_TOKEN = "0zeYA-PllRYp1tfrsq_w3vHGU1rPy237JMf5oDt73c4"
 _TEST_WRITE = False
-
-# If a special network environment is meet, please configure requests as you need.
-# Otherwise, just keep it empty.
-_REQUESTS_KWARGS = {
-	'proxies': {
-		'https': 'http://127.0.0.1:10808',
-	},
-	# 'verify': False,
-	# PAPI use https, an easy way is disable requests SSL verify
-}
+sys.dont_write_bytecode = True
 
 
-aapi = AppPixivAPI(**_REQUESTS_KWARGS)
-aapi.auth(refresh_token=_REFRESH_TOKEN)
+if "Windows" in platform():
+	REQUESTS_KWARGS = {'proxies':{'https':'http://127.0.0.1:10808', }}
+try:
+	aapi = AppPixivAPI(**REQUESTS_KWARGS)
+	aapi.auth(refresh_token=REFRESH_TOKEN)
+except:
+	print("请检查网络可用性或更换REFRESH_TOKEN")
+
+
+def timethis(func):
+	@wraps(func)
+	def wrapper(*args, **kwargs):
+		start = time.perf_counter()
+		r = func(*args, **kwargs)
+		end = time.perf_counter()
+		print('{}.{} : {}'.format(func.__module__, func.__name__, end - start))
+		return r
+	return wrapper
+
+
+def formatName(text):
+	list = '/ \ : * " < > | ?'.split(" ")
+	for i in range(len(list)):
+		a = list[i]
+		text = text.replace(a, " ")
+	return text
 
 
 def getNovelInfo(novel_id):
@@ -36,10 +55,10 @@ def getNovelInfo(novel_id):
 	time = novel.create_date[11:19]
 	datetime = date+ " "+ time
 	
-	total_bookmarks = novel.total_bookmarks
-	total_view = novel.total_view
-	total_comments = novel.total_comments
-	return title, datetime, total_view, total_bookmarks, total_comments
+	bookmarks = novel.total_bookmarks
+	view = novel.total_view
+	comments = novel.total_comments
+	return title, datetime, view, bookmarks, comments
 
 
 def getIllustInfo(illust_id):
@@ -51,17 +70,16 @@ def getIllustInfo(illust_id):
 	time = illust.create_date[11:19]
 	datetime = date + " " + time
 	
-	total_bookmarks = illust.total_bookmarks
-	total_view = illust.total_view
-	total_comments = illust.total_comments
-	return title, datetime, total_view, total_bookmarks, total_comments
+	view = illust.total_view
+	bookmarks = illust.total_bookmarks
+	comments = illust.total_comments
+	return title, datetime, view, bookmarks, comments
 	
-
 
 def getUserInfo(user_id):
 	string = ""
 	json_result = aapi.user_detail(user_id)
-	print(json_result)
+	# print(json_result)
 	user = json_result.user
 	id = user.id
 	name = user.name
@@ -73,16 +91,18 @@ def getUserInfo(user_id):
 	webpage = profile.webpage
 	twitter = profile.twitter_url
 	total_follow_users = profile.total_follow_users
-	total_illusts = profile.total_illusts
-	total_manga = profile.total_manga
-	
-	total_novels = profile.total_novels
-	total_series = profile.total_novel_series
-	string = name +"\n系列小说："+str(total_series)+"篇\n共计："+str(total_novels)+"篇"
+ 
+	novels = profile.total_novels
+	series = profile.total_novel_series
+	illusts = profile.total_illusts
+	manga = profile.total_manga
+ 
+	string = "{}\n系列小说：{}篇，共计：{}篇\n插画：{}张，漫画：{}章".format(name, series, novels, illusts, manga )
+	string = string.replace("None", "0")
 	print(string)
-	return name, total_novels, total_series
+	return name, novels, series, illusts, manga
 	
-	
+
 def getNovelsList(user_id):
 	def addlist(json_result):
 		novels = json_result.novels
@@ -133,8 +153,9 @@ def getIllustsList(user_id):
 	return illustslist
 
 
-
-def formatData(user_id):
+@timethis
+def formatForCsv(user_id):
+	print("\n获取Pixiv数据中……")
 	text = "序号,名称,日期,点击,点赞,评论\n"  #获取到点赞其实是收藏，而不是"赞！"
 	novelslist = getNovelsList(user_id)
 	illustslist = getIllustsList(user_id)
@@ -147,10 +168,9 @@ def formatData(user_id):
 		
 	for i in range(len(illustslist)):
 		id = illustslist[i]
-		num = len(novelslist) - i
+		num = len(novelslist) + len(illustslist) - i
 		(title, datetime, view, bookmarks, comments) = getIllustInfo(id)
 		text += "{},{},{},{},{},{}\n".format(num, title ,datetime , view, bookmarks, comments)
-		
 	return text
 
 
@@ -166,26 +186,93 @@ def saveCsv(path, text):
 		print("保存失败")
 
 
-def SaveAsCsv(user_id, path):
-	path = os.path.join(path, "数据.csv")
-	text = formatData(user_id)
-	if not os.path.exists(path):
-		saveCsv(path, text)
+def saveAsCsv(user_id, path):
+	authro = getUserInfo(user_id)[0]
+	authro = formatName(authro)
+	path = os.path.join(path, authro + ".csv")
+	# print(path)
+	text = formatForCsv(user_id)
+	saveCsv(path, text)
 	return path
 
 
+@timethis
+def formatForDataFrame(user_id):
+	li = []
+	print("\n获取Pixiv数据中……")
+	novelslist = getNovelsList(user_id)
+	illustslist = getIllustsList(user_id)
+	
+	for i in range(len(novelslist)):
+		id = novelslist[i]
+		(title, datetime, view, bookmarks, comments) = getNovelInfo(id)
+		li.append([title, datetime, view, bookmarks, comments])
+	
+	for i in range(len(illustslist)):
+		id = illustslist[i]
+		(title, datetime, view, bookmarks, comments) = getIllustInfo(id)
+		li.append([title, datetime, view, bookmarks, comments])
+	return li
+
+
+def saveAsXlsx(user_id, path):
+	data = formatForDataFrame(user_id)
+	col = "名称,日期,点击,点赞,评论".split(",")
+	df = pd.DataFrame(data, columns=col)
+	df = df.sort_values(by="日期")
+	df.index = range(1, len(df) + 1)
+	# print(df)
+	
+	authro = getUserInfo(user_id)[0]
+	authro = formatName(authro)
+	path = os.path.join(path, authro + ".xlsx")
+	try:
+		df.to_excel(path, sheet_name="数据")
+		name = os.path.split(path)[1]
+		print("已存为：【{}】".format(name))
+		return path
+	except:
+		print("保存失败")
+		return None
+
+
+# @timethis
+def openExcel(path):
+	try:
+		excel = DispatchEx('Excel.Application')  # 独立进程
+		excel.Visible = 1  # 0为后台运行
+		excel.DisplayAlerts = 0  # 不显示，不警告
+		xlsx = excel.Workbooks.Open(path)  # 打开文档
+		print("打开Excel……")
+	except:
+		print("文件打开失败或文件不存在")
+
+
+def wrong():
+	print("输入错误，请重新输入")
+	main()
+	
+
+# @timethis
 def main():
-	print("请输入Pixiv作者链接")
-	print("")
+	print("\n请输入Pixiv作者链接：")
 	string = input()
 	if re.search("[0-9]+", string):
 		id = re.search("[0-9]+", string).group()
 		if "pixiv.net" in string and "users" in string:
-			print("开始下载此作者的阅读收藏评论数据")
-			getUserInfo(id)
-			SaveAsCsv(id, path)
-            
-	
+			print("开始获取作者相关数据")
+			try:
+				fliepath = saveAsXlsx(id, path)
+			except:
+				fliepath = saveAsCsv(id, path)
+			openExcel(fliepath)
+			# main()
+		else:
+			wrong()
+	else:
+		wrong()
+
+
 if __name__ == '__main__':
 	path = os.getcwd()
 	main()
