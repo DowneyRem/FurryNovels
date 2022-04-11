@@ -201,8 +201,11 @@ def openNowDir():
 	path = os.getcwd()
 	path = path.replace("\小说推荐\工具", "\兽人小说\小说推荐\频道版")
 	text = monthNow()
-	path = os.path.join(path,text)
-	os.system('start explorer '+ path)
+	pathNow = os.path.join(path, text)
+	if os.path.exists(pathNow):
+		os.system('start explorer '+ pathNow)
+	else:
+		os.system('start explorer '+ path)
 
 
 def zipFile(path):
