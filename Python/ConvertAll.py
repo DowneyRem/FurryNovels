@@ -2,8 +2,10 @@
 # -*- coding: UTF-8 -*-
 import os
 from FileOperate import findFile, openDocx, openText, saveText, removeFile, monthNow, openNowDir
+from Language import getLanguage
 from config import cc1, cc2
-form Language import getLanguage
+
+
 
 def setPath(path):
 	path0 = path.replace("\小说推荐", "\兽人小说\小说推荐\频道版")
