@@ -206,8 +206,8 @@ def openNowDir():
 		os.system('start explorer '+ pathNow)
 	else:
 		os.system('start explorer '+ path)
-
-
+		
+		
 def zipFile(path):
 	# 传入某文件或文件夹路径后，将其所在文件夹打包压缩
 	if os.path.isdir(path):
