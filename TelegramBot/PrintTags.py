@@ -32,25 +32,32 @@ def sortTags(set, cmp):  # 按dict内顺序对转换后的标签排序
 	return text
 
 
-def addTags(text):  # 添加繁简标签
-	list1 = "邊 變 並 從 點 東 對 發 該 個 給 關 過 還 後 歡 會 機 幾 間 見 將 進 經 覺 開 來 裡 兩 嗎 麼 沒 們 難 讓 時 實 說 雖 為 問 無 現 樣 應 於 與 則 這 種".split(" ")
-	list3 = "边 变 并 从 点 东 对 发 该 个 给 关 过 还 后 欢 会 机 几 间 见 将 进 经 觉 开 来 里 两 吗 么 没 们 难 让 时 实 说 虽 为 问 无 现 样 应 于 与 则 这 种".split(" ")
-	# 语料库来自 https://elearning.ling.sinica.edu.tw/cwordfreq.html
-	# 从中选取前三百的繁体字部分，并在文章中随机检验，取存在率最高的前50个繁体字符
+def addTags(text):  # 添加语言标签
+	tags = ""
+	list1 = "边 变 并 从 点 东 对 发 该 个 给 关 过 还 后 欢 会 机 几 间 见 将 进 经 觉 开 来 里 两 吗 么 没 们 难 让 时 实 说 虽 为 问 无 现 样 应 于 与 则 这 种".split(" ")
+	list2 = "邊 變 並 從 點 東 對 發 該 個 給 關 過 還 後 歡 會 機 幾 間 見 將 進 經 覺 開 來 裡 兩 嗎 麼 沒 們 難 讓 時 實 說 雖 為 問 無 現 樣 應 於 與 則 這 種".split(" ")
+	list3 = "あ い う え お か き く け こ さ し す せ そ た ち つ て と な に ぬ ね の は ひ ふ へ ほ ま み む め も や ゆ よ ら り る れ ろ わ を ん ぁ ぃ ぅ ぇ ぉ".split(" ")
+	list4 = "a b c d e f g h I j k l m n o p q r s t u v w x y z".split(" ")
 	
-	tags = ""; j = 0; list2 = []
-	for i in range(len(list1)):
-		char = list1[i]
-		num = text.count(char)
-		if num >= 5:
-			j += 1
-			list2.append(char)
+	def countChar(list):
+		j = 0
+		for i in range(len(list)):
+			char = list[i]
+			num = text.count(char)
+			if num >= 5:
+				j += 1
+		return j
 	
 	tags += " #txt #finished "
-	if j >= 0.2 * len(list1):  # 神奇的数据，可容错
+	if   countChar(list4) >= 0.4 * len(list4):
+		tags += "#en"
+	elif countChar(list3) >= 0.2 * len(list3):
+		tags += "#ja"
+	elif countChar(list2) >= 0.2 * len(list2):
 		tags += "#zh_tw"
-	else:
+	elif countChar(list1) >= 0.2 * len(list1):
 		tags += "#zh_cn"
+	# print(tags)
 	return tags
 
 
@@ -109,6 +116,7 @@ def setSpilt(s):
 
 
 def getInfo(text, textlist):
+	name = textlist[0]
 	authro = textlist[1].replace("作者：", "")
 	authro = "by #" + authro
 	
@@ -166,7 +174,7 @@ def printInfo(path):
 	else:
 		info = "【{}】未处理".format(name)
 		
-	print(info)
+	# print(info)
 	return info
 
 

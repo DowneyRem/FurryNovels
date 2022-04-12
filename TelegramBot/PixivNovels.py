@@ -136,7 +136,7 @@ def formatNovelInfo(novel_id):
 		caption = formatCaption(caption)
 		
 	string = title + author + URL + tags + caption
-	print(string)
+	# print(string)
 	return string
 
 
@@ -416,8 +416,8 @@ def novelAnalyse(novel_id):
 	
 	if view >= 0:  # 根据阅读量和收藏率增加推荐指数
 		numlist = [] ; a = -7.75 ; step1 = 1 ; step2 = 0.75
-		for a in np.arange(a, a + 9*step1, step1):  # 生成首列数据
-			b = np.arange(a, a + 21*step2, step2)  # 生成首行数据
+		for a in np.arange(a, a + 9 * step1, step1):  # 生成首列数据
+			b = np.arange(a, a + 21 * step2, step2)  # 生成首行数据
 			numlist.append(list(b))
 		numlist = np.asarray(numlist)
 		# print(numlist)
@@ -450,7 +450,22 @@ def testSeriesAnalyse(novel_id):
 	return recommend
 
 
+def setPath(id, path):
+	try:
+		recommend = testSeriesAnalyse(id)
+	except:
+		recommend = seriesAnalyse(id)
+	finally:
+		if recommend >= 5:
+			dir = "备用"  # monthNow()
+		else:
+			dir = "备用\\不推荐"
+		path = os.path.join(path, dir)
+		return path
+
+
 def testSeries(novel_id, path):
+	# path = setPath(path)
 	if getSeriesId(novel_id)[0] is None:
 		print("开始下载单篇小说……")
 		saveNovel(novel_id, path)

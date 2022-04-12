@@ -21,6 +21,8 @@ dict = {
 	"停笔":"Died",
 	"太监":"Died",
 	"died":"Died",
+	"English":"en",
+	"日本語":"ja",
 	"简体中文":"zh_cn",
 	"简中":"zh_cn",
 	"zh_cn":"zh_cn",

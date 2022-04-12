@@ -26,7 +26,7 @@ def translate(path, language):
 		text1 = text1.replace("』" , "’")
 		saveText(path1, text1)     # 转简体，存简体目录
 		info = cc1.convert(info)
-		return path1 #, info
+		return path1
 	
 	elif "zh_cn" in info and language == "zh-hant":
 		text2 = cc2.convert(text)  # 简体文件，转繁体
@@ -36,9 +36,10 @@ def translate(path, language):
 		text2 = text2.replace("’" , "』")
 		saveText(path2, text2)     # 转繁体，存繁体目录
 		info = cc2.convert(info)
-		return path2 #, info
+		return path2
 	else:
-		return path #, info
+		print(path)
+		return path
 
 
 
