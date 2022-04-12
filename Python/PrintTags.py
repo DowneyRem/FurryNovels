@@ -49,7 +49,7 @@ def addTags(text):  # 添加语言标签
 		return j
 	
 	tags += " #txt #finished "
-	if countChar(list4) >= 0.4 * len(list4):
+	if   countChar(list4) >= 0.4 * len(list4):
 		tags += "#en"
 	elif countChar(list3) >= 0.2 * len(list3):
 		tags += "#ja"
