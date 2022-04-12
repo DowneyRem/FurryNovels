@@ -550,4 +550,5 @@ if __name__ == '__main__':
 	path = path.replace("\工具", "")
 	dir = "备用"
 	path = os.path.join(path, dir)
+	# path = os.path.join(path, "Novels")
 	main()
