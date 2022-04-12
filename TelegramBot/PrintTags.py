@@ -5,7 +5,7 @@ from functools import cmp_to_key
 from DictNovel import noveldict, cmp   #小说标签
 from DictText import textdict          #正文关键词
 from DictRace import racedict          #种族关键词
-from FileOperate import findFile, openText, openText4, openDocx, openDocx4
+from FileOperate import findFile, openText, openText4, openDocx, openDocx4, monthNow, openNowDir
 from config import cc1, cc2
 
 
@@ -123,7 +123,7 @@ def getInfo(text, textlist):
 	url = textlist[2].replace("网址：", "")
 	url = url.replace("網址：", "")
 	url = url.replace("链接：", "")
-	url = url + "\n"
+	# url = url + "\n"
 	
 	tags = textlist[3].replace("标签：", "")
 	tags = tags.replace("標簽：", "")
@@ -131,7 +131,7 @@ def getInfo(text, textlist):
 	tags = cc1.convert(tags)  # 转简体，只处理简体标签
 	list = tags.split()
 	(tags1, tags2) = translateTags(list)  # 获取已翻译/未翻译的标签
-
+	
 	if "#zh_cn" in tags:
 		name = cc2.convert(textlist[0])
 	elif "#zh_tw" in tags:
@@ -146,11 +146,11 @@ def getInfo(text, textlist):
 	unsuretag = ""
 	if s1 != set():
 		s1 = setSpilt(s1)
-		tags1 = setSpilt(tags1)    #拆分一关键词对多个标签
-		s1 = s1.difference(tags1)  #去重，获取作者未标注的标签
+		tags1 = setSpilt(tags1)    # 拆分一关键词对多个标签
+		s1 = s1.difference(tags1)  # 去重，获取作者未标注的标签
 		s1 = sortTags(s1, cmp)
 		s2 = sortTags(s2, cmp)
-		unsuretag = "可能存在："+ s1 #+ s2
+		unsuretag = "可能存在：" + s1 # +"\n"+ s2
 	
 	tags1 = sortTags(tags1, cmp)
 	if tags2 != "":
@@ -173,25 +173,38 @@ def printInfo(path):
 		info = getInfo(text, textlist)
 	else:
 		info = "【{}】未处理".format(name)
-		
-	# print(info)
+	
+	print(info)
 	return info
 
 
 def getPath(path):
+	j = 0
+	dirstr = monthNow()  # 只处理本月的文件
 	pathlist = findFile(path, ".docx", ".txt")
 	for i in range(0, len(pathlist)):
 		filepath = pathlist[i]
-		printInfo(filepath)
+		if dirstr in filepath:
+			j += 1
+			printInfo(filepath)
+	if j != 0:
+		# openNowDir()
+	# text = set2Text(s)
+	# saveTextDesktop("tags.txt", text)
+	# saveTextDesktop("文字.txt", chars)
+		pass
+	else:
+		print("本月 " + dirstr + " 无新文档")
 
 
 def main():
 	print("本月文档如下：")
-	print("\n" * 2)
+	print("\n")
 	getPath(path)
 
 
 if __name__ == "__main__":
-	path = os.getcwd()
-	path = os.path.join(path, "Novels")
-	pass
+	path = os.path.join(os.getcwd())
+	path = path.replace("\工具", "")
+	pathlist = []
+	main()

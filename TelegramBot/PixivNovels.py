@@ -7,7 +7,7 @@ import math
 import numpy as np
 from pixivpy3 import AppPixivAPI
 from platform import platform
-from FileOperate import zipFile, saveText, formatName
+from FileOperate import zipFile, saveText, formatName, monthNow
 from config import REFRESH_TOKEN
 
 
@@ -286,7 +286,7 @@ def formatSeriesInfo(series_id):
 	url = "https://www.pixiv.net/novel/show.php?id={}".format(list[0])
 	info += "网址：{}\n".format(url)
 	info += "标签：{}\n".format(set2Text(s))
-	info += caption + "\n"*2
+	info += caption
 	# print(info)
 	return info
 
@@ -310,7 +310,7 @@ def saveSeries(series_id, path):
 	name = formatName(name)
 	filepath = os.path.join(path, name + ".txt")
 
-	text = formatSeriesInfo(series_id)
+	text = formatSeriesInfo(series_id) + "\n"*2
 	text += getSeriesText(series_id)
 	saveText(filepath, text)
 	print("【{}.txt】已保存".format(name))
@@ -457,7 +457,7 @@ def setPath(id, path):
 		recommend = seriesAnalyse(id)
 	finally:
 		if recommend >= 5:
-			dir = "备用"  # monthNow()
+			dir = "备用" # monthNow()
 		else:
 			dir = "备用\\不推荐"
 		path = os.path.join(path, dir)
@@ -465,7 +465,7 @@ def setPath(id, path):
 
 
 def testSeries(novel_id, path):
-	# path = setPath(path)
+	path = setPath(path)
 	if getSeriesId(novel_id)[0] is None:
 		print("开始下载单篇小说……")
 		saveNovel(novel_id, path)
@@ -488,13 +488,15 @@ def main():
 		if "pixiv.net" in string:
 			if "novel/series" in string:
 				print("开始下载系列小说……")
+				path = setPath(path)
 				saveSeries(id, path)
 				main()
 			elif "novel" in string:
-				testSeries(id)
+				testSeries(id, path)
 				main()
 			elif "users" in string:
 				print("开始下载此作者的全部小说")
+				path = os.path.join(path, "作者")
 				getAuthorInfo(id)
 				saveAuthor(id, path)
 				main()
