@@ -8,6 +8,7 @@ import numpy as np
 from pixivpy3 import AppPixivAPI
 from platform import platform
 from FileOperate import zipFile, saveText, formatName, monthNow
+from Language import getLanguage
 from config import REFRESH_TOKEN
 
 
@@ -39,12 +40,12 @@ def getTags(novel_id, set):
 	json_result = aapi.novel_detail(novel_id)
 	tags = json_result.novel.tags
 	for i in range(len(tags)):
-		dict = tags[i]
-		# if dict.translated_name is not None:
+		tagn = tags[i]
+		# if tagn.translated_name is not None:
 		# 	tag = dict.translated_name
-		# 	set.add("#"+tag)
-		tag = dict.name
-		set.add("#"+tag)
+		# 	set.add("#" + tag)
+		tag = tagn.name
+		set.add("#" + tag)
 	return set
 
 
@@ -71,6 +72,7 @@ def getSeriesId(novel_id):
 	
 def getNovelInfo(novel_id):
 	json_result = aapi.novel_detail(novel_id)
+	# print(json_result)
 	novel = json_result.novel
 	title = novel.title
 	author = getAuthorName(novel)[0]
@@ -85,9 +87,13 @@ def getNovelInfo(novel_id):
 
 
 def formatCaption(caption):
+	caption = caption.replace("<br />", "\n")
+	caption = caption.replace("<strong>", "")
+	caption = caption.replace("</strong>", "")
+	caption = caption.replace("&amp;" ,"&")
+	
 	# pattern = r'<a href="pixiv://(illusts|novels|users)/[0-9]{5,}">(illust|novel|user)/[0-9]{5,}</a>'
 	# 不清楚为什么用完整的表达式反而会匹配不了，不得已拆成了3份
-	
 	#<a href="pixiv://illusts/12345">illust/12345</a>
 	pattern = '<a href="pixiv://illusts/[0-9]{5,}">illust/[0-9]{5,}</a>'
 	a = re.findall(pattern, caption)
@@ -115,7 +121,24 @@ def formatCaption(caption):
 		id = re.search("[0-9]{5,}", string).group()
 		link = "https://www.pixiv.net/users/{}".format(id)
 		caption = caption.replace(string, link)
+	
+	
+	# 一般a标签
+	# <a href="https://deadmanshand.fanbox.cc/" target="_blank">https://deadmanshand.fanbox.cc/</a>
+	pattern = '''<a href="(https://.*)" target=(?:'|")_blank(?:'|").*>https://.*</a>'''
+	a = re.findall(pattern, caption)
+	for i in range(len(a)):
+		link = a[i]
+		caption = re.sub(pattern, link, caption, 1)
+		
+	caption = caption.replace("\n\n", "\n")
 	return caption
+
+
+def getLang(novel_id):
+	text = getNovelText(novel_id)
+	lang = getLanguage(text)
+	return lang
 
 
 def formatNovelInfo(novel_id):
@@ -124,17 +147,15 @@ def formatNovelInfo(novel_id):
 	author = "作者：{}\n".format(author)
 	URL = "网址：https://www.pixiv.net/novel/show.php?id={}\n".format(novel_id)
 	
-	s = set()
-	tags = set2Text(getTags(novel_id, s))
-	tags = "标签：" + tags+ "\n"
-	
 	if caption != "":
 		caption = "其他：{}\n".format(caption)
-		caption = caption.replace("<br />", "\n")
-		caption = caption.replace("<strong>", "")
-		caption = caption.replace("</strong>", "")
 		caption = formatCaption(caption)
-		
+	
+	s = set()
+	s = getTags(novel_id, s)
+	s.add(getLang(novel_id))
+	tags = "标签：{}\n".format(set2Text(s))
+
 	string = title + author + URL + tags + caption
 	print(string)
 	return string
@@ -265,28 +286,29 @@ def getSeriesInfo(series_id):
 
 	
 def formatSeriesInfo(series_id):
-	(title, author, caption, content_count) = getSeriesInfo(series_id)
-	info = "" ; s = set()
+	(title, author, caption, count) = getSeriesInfo(series_id)
 	author = "作者：{}\n".format(author)
-	info += title +"\n"+ author
+	
 	if caption != "":
 		caption = "其他：{}\n".format(caption)    #系列简介
-		caption = caption.replace("\n\n", "\n")
-		caption = caption.replace("", "")
-
+		caption = formatCaption(caption)
+		
 	list = getNovelsListFormSeries(series_id)
-	print("系列：{} 共有{}章".format(title, content_count))
-	if len(list) != content_count:
-		print("已获取{}章".format(len(list)))
+	novel_id = list[0]
+	url = "网址：https://www.pixiv.net/novel/show.php?id={}\n".format(novel_id)
 	
+	print("系列：{} 共有{}章".format(title, count))
+	if len(list) != count:
+		print("已获取{}章".format(len(list)))
+		
+	s = set()
+	s.add(getLang(novel_id))
 	for i in range(len(list)):
 		id = list[i]
 		s = getTags(id, s)
+	tag = "标签：{}\n".format(set2Text(s))
 	
-	url = "https://www.pixiv.net/novel/show.php?id={}".format(list[0])
-	info += "网址：{}\n".format(url)
-	info += "标签：{}\n".format(set2Text(s))
-	info += caption
+	info = title + "\n" + author + tag + url + caption
 	print(info)
 	return info
 
@@ -315,6 +337,11 @@ def saveSeries(series_id, path):
 	saveText(filepath, text)
 	print("【{}.txt】已保存".format(name))
 	return filepath
+
+
+### 【【【系列打包下载】】】
+
+
 
 
 ### 【【【用户页面】】】
@@ -450,70 +477,72 @@ def testSeriesAnalyse(novel_id):
 	return recommend
 
 
-def setPath(id, path):
-	try:
-		recommend = testSeriesAnalyse(id)
-	except:
-		recommend = seriesAnalyse(id)
-	finally:
-		if recommend >= 5:
-			dir = "备用" #monthNow()
-		else:
-			dir = "备用\\不推荐"
-		path = os.path.join(path, dir)
-		return path
-
-
-def testSeries(novel_id, path):
-	path = setPath(path)
-	if getSeriesId(novel_id)[0] is None:
-		print("开始下载单篇小说……")
-		saveNovel(novel_id, path)
-	else:
-		print("开始下载系列小说……")
-		series_id = getSeriesId(novel_id)[0]
-		saveSeries(series_id, path)
-
-
-def wrongType():
-	print("输入有误，请重新输入")
-	main()
-
-
+### 【【【主函数部分】】】】
 def main():
+	def wrong():
+		print("输入有误，请重新输入")
+		main()
+	
+	def downloadSeries(series_id, string):
+		if string == "" or string is None:
+			print("选择下载模式")
+			text = '''
+输入【 2 】，即下载txt合集
+输入【 3 】，即下载zip合集'''
+			string = input(text + "\n" * 2)
+		
+		if str(2) in string:
+			print("开始下载txt合集")
+			saveSeries(series_id, path)
+		elif str(3) in string:
+			print("开始下载zip合集")
+			pass
+	
+	
+	def testSeries(novel_id):
+		if getSeriesId(novel_id)[0] is None:
+			print("开始下载单篇小说……")
+			saveNovel(novel_id, path)
+		else:
+			print("选择下载模式")
+			text = '''
+输入【 1 】，即下载当前章节
+输入【 2 】，即下载txt合集
+输入【 3 】，即下载zip合集'''
+			string = input(text + "\n" * 2)
+			if str(1) in string:
+				print("开始下载当前章节")
+				saveNovel(novel_id, path)
+			else:
+				series_id = getSeriesId(novel_id)[0]
+				downloadSeries(series_id, string)
+	
+	
+	def download(string, id):
+		if "novel/series" in string:
+			print("开始下载系列小说……")
+			downloadSeries(id, "")
+		elif "novel" in string:
+			testSeries(id)
+		elif "users" in string:
+			print("开始下载此作者的全部小说")
+			getAuthorInfo(id)
+			saveAuthor(id, path)
+		elif "artworks" in string:
+			print("不支持下载插画，请重新输入")
+	
+	
 	print("\n请输入Pixiv小说链接")
 	string = input()
 	if re.search("[0-9]+", string):
 		id = re.search("[0-9]+", string).group()
 		if "pixiv.net" in string:
-			if "novel/series" in string:
-				print("开始下载系列小说……")
-				path = setPath(path)
-				saveSeries(id, path)
-				main()
-			elif "novel" in string:
-				testSeries(id, path)
-				main()
-			elif "users" in string:
-				print("开始下载此作者的全部小说")
-				path = os.path.join(path, "作者")
-				getAuthorInfo(id)
-				saveAuthor(id, path)
-				main()
-			elif "artworks" in string:
-				print("不支持下载插画，请重新输入")
-				main()
-		elif re.search("[0-9]+", string):
-			id = re.search("[0-9]+", string).group()
-			if len(id) >= 5:
-				print("检测到纯数字，按照小说id解析")
-				testSeries(id)
-			else:
-				wrongType()
+			download(string, id)
 		else:
-			wrongType()
+			testSeries(id)
+		main()
 	else:
-		wrongType()
+		wrong()
 
 
 if __name__ == '__main__':
