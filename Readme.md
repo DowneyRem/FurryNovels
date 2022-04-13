@@ -57,3 +57,6 @@
 [简体标签](https://github.com/DowneyRem/FurryNovels/blob/main/Tags_zh_cn.md) &
 [繁體标签](https://github.com/DowneyRem/FurryNovels/blob/main/Tags_zh_tw.md)   
 
+
+### 个龙学习练手项目
+欢迎指点
