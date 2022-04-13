@@ -345,6 +345,7 @@ def getSeriesText(series_id):
 
 
 def saveSeriesAsTxt(series_id, path):
+	print("开始下载txt合集")
 	name = getSeriesInfo(series_id)[0]
 	name = formatFileName(name)
 	filepath = os.path.join(path, name + ".txt")
@@ -357,6 +358,7 @@ def saveSeriesAsTxt(series_id, path):
 
 
 def saveSeriesAsZip(series_id, path):
+	print("开始下载zip合集")
 	dirname = getSeriesInfo(series_id)[0]
 	dirname = formatFileName(dirname)
 	path = os.path.join(path, dirname)
@@ -370,22 +372,6 @@ def saveSeriesAsZip(series_id, path):
 	zippath = zipFile(path)
 	return zippath
 
-
-def askHow(series_id, path, string):
-	if string == "" or string is None:
-		print("请选择下载模式")
-		text = '''
-		输入【 2 】，即下载txt合集
-		输入【 3 】，即下载zip合集'''
-		string = input(text + "\n" * 2)
-	
-	if str(2) in string:
-		print("开始下载txt合集")
-		saveSeriesAsTxt(series_id, path)
-	elif str(3) in string:
-		print("开始下载zip合集")
-		saveSeriesAsZip(series_id, path)
-	
 
 def saveSeries(series_id, path):
 	#判断系列为一篇小说还是多篇
@@ -441,13 +427,15 @@ def saveSeries(series_id, path):
 			return num
 		
 	num = getnum(series_id)
-	if   num >  0:
-		saveSeriesAsTxt(series_id, path)
-	elif num == 0:
-		saveSeriesAsTxt(series_id, path)
-		saveSeriesAsZip(series_id, path)
-	elif num <  0:
-		saveSeriesAsZip(series_id, path)
+	path2 =""
+	if   num > 0:
+		path1 = saveSeriesAsTxt(series_id, path)
+	elif num < 0:
+		path1 = saveSeriesAsZip(series_id, path)
+	else:
+		path1 = saveSeriesAsTxt(series_id, path)
+		path2 = saveSeriesAsZip(series_id, path)
+	return path1, path2
 
 
 ### 【【【用户页面】】】
@@ -597,20 +585,7 @@ def main():
 			series_id = getSeriesId(novel_id)[0]
 			saveSeries(series_id, path)
 			
-# 			print("选择下载模式")
-# 			text = '''
-# 输入【 1 】，即下载当前章节
-# 输入【 2 】，即下载txt合集
-# 输入【 3 】，即下载zip合集'''
-# 			string = input(text + "\n" * 2)
-# 			if str(1) in string:
-# 				print("开始下载当前章节")
-# 				saveNovel(novel_id, path)
-# 			else:
-# 				series_id = getSeriesId(novel_id)[0]
-# 				askHow(series_id, path, string)
 
-	
 	def download(string, id):
 		if "novel/series" in string:
 			print("开始下载系列小说……")
@@ -640,7 +615,7 @@ def main():
 
 if __name__ == '__main__':
 	path = os.getcwd()
-	path = path.replace("\工具", "")
+	path = path.replace("\\工具", "")
 	dir = "备用"
 	path = os.path.join(path, dir)
 	# path = os.path.join(path, "Novels")
