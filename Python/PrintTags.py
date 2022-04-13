@@ -177,5 +177,5 @@ def main():
 if __name__ == "__main__":
 	path = os.path.join(os.getcwd())
 	path = path.replace("\工具", "")
-	pathlist = []
+	# path = os.path.join(path, "Novels")
 	main()

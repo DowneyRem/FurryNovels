@@ -157,6 +157,12 @@ def formatCaption(caption):
 	return caption
 
 
+def getLang(novel_id):
+	text = getNovelText(novel_id)
+	lang = getLanguage(text)
+	return lang
+
+
 def formatNovelInfo(novel_id):
 	(title, author, caption) = getNovelInfo(novel_id)[0:3]
 	title = title + "\n"
@@ -236,6 +242,12 @@ def formatPixivText(text, novel_id):
 		else:
 			string = "{}【{}】".format(name, link)
 			text = re.sub("\[{2}jumpuri: *(.*) *> *(.*)\]{2}", string, text, 1)
+	
+	# [uploadedimage: 上传图片自动生成的ID]
+	# 会被 pixivpy 自动转换成一下这一大串
+	stringpart ="jumpuri:If you would like to view illustrations, please use your desktop browser.>https://www.pixiv.net/n/"
+	autostring = "[[{}{}]]".format(stringpart, novel_id)
+	text = text.replace(autostring, "【此文内有插图，请在Pixv查看】")
 	return text
 
 
