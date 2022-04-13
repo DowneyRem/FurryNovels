@@ -146,7 +146,7 @@ def printInfo(path):
 	else:
 		info = "【{}】未处理".format(name)
 	
-	print(info)
+	# print(info)
 	return info
 
 

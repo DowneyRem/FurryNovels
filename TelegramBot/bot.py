@@ -11,7 +11,7 @@ from telegram.utils.request import Request
 from functools import wraps
 from platform import platform
 
-from PixivNovels import (saveNovel, saveSeries, saveAuthor, getAuthorInfo, getSeriesId, novelAnalyse, seriesAnalyse)
+from PixivNovels import (saveNovel, saveSeries, saveSeriesAsTxt, saveSeriesAsZip, saveAuthor, getAuthorInfo, getSeriesId, analyse)
 from PrintTags import printInfo
 from DictRace import racedict
 from FileOperate import removeFile
@@ -62,7 +62,7 @@ def botmain(update, context):
 	def getUserName(update, context):
 		firstname = update.message.from_user.first_name  # 获取昵称
 		name = update.message.from_user.username  # 获取用户名
-		sharetext = "来自 {} 的分享".format(firstname)
+		sharetext = "\n来自 {} 的分享".format(firstname)
 		return sharetext
 	
 	
@@ -82,12 +82,15 @@ def botmain(update, context):
 		# context.bot.delete_message(chatid, messageid + 0)
 		context.bot.delete_message(chatid, messageid + 1)
 		context.bot.delete_message(chatid, messageid + 2)
+		print("文件已上传至用户")
 	
-	
-	def uploadToChannel(channel, path):
+	def uploadToChannel(channel, path, recommend=0):
 		(document, name, caption) = upload(path)
-		print(name)
 		caption += getUserName(update, context)
+		if recommend >= 0:
+			caption += "\n推荐指数：{}".format(recommend)
+			caption += " @FurryNovels"
+			
 		context.bot.send_document(channel, document, name, caption)
 		print("已经发送至：" + channel)
 	
@@ -96,11 +99,12 @@ def botmain(update, context):
 		def singleNovel(novel_id):
 			myprint("开始下载单篇小说……")
 			filepath = saveNovel(novel_id, path)
-			recommend = novelAnalyse(novel_id)
+			recommend = analyse(novel_id)
 			return filepath, recommend
 		
 		if getSeriesId(novel_id)[0] is None:
 			(filepath, recommend) = singleNovel(novel_id)
+		
 		else:
 			# myprint("是否按照系列下载此小说？")
 			# if not :
@@ -109,16 +113,16 @@ def botmain(update, context):
 			
 			myprint("开始下载系列小说……")
 			series_id = getSeriesId(novel_id)[0]
-			filepath = saveSeries(series_id, path)
-			recommend = seriesAnalyse(series_id)
+			filepath = saveSeriesAsZip(series_id, path)
+			recommend = analyse(series_id)
 		return filepath, recommend
 	
 	
 	def download(string, id):
 		if "novel/series" in string:
 			myprint("开始下载系列小说……")
-			filepath = saveSeries(id, path)
-			recommend = seriesAnalyse(id)
+			filepath = saveSeriesAsZip(id, path)
+			recommend = analyse(id)
 		elif "novel" in string:
 			(filepath, recommend) = testSeries(id)
 		elif "users" in string:
@@ -154,11 +158,12 @@ def botmain(update, context):
 		caption = upload(filepath)[2]
 		furrynum = 0
 		racelist = list(racedict.values())
+		# racelist = list(raceset)
 		for i in range(len(racelist)):
 			race = racelist[i]
 			if race in caption:
 				furrynum += 1
-		print(furrynum)
+		print("福瑞指数：{}".format(furrynum))
 		return furrynum
 	
 	
@@ -167,11 +172,11 @@ def botmain(update, context):
 	caption = upload(filepath)[2]
 	furrynum = furry(filepath)
 	
-	if furrynum >= 5 and (".zip" not in filepath) and "zh" in caption:
-		uploadToChannel("@FurryReading", filepath)
-	if furrynum >= 5 and recommend >= 5 and "zh" in caption:
+	if furrynum >= 3 and (".zip" not in filepath) and "zh" in caption:
+		uploadToChannel("@FurryReading", filepath, recommend)
+	if furrynum >= 3 and recommend >= 5 and "zh" in caption:
 		pass
-		# uploadToChannel("@FurryNovels", filepath)
+		# uploadToChannel("@FurryNovels", filepath, recommend)
 	
 	# language = update.message.from_user.language_code
 	# filepath = translate(filepath, language)

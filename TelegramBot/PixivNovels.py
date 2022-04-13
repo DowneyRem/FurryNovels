@@ -568,8 +568,8 @@ def analyse(id):
 		if view <= 1000:  #对阅读量小于1000的小说适当提高要求
 			recommend += -0.75
 		
-	print("推荐指数：{:.2f}".format(recommend))
-	return recommend
+		print("推荐指数：{:.2f}".format(recommend))
+		return recommend
 
 
 	def seriesAnalyse(series_id):
