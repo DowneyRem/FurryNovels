@@ -35,6 +35,12 @@ def set2Text(set):
 	return text
 
 
+def getLang(novel_id):
+	text = getNovelText(novel_id)
+	lang = getLanguage(text)
+	return lang
+
+
 def getTags(novel_id, set):
 	#set 去重复标签，支持系列小说
 	json_result = aapi.novel_detail(novel_id)
@@ -86,11 +92,28 @@ def getNovelInfo(novel_id):
 	return title, author, caption, view, bookmarks, comments
 
 
+def formatNovelName(novel_id):
+	name = getNovelInfo(novel_id)[0]
+	# pattern = "((?:给|給)?.+?的?(?:委托|赠文|无偿))(?::|：|;|；|,|，)?(.+?)((?:（| ).*）?)"
+	pattern = "((?:给|給)?.+?的?(?:委托|赠文|无偿))(?::|：|;|；|,|，)?(.+)"
+	text = re.findall(pattern, name)
+	if text != []:
+		# print(text)
+		a = text[0][0].strip()
+		b = text[0][1].strip()
+		b = re.sub("(\(|（)?[0-9]+(\)|）)?", "", b)
+		b = b.replace("摸鱼", "")
+		
+		if len(b) >= 1:
+			name = text[0][1].strip()
+	return name
+
+
 def formatCaption(caption):
 	caption = caption.replace("<br />", "\n")
 	caption = caption.replace("<strong>", "")
 	caption = caption.replace("</strong>", "")
-	caption = caption.replace("&amp;" ,"&")
+	caption = caption.replace("&amp;", "&")
 	
 	# pattern = r'<a href="pixiv://(illusts|novels|users)/[0-9]{5,}">(illust|novel|user)/[0-9]{5,}</a>'
 	# 不清楚为什么用完整的表达式反而会匹配不了，不得已拆成了3份
@@ -103,7 +126,7 @@ def formatCaption(caption):
 		id = re.search("[0-9]{5,}", string).group()
 		link = "https://www.pixiv.net/artworks/{}".format(id)
 		caption = caption.replace(string, link)
-		
+	
 	#<a href="pixiv://novels/12345">novel/12345</a>
 	pattern = '<a href="pixiv://novels/[0-9]{5,}">novel/[0-9]{5,}</a>'
 	a = re.findall(pattern, caption)
@@ -122,7 +145,6 @@ def formatCaption(caption):
 		link = "https://www.pixiv.net/users/{}".format(id)
 		caption = caption.replace(string, link)
 	
-	
 	# 一般a标签
 	# <a href="https://deadmanshand.fanbox.cc/" target="_blank">https://deadmanshand.fanbox.cc/</a>
 	pattern = '''<a href="(https://.*)" target=(?:'|")_blank(?:'|").*>https://.*</a>'''
@@ -130,15 +152,9 @@ def formatCaption(caption):
 	for i in range(len(a)):
 		link = a[i]
 		caption = re.sub(pattern, link, caption, 1)
-		
+	
 	caption = caption.replace("\n\n", "\n")
 	return caption
-
-
-def getLang(novel_id):
-	text = getNovelText(novel_id)
-	lang = getLanguage(text)
-	return lang
 
 
 def formatNovelInfo(novel_id):
@@ -157,7 +173,7 @@ def formatNovelInfo(novel_id):
 	tags = "标签：{}\n".format(set2Text(s))
 
 	string = title + author + URL + tags + caption
-	print(string)
+	# print(string)
 	return string
 
 
@@ -204,6 +220,12 @@ def formatPixivText(text, novel_id):
 		string = "插图：https://www.pixiv.net/artworks/".format(string)
 		text = re.sub("\[pixivimage:(.*)\]", string, text, 1)
 		
+	# [uploadedimage: 上传图片自动生成的ID]
+	# 会被 pixivpy 自动转换成一下这一大串
+	stringpart ="jumpuri:If you would like to view illustrations, please use your desktop browser.>https://www.pixiv.net/n/"
+	autostring = "[[{}{}]]".format(stringpart, novel_id)
+	text = text.replace(autostring, "【此文内有插图，请在Pixv查看】")
+	
 	# [[jumpuri: 标题 > 链接目标的URL]]
 	a = re.findall("\[{2}jumpuri: *(.*) *> *(.*)\]{2}", text)
 	for i in range(len(a)):
@@ -214,12 +236,6 @@ def formatPixivText(text, novel_id):
 		else:
 			string = "{}【{}】".format(name, link)
 			text = re.sub("\[{2}jumpuri: *(.*) *> *(.*)\]{2}", string, text, 1)
-	
-	# [uploadedimage: 上传图片自动生成的ID]
-	# 会被 pixivpy 自动转换成一下这一大串
-	stringpart ="jumpuri:If you would like to view illustrations, please use your desktop browser.>https://www.pixiv.net/n/"
-	autostring = "[[{}{}]]".format(stringpart, novel_id)
-	text = text.replace(autostring, "【此文内有插图，请在Pixv查看】")
 	return text
 
 
@@ -309,25 +325,8 @@ def formatSeriesInfo(series_id):
 	tag = "标签：{}\n".format(set2Text(s))
 	
 	info = title + "\n" + author + tag + url + caption
-	print(info)
+	# print(info)
 	return info
-
-
-def formatNovelName(novel_id):
-	name = getNovelInfo(novel_id)[0]
-	# pattern = "((?:给|給)?.+?的?(?:委托|赠文|无偿))(?::|：|;|；|,|，)?(.+?)((?:（| ).*）?)"
-	pattern = "((?:给|給)?.+?的?(?:委托|赠文|无偿))(?::|：|;|；|,|，)?(.+)"
-	text = re.findall(pattern, name)
-	if text != []:
-		# print(text)
-		a = text[0][0].strip()
-		b = text[0][1].strip()
-		b = re.sub("(\(|（)?[0-9]+(\)|）)?", "", b)
-		b = b.replace("摸鱼", "")
-		
-		if len(b) >= 1:
-			name = text[0][1].strip()
-	return name
 
 
 def getSeriesText(series_id):
@@ -368,7 +367,7 @@ def saveSeriesAsZip(series_id, path):
 	for i in range(len(list)):
 		id = list[i]
 		saveNovel(id, path)
-	
+		
 	zippath = zipFile(path)
 	return zippath
 
@@ -392,11 +391,11 @@ def saveSeries(series_id, path):
 			num += 1
 		elif re.findall("(设定|設定|背景|引|序章|终章|終章|番外|后记|後記)", novelsName):
 			num += 1
-		elif re.findall(pat2, novelsName):
+		elif re.findall("(部|卷|章|节|節|篇|话|話)", novelsName):
 			num += 1
 		# elif seriesName != "" and seriesName in novelsName:
 		# 	num += 1
-		print(novelsName, num)
+		# print(novelsName, num)
 		return num
 	
 	def getnum(series_id):
@@ -424,18 +423,19 @@ def saveSeries(series_id, path):
 					break
 				else:
 					num = test1(series_id, id, num)
+			
+			num = 100 * num /count
 			return num
 		
 	num = getnum(series_id)
-	path2 =""
-	if   num > 0:
-		path1 = saveSeriesAsTxt(series_id, path)
-	elif num < 0:
-		path1 = saveSeriesAsZip(series_id, path)
+	if num > +60:
+		filepath = saveSeriesAsTxt(series_id, path)
+	if num < -60:
+		filepath = saveSeriesAsZip(series_id, path)
 	else:
-		path1 = saveSeriesAsTxt(series_id, path)
-		path2 = saveSeriesAsZip(series_id, path)
-	return path1, path2
+		filepath = saveSeriesAsTxt(series_id, path)
+		filepath = saveSeriesAsZip(series_id, path)
+	return filepath
 
 
 ### 【【【用户页面】】】
@@ -525,7 +525,7 @@ def saveAuthor(user_id, path):
 
 
 ### 【【【【数据统计部分】】】】
-def analyse(novel_id):
+def analyse(id):
 	def novelAnalyse(novel_id):
 		(view, bookmarks, comments) = getNovelInfo(novel_id)[3:6]
 		rate = 100 * bookmarks / view
@@ -540,7 +540,7 @@ def analyse(novel_id):
 		if view >= 0:  # 根据阅读量和收藏率增加推荐指数
 			numlist = [] ; a = -7.75 ; step1 = 1 ; step2 = 0.75
 			for a in np.arange(a, a + 9 * step1, step1):  # 生成首列数据
-				b = np.arange(a, a + 21 * step2, step2)  # 生成首行数据
+				b  = np.arange(a, a + 21 * step2, step2)  # 生成首行数据
 				numlist.append(list(b))
 			numlist = np.asarray(numlist)
 			# print(numlist)
@@ -560,16 +560,28 @@ def analyse(novel_id):
 		print("推荐指数：{:.2f}".format(recommend))
 		return recommend
 	
-	
-	if getSeriesId(novel_id)[0] is None:
-		recommend = novelAnalyse(novel_id)
-	else:
-		series_id = getSeriesId(novel_id)[0]
+	def seriesAnalyse(series_id):
 		novel_id  = getNovelsListFormSeries(series_id)[0]
 		recommend = novelAnalyse(novel_id)  # 系列取第一篇进行统计
+		return recommend
+	
+	def testAnalyse(novel_id):
+		if getSeriesId(novel_id)[0] is None:
+			recommend = novelAnalyse(novel_id)
+		else:
+			series_id = getSeriesId(novel_id)[0]
+			recommend = seriesAnalyse(series_id)
+		return recommend
+	
+	try:
+		novellist = getNovelsListFormSeries(id)
+		id = novellist[0]
+		recommend = seriesAnalyse(id)
+	except TypeError:  #非系列id报错
+		recommend = testAnalyse(id)
 	return recommend
 
-
+	
 ### 【【【主函数部分】】】】
 def main():
 	def wrong():
@@ -578,6 +590,7 @@ def main():
 		
 	
 	def testSeries(novel_id):
+		analyse(novel_id)
 		if getSeriesId(novel_id)[0] is None:
 			print("开始下载单篇小说……")
 			saveNovel(novel_id, path)
@@ -589,6 +602,7 @@ def main():
 	def download(string, id):
 		if "novel/series" in string:
 			print("开始下载系列小说……")
+			analyse(id)
 			saveSeries(id, path)
 		elif "novel" in string:
 			testSeries(id)
@@ -616,7 +630,6 @@ def main():
 if __name__ == '__main__':
 	path = os.getcwd()
 	path = path.replace("\\工具", "")
-	dir = "备用"
-	path = os.path.join(path, dir)
+	path = os.path.join(path, "备用")
 	# path = os.path.join(path, "Novels")
 	main()

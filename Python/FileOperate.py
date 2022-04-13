@@ -208,10 +208,12 @@ def openNowDir():
 		os.system('start explorer '+ path)
 		
 		
-def zipFile(path):
+def zipFile(path, delete=0):
 	# 传入某文件或文件夹路径后，将其所在文件夹打包压缩
+	# delete 默认为0，为0或为""时，压缩后删除源文件
+	
 	if os.path.isdir(path):
-		dir = path
+		dir = path    #文件上级文件夹
 	elif os.path.isfile(path):
 		(dir, name) = os.path.split(path)
 	list = findFile(dir, ) ## 获取目录下所有文件
@@ -226,8 +228,16 @@ def zipFile(path):
 		# print(filedir)
 		z.write(filename=path, arcname=filedir)   #压缩的文件，zip内路径
 	z.close()
+	
+	if delete == 0 or delete == "":
+		try:
+			shutil.rmtree(dir)   #删除文件夹
+			# print("【已经删除zip的源文件夹】")
+		except IOError:
+			print("【zip的源文件夹删除失败】")
+			
 	zipname = os.path.split(zippath)[1]
-	print("【"+ zipname +"】压缩完成")
+	print("【{}】压缩完成".format(zipname))
 	return zippath
 
 
