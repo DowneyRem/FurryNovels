@@ -7,7 +7,7 @@ import math
 import numpy as np
 from pixivpy3 import AppPixivAPI
 from platform import platform
-from FileOperate import zipFile, saveText, formatName, monthNow
+from FileOperate import zipFile, saveText, formatFileName, monthNow, makeDirs
 from Language import getLanguage
 from config import REFRESH_TOKEN
 
@@ -237,8 +237,8 @@ def getNovelText(novel_id):
 
 
 def saveNovel(novel_id, path):
-	name = getNovelInfo(novel_id)[0]
-	name = formatName(name)
+	name = formatNovelName(novel_id)
+	name = formatFileName(name)
 	filepath = os.path.join(path, name + ".txt")
 
 	text = formatNovelInfo(novel_id)
@@ -312,13 +312,30 @@ def formatSeriesInfo(series_id):
 	print(info)
 	return info
 
-	
+
+def formatNovelName(novel_id):
+	name = getNovelInfo(novel_id)[0]
+	# pattern = "((?:给|給)?.+?的?(?:委托|赠文|无偿))(?::|：|;|；|,|，)?(.+?)((?:（| ).*）?)"
+	pattern = "((?:给|給)?.+?的?(?:委托|赠文|无偿))(?::|：|;|；|,|，)?(.+)"
+	text = re.findall(pattern, name)
+	if text != []:
+		# print(text)
+		a = text[0][0].strip()
+		b = text[0][1].strip()
+		b = re.sub("(\(|（)?[0-9]+(\)|）)?", "", b)
+		b = b.replace("摸鱼", "")
+		
+		if len(b) >= 1:
+			name = text[0][1].strip()
+	return name
+
+
 def getSeriesText(series_id):
 	text = "\n"
 	list = getNovelsListFormSeries(series_id)
 	for i in range(len(list)):
 		id = list[i]
-		title = getNovelInfo(id)[0] + "\n"
+		title = formatNovelName(id) + "\n"
 		if ("第"not in title) and ("章" not in title):
 			title = "第{}章 {}".format(i+1, title)
 		text += title
@@ -327,9 +344,9 @@ def getSeriesText(series_id):
 	return text
 
 
-def saveSeries(series_id, path):
+def saveSeriesAsTxt(series_id, path):
 	name = getSeriesInfo(series_id)[0]
-	name = formatName(name)
+	name = formatFileName(name)
 	filepath = os.path.join(path, name + ".txt")
 
 	text = formatSeriesInfo(series_id) + "\n"*2
@@ -339,9 +356,98 @@ def saveSeries(series_id, path):
 	return filepath
 
 
-### 【【【系列打包下载】】】
+def saveSeriesAsZip(series_id, path):
+	dirname = getSeriesInfo(series_id)[0]
+	dirname = formatFileName(dirname)
+	path = os.path.join(path, dirname)
+	makeDirs(path)
+	
+	list = getNovelsListFormSeries(series_id)
+	for i in range(len(list)):
+		id = list[i]
+		saveNovel(id, path)
+	
+	zippath = zipFile(path)
+	return zippath
 
 
+def askHow(series_id, path, string):
+	if string == "" or string is None:
+		print("请选择下载模式")
+		text = '''
+		输入【 2 】，即下载txt合集
+		输入【 3 】，即下载zip合集'''
+		string = input(text + "\n" * 2)
+	
+	if str(2) in string:
+		print("开始下载txt合集")
+		saveSeriesAsTxt(series_id, path)
+	elif str(3) in string:
+		print("开始下载zip合集")
+		saveSeriesAsZip(series_id, path)
+	
+
+def saveSeries(series_id, path):
+	#判断系列为一篇小说还是多篇
+	def test1(series_id, novel_id, num):
+		seriesName = getSeriesInfo(series_id)[0]
+		seriesName = seriesName.replace("系列", "")
+		novelsName = getNovelInfo(novel_id)[0]
+		novelsCaption = getNovelInfo(novel_id)[2]
+		
+		pat1 = "(第|\(|（|-)?"
+		pat2 = "(部|卷|章|节|節|篇|话|話|\)|）|-|\.)"
+
+		if   re.findall(pat1 + "[0-9.]+" + pat2, novelsName):
+			num += 1
+		elif re.findall(pat1 + "[零〇一二三四五六七八九点十百千万亿萬億]+" + pat2, novelsName):
+			num += 1
+		elif re.findall("[上中下]" + pat2, novelsName):
+			num += 1
+		elif re.findall("(设定|設定|背景|引|序章|终章|終章|番外|后记|後記)", novelsName):
+			num += 1
+		elif re.findall(pat2, novelsName):
+			num += 1
+		# elif seriesName != "" and seriesName in novelsName:
+		# 	num += 1
+		print(novelsName, num)
+		return num
+	
+	def getnum(series_id):
+		list = getNovelsListFormSeries(series_id)
+		count = len(list)
+		
+		seriesName = getSeriesInfo(series_id)[0]
+		seriesCaption = getSeriesInfo(series_id)[2]
+		seriesName = seriesName.replace("系列", "")
+		
+		if "委托" in seriesName or "委托" in seriesCaption:
+			return -100, count
+		else:
+			num = 0
+			for i in range(len(list)):
+				id = list[i]
+				name = getNovelInfo(id)[0]
+				caption = getNovelInfo(id)[2]
+				
+				if re.findall("(?:给|給)?.+?的?(?:委托|赠文|无偿)", name):
+					num = -100
+					break
+				elif re.findall("(?:给|給)?.+?的?(?:委托|赠文|无偿)", caption):
+					num = -100
+					break
+				else:
+					num = test1(series_id, id, num)
+			return num
+		
+	num = getnum(series_id)
+	if   num >  0:
+		saveSeriesAsTxt(series_id, path)
+	elif num == 0:
+		saveSeriesAsTxt(series_id, path)
+		saveSeriesAsZip(series_id, path)
+	elif num <  0:
+		saveSeriesAsZip(series_id, path)
 
 
 ### 【【【用户页面】】】
@@ -352,23 +458,23 @@ def getAuthorInfo(user_id):
 	id = user.id
 	name = user.name
 	account = user.account
-	profile_image_urls = user.profile_image_urls.medium
+	profile = user.profile_image_urls.medium
 	comment = user.comment
 	
 	profile = json_result.profile
 	webpage = profile.webpage
 	twitter = profile.twitter_url
 	total_follow_users = profile.total_follow_users
-	total_illusts = profile.total_illusts
-	total_manga = profile.total_manga
+	illusts = profile.total_illusts
+	manga = profile.total_manga
 	
-	total_novels = profile.total_novels
-	total_series = profile.total_novel_series
-	string = "{}({})\n系列小说：{}篇\n共计：{}篇".format(name, id, total_series, total_novels)
+	novels = profile.total_novels
+	series = profile.total_novel_series
+	string = "{}({})\n系列小说：{}篇\n共计：{}篇".format(name, id, series, novels)
 	
-	# print(string)
-	return string
-	# return name, total_novels, total_series
+	print(string)
+	# return string
+	return name, novels, series
 	
 	
 def getNovelsListFromAuthor(user_id):
@@ -412,7 +518,7 @@ def saveAuthor(user_id, path):
 	
 	novel_id = novelslist[0]
 	author = getNovelInfo(novel_id)[1]
-	author = formatName(author)
+	author = formatFileName(author)
 	path = os.path.join(path, author)
 	print("保存目录：" + path)
 	
@@ -424,56 +530,55 @@ def saveAuthor(user_id, path):
 		
 	for i in range(len(serieslist)):
 		series_id = serieslist[i]
-		saveSeries(series_id, path)
+		saveSeriesAsTxt(series_id, path)
+		
 	zippath = zipFile(path)
 	return zippath
 
 
 ### 【【【【数据统计部分】】】】
-def novelAnalyse(novel_id):
-	(view, bookmarks, comments) = getNovelInfo(novel_id)[3:6]
-	rate = 100 * bookmarks / view
-	# print(view, bookmarks, comments, round(rate, 2))
-	recommend = 0  # 推荐指数
-	
-	if comments >= 1:  # 根据评论量增加推荐指数
-		i = math.log2(comments)
-		recommend += round(i, 2)
-	# print(round(i, 2))
-	
-	if view >= 0:  # 根据阅读量和收藏率增加推荐指数
-		numlist = [] ; a = -7.75 ; step1 = 1 ; step2 = 0.75
-		for a in np.arange(a, a + 9 * step1, step1):  # 生成首列数据
-			b = np.arange(a, a + 21 * step2, step2)  # 生成首行数据
-			numlist.append(list(b))
-		numlist = np.asarray(numlist)
-		# print(numlist)
+def analyse(novel_id):
+	def novelAnalyse(novel_id):
+		(view, bookmarks, comments) = getNovelInfo(novel_id)[3:6]
+		rate = 100 * bookmarks / view
+		# print(view, bookmarks, comments, round(rate, 2))
+		recommend = 0  # 推荐指数
 		
-		x = int(view // 500)
-		y = int(rate // 0.5)
-		if x >= len(numlist):
-			x = len(numlist) - 1
-		if y >= len(numlist[0]):
-			y = len(numlist[0]) - 1
-		recommend += numlist[x, y]
-	# print(numlist[x,y])
+		if comments >= 1:  # 根据评论量增加推荐指数
+			i = math.log2(comments)
+			recommend += round(i, 2)
+		# print(round(i, 2))
+		
+		if view >= 0:  # 根据阅读量和收藏率增加推荐指数
+			numlist = [] ; a = -7.75 ; step1 = 1 ; step2 = 0.75
+			for a in np.arange(a, a + 9 * step1, step1):  # 生成首列数据
+				b = np.arange(a, a + 21 * step2, step2)  # 生成首行数据
+				numlist.append(list(b))
+			numlist = np.asarray(numlist)
+			# print(numlist)
+			
+			x = int(view // 500)
+			y = int(rate // 0.5)
+			if x >= len(numlist):
+				x = len(numlist) - 1
+			if y >= len(numlist[0]):
+				y = len(numlist[0]) - 1
+			recommend += numlist[x, y]
+			# print(numlist[x,y])
+		
+		if view <= 1000:  #对阅读量小于1000的小说适当提高要求
+			recommend += -0.75
+		
+		print("推荐指数：{:.2f}".format(recommend))
+		return recommend
 	
-	print("推荐指数：{:.2f}".format(recommend))
-	return recommend
-
-
-def seriesAnalyse(series_id):
-	novel_id = getNovelsListFormSeries(series_id)[0]
-	recommend = novelAnalyse(novel_id)  # 系列取第一篇进行统计
-	return recommend
-
-
-def testSeriesAnalyse(novel_id):
+	
 	if getSeriesId(novel_id)[0] is None:
 		recommend = novelAnalyse(novel_id)
 	else:
 		series_id = getSeriesId(novel_id)[0]
-		recommend = seriesAnalyse(series_id)
+		novel_id  = getNovelsListFormSeries(series_id)[0]
+		recommend = novelAnalyse(novel_id)  # 系列取第一篇进行统计
 	return recommend
 
 
@@ -482,46 +587,34 @@ def main():
 	def wrong():
 		print("输入有误，请重新输入")
 		main()
-	
-	def downloadSeries(series_id, string):
-		if string == "" or string is None:
-			print("选择下载模式")
-			text = '''
-输入【 2 】，即下载txt合集
-输入【 3 】，即下载zip合集'''
-			string = input(text + "\n" * 2)
 		
-		if str(2) in string:
-			print("开始下载txt合集")
-			saveSeries(series_id, path)
-		elif str(3) in string:
-			print("开始下载zip合集")
-			pass
-	
 	
 	def testSeries(novel_id):
 		if getSeriesId(novel_id)[0] is None:
 			print("开始下载单篇小说……")
 			saveNovel(novel_id, path)
 		else:
-			print("选择下载模式")
-			text = '''
-输入【 1 】，即下载当前章节
-输入【 2 】，即下载txt合集
-输入【 3 】，即下载zip合集'''
-			string = input(text + "\n" * 2)
-			if str(1) in string:
-				print("开始下载当前章节")
-				saveNovel(novel_id, path)
-			else:
-				series_id = getSeriesId(novel_id)[0]
-				downloadSeries(series_id, string)
-	
+			series_id = getSeriesId(novel_id)[0]
+			saveSeries(series_id, path)
+			
+# 			print("选择下载模式")
+# 			text = '''
+# 输入【 1 】，即下载当前章节
+# 输入【 2 】，即下载txt合集
+# 输入【 3 】，即下载zip合集'''
+# 			string = input(text + "\n" * 2)
+# 			if str(1) in string:
+# 				print("开始下载当前章节")
+# 				saveNovel(novel_id, path)
+# 			else:
+# 				series_id = getSeriesId(novel_id)[0]
+# 				askHow(series_id, path, string)
+
 	
 	def download(string, id):
 		if "novel/series" in string:
 			print("开始下载系列小说……")
-			downloadSeries(id, "")
+			saveSeries(id, path)
 		elif "novel" in string:
 			testSeries(id)
 		elif "users" in string:
@@ -534,8 +627,8 @@ def main():
 	
 	print("\n请输入Pixiv小说链接")
 	string = input()
-	if re.search("[0-9]+", string):
-		id = re.search("[0-9]+", string).group()
+	if re.search("[0-9]{5,}", string):
+		id = re.search("[0-9]{5,}", string).group()
 		if "pixiv.net" in string:
 			download(string, id)
 		else:

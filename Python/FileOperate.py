@@ -112,7 +112,7 @@ def openExcel(paths):  #打开软件手动操作
 
 
 #暂未加入保存函数内，如何加入？
-def formatName(text):
+def formatFileName(text):
 	list = '/ \ : * " < > | ?'.split(" ")
 	for i in range(len(list)):
 		a = list[i]
