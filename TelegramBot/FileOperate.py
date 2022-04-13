@@ -112,7 +112,7 @@ def openExcel(paths):  #打开软件手动操作
 
 
 #暂未加入保存函数内，如何加入？
-def formatName(text):
+def formatFileName(text):
 	list = '/ \ : * " < > | ?'.split(" ")
 	for i in range(len(list)):
 		a = list[i]
@@ -208,10 +208,10 @@ def openNowDir():
 		os.system('start explorer '+ path)
 		
 		
-def zipFile(path):
+def zipFile(path, delete=0):
 	# 传入某文件或文件夹路径后，将其所在文件夹打包压缩
 	if os.path.isdir(path):
-		dir = path
+		dir = path    #文件上级文件夹
 	elif os.path.isfile(path):
 		(dir, name) = os.path.split(path)
 	list = findFile(dir, ) ## 获取目录下所有文件
@@ -226,8 +226,16 @@ def zipFile(path):
 		# print(filedir)
 		z.write(filename=path, arcname=filedir)   #压缩的文件，zip内路径
 	z.close()
+	
+	if delete == 0 or delete == "":
+		try:
+			shutil.rmtree(dir)   #删除文件夹
+			# print("【已经删除zip的源文件夹】")
+		except IOError:
+			print("【zip的源文件夹删除失败】")
+			
 	zipname = os.path.split(zippath)[1]
-	print("【"+ zipname +"】压缩完成")
+	print("【{}】压缩完成".format(zipname))
 	return zippath
 
 
