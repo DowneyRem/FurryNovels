@@ -205,8 +205,5 @@ if __name__ == "__main__":
 	path = os.path.join(os.getcwd())
 	# path = path.replace("\工具", "")
 	path = os.path.join(path, "Novels")
-	# main()
-	path = "D:\\Download\\Github\\FurryNovelsBot\\Novels\\兽太哈克.zip"
-	printInfo(path)
-	path = "D:\\Download\\Github\\FurryNovelsBot\\Novels\\好玩具.txt"
-	printInfo(path)
+	main()
+
