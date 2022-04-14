@@ -1,11 +1,14 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
 import os
+import re
+from platform import platform
 from functools import cmp_to_key
 from DictNovel import noveldict, cmp   #小说标签
 from DictText import textdict          #正文关键词
 from DictRace import racedict          #种族关键词
 from FileOperate import findFile, openText, openText4, openDocx, openDocx4, monthNow, openNowDir
+from PixivNovels import getSeriesId, formatSeriesInfo
 from Language import getLanguage
 from config import cc1, cc2
 
@@ -98,7 +101,7 @@ def getInfo(text, textlist):
 	
 	tags = textlist[3].replace("标签：", "")
 	tags = tags.replace("標簽：", "")
-	tags += getLanguage(text)  # 新增语言标签
+	# tags += getLanguage(text)  # 新增语言标签
 	tags = cc1.convert(tags)  # 转简体，只处理简体标签
 	list = tags.split()
 	(tags1, tags2) = translateTags(list)  # 获取已翻译/未翻译的标签
@@ -121,7 +124,7 @@ def getInfo(text, textlist):
 		s1 = s1.difference(tags1)  # 去重，获取作者未标注的标签
 		s1 = sortTags(s1, cmp)
 		s2 = sortTags(s2, cmp)
-		unsuretag = "可能存在：" + s1 +"\n"+ s2
+		unsuretag = "可能存在：" + s1 # +"\n"+ s2
 	
 	tags1 = sortTags(tags1, cmp)
 	if tags2 != "":
@@ -139,13 +142,37 @@ def printInfo(path):
 	elif ext == ".txt":
 		textlist = openText4(path)
 		text = openText(path)
+		
+	elif ext == ".zip":
+		text = ""  #处理zip合集
+		path = path.replace(".zip", "")
+		filelist = findFile(path, ".txt")
+		for i in range(len(filelist)):
+			file = filelist[i]
+			text += openText(file)
+
+		urltext = openText4(filelist[1])[2]
+		novelid = re.findall("[0-9]{5,}", urltext)[0]
+		seriesid = getSeriesId(novelid)[0]
+		
+		caption  = formatSeriesInfo(seriesid)
+		caption  = re.sub("其他：.*\n?", "", caption, 1)
+		caption  = caption.replace("\n", "\n\t")
+		textlist = caption.split("\t")
+		
+	else:
+		print("文件类别不在可以处理的范围内")
+	
 	
 	if len(textlist) >= 4:
 		info = getInfo(text, textlist)
 	else:
 		info = "【{}】未处理".format(name)
-	
-	print(info)
+		
+	if "Windows" in platform():
+		# print(textlist)
+		print(info)
+		pass
 	return info
 
 
@@ -155,17 +182,17 @@ def getPath(path):
 	pathlist = findFile(path, ".docx", ".txt")
 	for i in range(0, len(pathlist)):
 		filepath = pathlist[i]
-		if dirstr in filepath:
-			j += 1
-			printInfo(filepath)
-	if j != 0:
-		# openNowDir()
-	# text = set2Text(s)
-	# saveTextDesktop("tags.txt", text)
-	# saveTextDesktop("文字.txt", chars)
-		pass
-	else:
-		print("本月 " + dirstr + " 无新文档")
+		printInfo(filepath)
+		
+		
+		# if dirstr in filepath:
+		# 	j += 1
+		# 	printInfo(filepath)
+	# if j != 0:
+	# 	openNowDir()
+	# 	pass
+	# else:
+	# 	print("本月 " + dirstr + " 无新文档")
 
 
 def main():
@@ -176,6 +203,7 @@ def main():
 
 if __name__ == "__main__":
 	path = os.path.join(os.getcwd())
-	path = path.replace("\工具", "")
+	path = path.replace("\\工具", "")
 	# path = os.path.join(path, "Novels")
 	main()
+
