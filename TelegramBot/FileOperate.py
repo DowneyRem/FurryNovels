@@ -104,7 +104,7 @@ def openDocx4(path):
 		print("文件打开失败")
 
 
-def openExcel(paths):  #打开软件手动操作
+def openExcel(path):  #打开软件手动操作
 	excel = DispatchEx('Excel.Application')  # 独立进程
 	excel.Visible = 1  # 0为后台运行
 	excel.DisplayAlerts = 0  # 不显示，不警告
@@ -208,7 +208,7 @@ def openNowDir():
 		os.system('start explorer '+ path)
 		
 		
-def zipFile(path, delete=0):
+def zipFile(path, delete=1):
 	# 传入某文件或文件夹路径后，将其所在文件夹打包压缩
 	if os.path.isdir(path):
 		dir = path    #文件上级文件夹

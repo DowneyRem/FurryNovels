@@ -11,7 +11,7 @@ from telegram.utils.request import Request
 from functools import wraps
 from platform import platform
 
-from PixivNovels import (saveNovel, saveSeries, saveSeriesAsTxt, saveSeriesAsZip, saveAuthor, getAuthorInfo, getSeriesId, analyse)
+from PixivNovels import (saveNovel, saveSeries, saveSeriesAsTxt, saveSeriesAsZip, saveAuthor, getAuthorInfo, getSeriesId, novelAnalyse, seriesAnalyse)
 from PrintTags import printInfo
 from DictRace import racedict
 from FileOperate import removeFile
@@ -99,7 +99,7 @@ def botmain(update, context):
 		def singleNovel(novel_id):
 			myprint("开始下载单篇小说……")
 			filepath = saveNovel(novel_id, path)
-			recommend = analyse(novel_id)
+			recommend = novelAnalyse(novel_id)
 			return filepath, recommend
 		
 		if getSeriesId(novel_id)[0] is None:
@@ -113,16 +113,18 @@ def botmain(update, context):
 			
 			myprint("开始下载系列小说……")
 			series_id = getSeriesId(novel_id)[0]
-			filepath = saveSeriesAsZip(series_id, path)
-			recommend = analyse(series_id)
+			# filepath = saveSeriesAsZip(series_id, path)
+			filepath = saveSeriesAsTxt(id, path)
+			recommend = seriesAnalyse(series_id)
 		return filepath, recommend
 	
 	
 	def download(string, id):
 		if "novel/series" in string:
 			myprint("开始下载系列小说……")
-			filepath = saveSeriesAsZip(id, path)
-			recommend = analyse(id)
+			# filepath = saveSeriesAsZip(id, path)
+			filepath = saveSeriesAsTxt(id, path)
+			recommend =seriesAnalyse(id)
 		elif "novel" in string:
 			(filepath, recommend) = testSeries(id)
 		elif "users" in string:
