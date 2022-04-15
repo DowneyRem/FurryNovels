@@ -207,10 +207,7 @@ racedict = {
 	"灰龟":"turtle",
 	
 	
-	"福瑞":"furry",
 	"兽族":"furry",
-	"兽人":"furry",
-	"兽兽":"furry",
 	"纯兽":"non-anthro",
 	"人类":"Human",
 	"鸟人":"Harpy",
