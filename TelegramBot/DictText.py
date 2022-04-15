@@ -18,9 +18,10 @@ textdict = {
 	
 
 	"龙根":"dragon R18",
-	"龙棒":"dragon R18",
+	"龙根":"dragon R18",
 	"兽奸":"furry R18",
 	
+
 	
 	"阴道交":"VaginalSex",
 	"阴交":"VaginalSex",

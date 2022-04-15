@@ -17,8 +17,6 @@ racedict = {
 	"狮子兽人":"lion",
 	"虎兽人":"tiger",
 	"虎人":"tiger",
-	"龙":"dragon",
-	"龙兽":"dragon",
 	"龙兽人":"dragon",
 	"龙人":"dragon",
 	"龙族":"dragon",
@@ -207,10 +205,7 @@ racedict = {
 	"灰龟":"turtle",
 	
 	
-	"福瑞":"furry",
 	"兽族":"furry",
-	"兽人":"furry",
-	"兽兽":"furry",
 	"纯兽":"non-anthro",
 	"人类":"Human",
 	"鸟人":"Harpy",
