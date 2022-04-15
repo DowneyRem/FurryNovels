@@ -274,11 +274,6 @@ def main():
 
 
 if __name__ == '__main__':
-	# path = os.getcwd()
-	# main()
+	path = os.getcwd()
+	main()
 	
-	path = "D:\\Users\\Administrator\\Desktop"
-	path2 = "D:\\OneDrive - yangtzeu.edu.cn\\Office Documents\\WPS Cloud Files\\唐门小说点赞统计.xlsx"
-	path1 = saveAsXlsx(16721009, path)
-	openExcel(path1)
-	openExcel(path2)

@@ -11,9 +11,6 @@ from FileOperate import zipFile, saveText, formatFileName, monthNow, makeDirs
 from Language import getLanguage
 from config import REFRESH_TOKEN
 
-if "小说推荐" in os.getcwd():
-	from FileOperate import saveDocx
-
 
 sys.dont_write_bytecode = True
 _TEST_WRITE = False
@@ -85,7 +82,7 @@ def getNovelInfo(novel_id):
 	novel = json_result.novel
 	title = novel.title
 	author = getAuthorName(novel)[0]
-	authorid = getAuthorName(novel)[1]
+	id = getAuthorName(novel)[1]
 	caption = novel.caption
 	view = novel.total_view
 	bookmarks = novel.total_bookmarks
@@ -93,7 +90,7 @@ def getNovelInfo(novel_id):
 	
 	image_urls = novel.image_urls
 	text_length = novel.text_length
-	return title, author, caption, view, bookmarks, comments, authorid
+	return title, author, caption, view, bookmarks, comments, id
 
 
 def formatNovelName(novel_id):
@@ -130,7 +127,7 @@ def formatCaption(caption):
 		id = re.search("[0-9]{5,}", string).group()
 		link = "https://www.pixiv.net/artworks/{}".format(id)
 		caption = caption.replace(string, link)
-	
+		
 	#<a href="pixiv://novels/12345">novel/12345</a>
 	pattern = '<a href="pixiv://novels/[0-9]{5,}">novel/[0-9]{5,}</a>'
 	a = re.findall(pattern, caption)
@@ -149,6 +146,7 @@ def formatCaption(caption):
 		link = "https://www.pixiv.net/users/{}".format(id)
 		caption = caption.replace(string, link)
 	
+	
 	# 一般a标签
 	# <a href="https://deadmanshand.fanbox.cc/" target="_blank">https://deadmanshand.fanbox.cc/</a>
 	pattern = '''<a href="(https://.*)" target=(?:'|")_blank(?:'|").*>https://.*</a>'''
@@ -156,7 +154,7 @@ def formatCaption(caption):
 	for i in range(len(a)):
 		link = a[i]
 		caption = re.sub(pattern, link, caption, 1)
-	
+		
 	caption = caption.replace("\n\n", "\n")
 	return caption
 
@@ -193,7 +191,7 @@ def formatNovelText(text):
 	text = re.sub("。。。{3,}", "……", text)
 	
 	text = re.sub("\n{2,}", "\n\n", text)
-	text = re.sub("\n {1,}", "\n　　", text) #半角空格换成全角空格
+	text = re.sub("\n {1,}", "\n", text) #半角空格换成全角空格
 	if "　　" not in text:  # 直接添加全角空格
 		text = text.replace("\n", "\n　　")
 	return text
@@ -235,7 +233,6 @@ def formatPixivText(text, novel_id):
 	stringpart ="jumpuri:If you would like to view illustrations, please use your desktop browser.>https://www.pixiv.net/n/"
 	autostring = "[[{}{}]]".format(stringpart, novel_id)
 	text = text.replace(autostring, "【此文内有插图，请在Pixv查看】")
-	
 	# [[jumpuri: 标题 > 链接目标的URL]]
 	a = re.findall("\[{2}jumpuri: *(.*) *> *(.*)\]{2}", text)
 	for i in range(len(a)):
@@ -258,7 +255,11 @@ def formatPixivText(text, novel_id):
 def getNovelText(novel_id):
 	text = "\n"
 	json_result = aapi.novel_text(novel_id)
-	text += json_result.novel_text
+	try:
+		text += json_result.novel_text
+	except TypeError:
+		print("文本获取失败：{}".format(novel_id))
+	
 	series_prev = json_result.series_prev
 	series_next = json_result.series_next
 	
@@ -269,24 +270,16 @@ def getNovelText(novel_id):
 
 
 def saveNovel(novel_id, path):
+	name = formatNovelName(novel_id)
+	name = formatFileName(name)
+	filepath = os.path.join(path, name + ".txt")
+
 	text = formatNovelInfo(novel_id)
 	text += "\n" * 2
 	text += getNovelText(novel_id)
 	# print(text)
-	
-	name = formatNovelName(novel_id)
-	name = formatFileName(name)
-	
-	if "小说推荐" in path:
-		filepath = os.path.join(path, name + ".docx")
-		saveDocx(filepath, text)
-		print("【{}.docx】已保存".format(name))
-		
-	else:
-		filepath = os.path.join(path, name + ".txt")
-		saveText(filepath, text)
-		print("【{}.txt】已保存".format(name))
-		
+	saveText(filepath, text)
+	print("【" + name + ".txt】已保存")
 	return filepath
 	
 
@@ -352,7 +345,7 @@ def formatSeriesInfo(series_id):
 	# print(info)
 	return info
 
-
+	
 def getSeriesText(series_id):
 	text = "\n"
 	list = getNovelsListFormSeries(series_id)
@@ -369,25 +362,17 @@ def getSeriesText(series_id):
 
 def saveSeriesAsTxt(series_id, path):
 	print("开始下载txt合集")
-	text = formatSeriesInfo(series_id) + "\n"*2
-	text += getSeriesText(series_id)
-
 	name = getSeriesInfo(series_id)[0]
 	name = formatFileName(name)
-	
-	if "小说推荐" in path:
-		filepath = os.path.join(path, name + ".docx")
-		saveDocx(filepath, text)
-		print("【{}.docx】已保存".format(name))
-		
-	else:
-		filepath = os.path.join(path, name + ".txt")
-		saveText(filepath, text)
-		print("【{}.txt】已保存".format(name))
-		
+	filepath = os.path.join(path, name + ".txt")
+
+	text = formatSeriesInfo(series_id) + "\n"*2
+	text += getSeriesText(series_id)
+	saveText(filepath, text)
+	print("【{}.txt】已保存".format(name))
 	return filepath
-	
-	
+
+
 def saveSeriesAsZip(series_id, path):
 	print("开始下载zip合集")
 	dirname = getSeriesInfo(series_id)[0]
@@ -405,8 +390,8 @@ def saveSeriesAsZip(series_id, path):
 
 
 def saveSeries(series_id, path):
-	#判断系列为一篇小说还是多篇
-	def test1(series_id, novel_id, num):
+	#判断系列为一篇小说还是多篇，但疯狂请求会被P站限制，考虑弃用
+	def test(series_id, novel_id, num):
 		seriesName = getSeriesInfo(series_id)[0]
 		seriesName = seriesName.replace("系列", "")
 		novelsName = getNovelInfo(novel_id)[0]
@@ -427,7 +412,7 @@ def saveSeries(series_id, path):
 			num += 1
 		# elif seriesName != "" and seriesName in novelsName:
 		# 	num += 1
-		# print(novelsName, num)
+		print(novelsName, num)
 		return num
 	
 	def getnum(series_id):
@@ -453,22 +438,34 @@ def saveSeries(series_id, path):
 				elif re.findall("(?:给|給)?.+?的?(?:委托|赠文|无偿)", caption):
 					num = -100
 					break
+				elif re.findall("第?[0-9.]+(章|话|話)", name):
+					num = +100
+					break
+				elif re.findall("第?[零〇一二三四五六七八九点十百千万亿萬億]+(章|话|話)", name):
+					num = +100
+					break
 				else:
-					num = test1(series_id, id, num)
-			
+					num = test(series_id, id, num)
+
 			num = 100 * num /count
 			return num
 		
-	num = getnum(series_id)
-	if num > +60:
-		filepath = saveSeriesAsTxt(series_id, path)
-	if num < -60:
-		filepath = saveSeriesAsZip(series_id, path)
-	else:
-		filepath = saveSeriesAsTxt(series_id, path)
-		filepath = saveSeriesAsZip(series_id, path)
+	def saveSeriesMain(series_id):
+		num = getnum(series_id)
+		if num > +60:
+			filepath = saveSeriesAsTxt(series_id, path)
+		if num < -60:
+			filepath = saveSeriesAsZip(series_id, path)
+		else:
+			filepath = saveSeriesAsTxt(series_id, path)
+			filepath = saveSeriesAsZip(series_id, path)
+		return filepath
+	
+	filepath = saveSeriesMain(series_id)
+	# filepath = saveSeriesAsTxt(series_id, path)
+	# filepath = saveSeriesAsZip(series_id, path)
 	return filepath
-
+	
 
 ### 【【【用户页面】】】
 def getAuthorInfo(user_id):
@@ -493,7 +490,8 @@ def getAuthorInfo(user_id):
 	string = "{}({})\n系列小说：{}篇\n共计：{}篇".format(name, id, series, novels)
 	
 	print(string)
-	return name, novels, series, string
+	# return string
+	return name, novels, series
 	
 	
 def getNovelsListFromAuthor(user_id):
@@ -550,7 +548,6 @@ def saveAuthor(user_id, path):
 	for i in range(len(serieslist)):
 		series_id = serieslist[i]
 		saveSeriesAsTxt(series_id, path)
-		
 	zippath = zipFile(path)
 	return zippath
 
@@ -570,7 +567,7 @@ def novelAnalyse(novel_id):
 	if view >= 0:  # 根据阅读量和收藏率增加推荐指数
 		numlist = [] ; a = -7.75 ; step1 = 1 ; step2 = 0.75
 		for a in np.arange(a, a + 9 * step1, step1):  # 生成首列数据
-			b  = np.arange(a, a + 21 * step2, step2)  # 生成首行数据
+			b = np.arange(a, a + 21 * step2, step2)  # 生成首行数据
 			numlist.append(list(b))
 		numlist = np.asarray(numlist)
 		# print(numlist)
@@ -582,7 +579,7 @@ def novelAnalyse(novel_id):
 		if y >= len(numlist[0]):
 			y = len(numlist[0]) - 1
 		recommend += numlist[x, y]
-		# print(numlist[x,y])
+	# print(numlist[x,y])
 	
 	if view <= 1000:  #对阅读量小于1000的小说适当提高要求
 		recommend += -0.75
@@ -590,52 +587,36 @@ def novelAnalyse(novel_id):
 	print("推荐指数：{:.2f}".format(recommend))
 	return recommend
 
+
 def seriesAnalyse(series_id):
-	novel_id  = getNovelsListFormSeries(series_id)[0]
+	novel_id = getNovelsListFormSeries(series_id)[0]
 	recommend = novelAnalyse(novel_id)  # 系列取第一篇进行统计
 	return recommend
-	
-def analyse(id):
-	def testAnalyse(novel_id):
-		if getSeriesId(novel_id)[0] is None:
-			recommend = novelAnalyse(novel_id)
-		else:
-			series_id = getSeriesId(novel_id)[0]
-			recommend = seriesAnalyse(series_id)
-		return recommend
-	
-	try:
-		novellist = getNovelsListFormSeries(id)
-		id = novellist[0]
-		recommend = seriesAnalyse(id)
-	except TypeError:  #非系列id报错
-		recommend = testAnalyse(id)
-	return recommend
 
-	
+
 ### 【【【主函数部分】】】】
 def main():
 	def wrong():
 		print("输入有误，请重新输入")
 		main()
-		
 	
 	def testSeries(novel_id):
-		analyse(novel_id)
 		if getSeriesId(novel_id)[0] is None:
 			print("开始下载单篇小说……")
+			novelAnalyse(novel_id)
 			saveNovel(novel_id, path)
+			
 		else:
 			series_id = getSeriesId(novel_id)[0]
+			seriesAnalyse(series_id)
 			saveSeries(series_id, path)
-			
-
+	
+	
 	def download(string, id):
 		if "novel/series" in string:
 			print("开始下载系列小说……")
-			analyse(id)
-			saveSeriesAsZip(id, path)
-			# saveSeries(id, path)
+			seriesAnalyse(id)
+			saveSeries(id, path)
 		elif "novel" in string:
 			testSeries(id)
 		elif "users" in string:
@@ -661,9 +642,7 @@ def main():
 
 if __name__ == '__main__':
 	path = os.getcwd()
-	if "小说推荐" in path:
-		path = path.replace("\\工具", "")
-		path = os.path.join(path, "备用")
-	else:
-		path = os.path.join(path, "Novels")
+	path = path.replace("\\工具", "")
+	path = os.path.join(path, "备用")
+	# path = os.path.join(path, "Novels")
 	main()
