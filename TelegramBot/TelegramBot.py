@@ -11,21 +11,23 @@ from telegram.utils.request import Request
 from functools import wraps
 from platform import platform
 
-from PixivNovels import (saveNovel, saveSeriesAsTxt, saveSeriesAsZip, saveAuthor, getNovelInfo,getAuthorInfo, getSeriesId, novelAnalyse, seriesAnalyse, formatNovelInfo, formatSeriesInfo)
+from PixivNovels import (saveNovel, saveSeriesAsTxt, saveSeriesAsZip, saveAuthor, getNovelInfo, getAuthorInfo, getSeriesId, novelAnalyse, seriesAnalyse, formatNovelInfo, formatSeriesInfo)
 from PrintTags import printInfo, getInfo
-from FileOperate import findFile, openText, removeFile
+from FileOperate import findFile, openText, removeFile, unzipFile
 from Convert import translate
 from DictRace import racedict
 from config import *
 
 
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                    level=logging.INFO)
-logger = logging.getLogger(__name__)
+# logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+#                     level=logging.INFO)
+# logger = logging.getLogger(__name__)
 
 
 def start(update, context):
-	update.message.reply_text("发送Pixiv小说链接下载小说", reply_markup=ReplyKeyboardRemove())
+	# chatid = update.message.chat.id
+	# context.bot.send_message(chatid, "sadfsdf")
+	update.message.reply_text("发送Pixiv小说链接下载小说")
 
 
 def help(update, context):
@@ -36,8 +38,8 @@ def help(update, context):
 """)
 
 
-def error(update, context):
-	logger.warning('Update "%s" caused error "%s"', update, context.error)
+# def error(update, context):
+# 	logger.warning('Update "%s" caused error "%s"', update, context.error)
 
 
 def ping(update, context):
@@ -53,95 +55,110 @@ def cancel(update, context):
 	pass
 
 
-def myprint(update, text):
-	text = "ceui"
-	print(text)
-	try:
-		update.message.reply_text(text)
-		# bot.send_message(update.message.chat.id, text)
-	except:
-		print("uibd")
-		
-
-
 def download(update, context):
+	def myprint(text):
+		print(text)
+		query.message.chat.send_message(text)
+	
+	
+	def uploadToUser(path, caption):
+		print("上传至用户")
+		document = open(path, 'rb')
+		name = os.path.split(path)[1]
+		query.message.chat.send_document(document, name, caption)
+		
+		chatid = query.message.chat.id
+		messageid = query.message.message_id
+		# context.bot.delete_message(chatid, messageid -1)
+		context.bot.delete_message(chatid, messageid +0)
+		context.bot.delete_message(chatid, messageid +1)
+		context.bot.delete_message(chatid, messageid +2)
+		
+		
+	def uploadToChannel(channel, path, caption):
+		print("上传至频道：{}".format(channel))
+		document = open(path, 'rb')
+		name = os.path.split(path)[1]
+		context.bot.send_document(channel, document, name, caption)
+		
+	
+	def downloadAll(query):
+		data = query.data
+		method = int(data[0])
+		id = data[2:] #传入的id已做过分类处理
+		
+		if   method == 1:
+			myprint("下载单章中……")
+			filepath = saveNovel(id, path)
+			myprint("下载完成，等待上传中……")
+			caption = printInfo(filepath)
+			recommend = novelAnalyse(id)
+		
+		elif method == 2:
+			myprint("下载系列txt合集中……")
+			filepath = saveSeriesAsTxt(id, path)
+			myprint("下载完成，等待上传中……")
+			caption = printInfo(filepath)
+			recommend = seriesAnalyse(id)
+		
+		elif method == 3:
+			myprint("下载系列zip合集中……")
+			filepath = saveSeriesAsZip(id, path)
+			myprint("下载完成，等待上传中……")
+			
+			caption = formatSeriesInfo(id)
+			caption = caption.replace("\n", "\n\t")
+			caption = caption.split("\t")
+			textlist = caption[0:4]
+			text = " " #为了快速上传，不检测正文；避免后续报错，text不为空
+			caption = getInfo(text, textlist)
+			recommend = seriesAnalyse(id)
+		
+		elif method == 4:
+			myprint("下载作者小说zip合集中……")
+			filepath = saveAuthor(id, path)
+			myprint("下载完成，等待上传中……")
+			caption = getAuthorInfo(id)[3]
+			recommend = -100
+		# elif method == 5:
+		# 	pass
+		
+		recommend = round(recommend, 2)
+		return filepath, caption, recommend
+	
+	
+	def furry(caption):
+		furrynum = 0
+		racelist = list(racedict.values())
+		# racelist = list(raceset)
+		for i in range(len(racelist)):
+			race = racelist[i]
+			if race in caption:
+				furrynum += 1
+		print("福瑞指数：{}".format(furrynum))
+		return furrynum
+	
+	
 	query = update.callback_query
-	data = query.data
-	method = int(data[0])
-	id = data[2:]
+	# print(query.message)
+	username = query.message.chat.first_name
+	if query.data !="":  #清除按钮
+		query.edit_message_reply_markup(InlineKeyboardMarkup([[]]))
 	
-	# if query.data !="":
-	# 	query.edit_message_reply_markup(InlineKeyboardMarkup([[]]))
+	(filepath, caption, recommend) = downloadAll(query)
+	furrynum = furry(caption)
+	uploadToUser(filepath, caption)
 	
-	if   method == 1:
-		myprint(update, "下载单章中……")
-		filepath = saveNovel(id, path)
-		caption  = printInfo(filepath)
-		# caption  = formatNovelInfo(id)
-		caption += "推荐指数：".format(novelAnalyse(id))
-		
-	elif method == 2:
-		myprint(update, "下载系列txt合集中……")
-		filepath = saveSeriesAsTxt(id, path)
-		caption  = printInfo(filepath)
-		# caption  = formatSeriesInfo(id)
-		caption += "推荐指数：".format(seriesAnalyse(id))
-		
-	elif method == 3:
-		myprint(update, "下载系列zip合集中……")
-		filepath = saveSeriesAsZip(id, path)
-		caption = printInfo(filepath)
-		# caption += "推荐指数：".format(seriesAnalyse(id))
-		
-	elif method == 4:
-		filepath = saveAuthor(id, path)
-		caption = formatSeriesInfo(id)
-	elif method == 5:
+	caption += "来自 {} 的分享\n".format(username)
+	if recommend != -100:
+		caption += "推荐指数： {}".format(recommend)
+	if furrynum >= 3 and "zh" in caption and (".zip" not in filepath):
+		uploadToChannel("@FurryReading", filepath, caption)
+	if furrynum >= 3 and recommend >= 5 and "zh" in caption:
+		# uploadToChannel("@FurryNovels", filepath, caption)
 		pass
-		
-	# print(filepath)
-	# print(caption)
-	
-
-def uploadFile(path):
-	document = open(path, 'rb')
-	name = os.path.split(path)[1]
-	caption = printInfo(path)
-	return document, name, caption
-	
-
-def getUserName(update, context):
-	firstname = update.message.from_user.first_name  # 获取昵称
-	username = update.message.from_user.username  # 获取用户名
-	text = "\n来自 {} 的分享".format(firstname)
-	return text
 	
 	
-def uploadToUser(update, context):
-	chatid = update.message.chat.id
-	messageid = update.message.message_id
-	myprint(update, "开始上传……")
-	(document, name, caption) = uploadFile(path)
-	context.bot.send_document(chatid, document, name, caption)
-	# context.bot.delete_message(chatid, messageid + 0)
-	context.bot.delete_message(chatid, messageid + 1)
-	context.bot.delete_message(chatid, messageid + 2)
-	print("文件已上传至用户")
-
-
-def uploadToChannel(update, context, channel, path, recommend=0):
-	(document, name, caption) = uploadFile(path)
-	caption += getUserName(update, context)
-	if recommend >= 0:
-		caption += "\n推荐指数：{}".format(recommend)
-		caption += " @FurryNovels"
-	
-	context.bot.send_document(channel, document, name, caption)
-	print("已经发送至：" + channel)
-
-
-
-
 def botmain(update, context):
 	def myprint(text):
 		print(text)
@@ -154,18 +171,6 @@ def botmain(update, context):
 			myprint("群组链接： https://t.me/FurryNovels/27 ", )
 		else:
 			myprint("输入有误，请重新输入Pixiv小说网址", )
-	
-	
-	def uploadToUser(path):
-		chatid = update.message.chat.id
-		messageid = update.message.message_id
-		myprint("开始上传……")
-		(document, name, caption) = uploadFile(path)
-		context.bot.send_document(chatid, document, name, caption)
-		# context.bot.delete_message(chatid, messageid + 0)
-		context.bot.delete_message(chatid, messageid + 1)
-		context.bot.delete_message(chatid, messageid + 2)
-		print("文件已上传至用户")
 	
 	
 	def testSeries(novel_id):
@@ -208,22 +213,21 @@ def botmain(update, context):
 	
 	def getId(update, context):
 		string = update.message.text
+		messageid = update.message.message_id
+
 		if re.search("[0-9]{5,}", string):
 			id = re.search("[0-9]+", string).group()
 			if "pixiv.net" in string:
-				if "novel/series" in string:
+				
+				if "users" in string:
+					saveAuthor(id)
+				elif "novel/series" in string:
 					myprint("开始下载系列小说……", )
-					# (filepath, recommend) =
 					saveSeries(id)
 				elif "novel" in string:
 					testSeries(id)
-				
-				elif "users" in string:
-					myprint("开始下载此作者的全部小说")
-					saveAuthor(id)
 				elif "artworks" in string:
 					myprint("不支持下载插画，请重新输入")
-				download(string, id)
 				
 			else:
 				testSeries(id)
@@ -235,25 +239,8 @@ def botmain(update, context):
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 def main():
+	# bot = Bot(token=BOT_TOKEN)
 	updater = Updater(BOT_TOKEN, use_context=True, request_kwargs=REQUESTS_KWARGS)
 	if "Windows" in platform():
 		updater.start_polling()
@@ -276,7 +263,7 @@ def main():
 
 	# dispatcher.add_handler(MessageHandler(Filters.document, )
 	updater.dispatcher.add_handler(CallbackQueryHandler(download))
-	dispatcher.add_error_handler(error)
+	# dispatcher.add_error_handler(error)
 	updater.idle()
 
 

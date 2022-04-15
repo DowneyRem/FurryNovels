@@ -4,9 +4,11 @@ import os
 import time
 import shutil
 import zipfile
-from docx.api import Document
-from win32com.client import DispatchEx
 from functools import wraps
+
+if "小说推荐" in os.getcwd():
+	from docx.api import Document
+	from win32com.client import DispatchEx
 
 
 def timethis(func):
@@ -182,11 +184,15 @@ def makeDirs(path):
 	if not os.path.exists(path):
 		os.makedirs(path)
 
+
 def removeFile(path):
-	if os.path.exists(path):
+	if os.path.isdir(path):
+	# if os.path.exists(path):
 		shutil.rmtree(path)
 	os.makedirs(path)
-
+	if os.path.isfile(path):
+		os.remove(path)
+	
 
 def monthNow():
 	year = str(time.localtime()[0])
@@ -210,13 +216,21 @@ def openNowDir():
 		
 def zipFile(path, delete=1):
 	# 传入某文件或文件夹路径后，将其所在文件夹打包压缩
+	# delete 为0或为""时，压缩后删除源文件
+	
 	if os.path.isdir(path):
 		dir = path    #文件上级文件夹
 	elif os.path.isfile(path):
 		(dir, name) = os.path.split(path)
-	list = findFile(dir, ) ## 获取目录下所有文件
-	zippath = os.path.join(dir + ".zip")
+	else:
+		print("不存在 {}".format(path))
+		os._exit(0)
 
+	zippath = os.path.join(dir + ".zip")
+	if os.path.exists(zippath):
+		os.remove(zippath) #重新压缩
+		
+	list = findFile(dir, ) ## 获取目录下所有文件
 	z = zipfile.ZipFile(zippath, 'w', zipfile.ZIP_DEFLATED)
 	for i in range(len(list)):
 		path = list[i]
@@ -230,13 +244,40 @@ def zipFile(path, delete=1):
 	if delete == 0 or delete == "":
 		try:
 			shutil.rmtree(dir)   #删除文件夹
-			# print("【已经删除zip的源文件夹】")
+			print("【已经删除zip的源文件夹】")
 		except IOError:
 			print("【zip的源文件夹删除失败】")
 			
 	zipname = os.path.split(zippath)[1]
 	print("【{}】压缩完成".format(zipname))
 	return zippath
+
+
+def unzipFile(path, delete=1):
+	# 传入zip后，解压至以zip文件名建立的新文件夹
+	# delete 为0或为""时，解压后删除源文件
+	name = os.path.split(path)[1]
+	dir = os.path.splitext(path)[0]   # 解压后的文件夹
+	if os.path.exists(dir):
+		removeFile(dir)
+	
+	if not zipfile.is_zipfile(path):
+		print("【{}】不存在或不是zip文件".format(name))
+		
+	else:
+		z = zipfile.ZipFile(path, "r")
+		for file in z.namelist():
+			z.extract(file, dir)
+		z.close()
+		print("【{}】已经完成解压".format(name))
+		
+		if delete == 0 or delete == "":
+			try:
+				removeFile(path)  #删除zip文件
+				print("【{}】已经删除".format(name))
+			except UnicodeError:
+				print("【{}】删除失败".format(name))
+	return dir
 
 
 if __name__ == '__main__':
