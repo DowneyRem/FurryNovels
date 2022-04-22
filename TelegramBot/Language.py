@@ -1,5 +1,5 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+#!/usr/bin/python
+# -*- coding: UTF-8 -*-
 
 
 def getLanguage(text):  # 添加语言标签
@@ -20,7 +20,7 @@ def getLanguage(text):  # 添加语言标签
 		return j
 	
 	
-	if   countChar(list3) >= 0.6 * len(list3):
+	if countChar(list3) >= 0.6 * len(list3):
 		tags += "#ja"
 	elif countChar(list2) >= 0.6 * len(list2):
 		tags += "#zh_tw"
@@ -30,3 +30,7 @@ def getLanguage(text):  # 添加语言标签
 		tags += "#en"
 	# print(tags)
 	return tags
+
+
+if __name__ == "__main__":
+	pass

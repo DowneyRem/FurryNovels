@@ -4,17 +4,18 @@ import os
 import re
 import signal
 import logging
+from functools import wraps
+from platform import platform
+
 from telegram.ext import messagequeue as mq
 from telegram import (ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardMarkup, InlineKeyboardButton, MessageEntity)
 from telegram.ext import (Updater, CommandHandler, MessageHandler, Filters, ConversationHandler, CallbackQueryHandler)
-from telegram.utils.request import Request
-from functools import wraps
-from platform import platform
+# from telegram.utils.request import Request
 
 from PixivNovels import (saveNovel, saveSeriesAsTxt, saveSeriesAsZip, saveAuthor, getNovelInfo, getAuthorInfo, getSeriesId, novelAnalyse, seriesAnalyse, formatNovelInfo, formatSeriesInfo)
 from PrintTags import printInfo, getInfo
 from FileOperate import findFile, openText, removeFile, unzipFile
-from Convert import translate
+from Convert import convert
 from DictRace import racedict
 from config import *
 
@@ -24,17 +25,19 @@ from config import *
 # logger = logging.getLogger(__name__)
 
 
+
 def start(update, context):
 	# chatid = update.message.chat.id
 	# context.bot.send_message(chatid, "sadfsdf")
-	update.message.reply_text("发送Pixiv小说链接下载小说")
+	update.message.reply_text("发送Pixiv的小说链接，即可下载小说")
 
 
 def help(update, context):
 	update.message.reply_text("""
-我是 @FurryReading @FurryNovels 的投稿bot
-把Pixiv的小说链接发给我，我就可以帮你下载小说
-同时我会把下载好的小说转发至 @FurryReading 作为你的分享或投稿
+我是 @FurryNovels 的投稿bot，把Pixiv的小说链接发给我，我就可以帮你下载小说
+""")
+	update.message.reply_text("""
+如果下载内容同时满足【中文】【兽人小说】的【txt文件】三个条件，我会转发一份到 @FurryReading ，作为你的分享
 """)
 
 
@@ -150,8 +153,10 @@ def download(update, context):
 	uploadToUser(filepath, caption)
 	
 	caption += "\n来自 {} 的分享".format(username)
-	if recommend != -100:
-		caption += "\n推荐指数： {}".format(recommend)
+	if recommend >= -100:
+		caption += "\n推荐指数： {} ".format(recommend)
+		caption += "@FurryNovels"
+		
 	if furrynum >= 3 and "zh" in caption and (".zip" not in filepath):
 		uploadToChannel("@FurryReading", filepath, caption)
 	if furrynum >= 3 and recommend >= 5 and "zh" in caption:

@@ -4,9 +4,10 @@ import os
 import re
 from platform import platform
 from functools import cmp_to_key
-from DictNovel import noveldict, cmp   #小说标签
-from DictText import textdict          #正文关键词
-from DictRace import racedict          #种族关键词
+
+from DictNovel import noveldict, cmp  # 小说标签
+from DictText import textdict  # 正文关键词
+from DictRace import racedict  # 种族关键词
 from FileOperate import findFile, openText, openText4, openDocx, openDocx4, unzipFile
 from PixivNovels import getSeriesId, formatSeriesInfo
 from Language import getLanguage
@@ -48,7 +49,7 @@ def translateTags(taglist):  # 获取英文标签
 		tag = tag.replace("　", "")
 		tag = noveldict.get(tag)  # 获取英文标签
 		
-		if tag != None:
+		if tag is not None:
 			s.add(tag)  # 获取到的标签利用set去重
 		else:
 			tag = taglist[i]
@@ -59,8 +60,7 @@ def translateTags(taglist):  # 获取英文标签
 def getTags(text):  # 获取可能存在的标签
 	# 引入总字数作基数的话，如何避免无法获得剧情向小说色情标签？
 	# 优势，色情标签过少可以添加 #剧情向标签
-	
-	s1 = set() ; s2 = set()
+	s1 = set(); s2 = set()
 	list1 = list(textdict.keys())
 	list2 = list(textdict.values())
 	for i in range(0, len(list1)):
@@ -80,7 +80,7 @@ def getRaceTags(text):  # 获取可能存在的标签
 	for i in range(0, len(list1)):
 		a = list1[i]
 		num = text.count(a)
-		if 10000 * num / textnum > 15:  #神奇的数据
+		if 10000 * num / textnum > 15:  # 神奇的数据
 			s1.add(list1[i])  # 汉字标签
 			s2.add(list2[i])  # 英文标签
 	return s2, s1  # 英文标签在前
@@ -128,9 +128,9 @@ def getInfo(text, textlist):
 		s2 = sortTags(s2, cmp)
 		
 		if "小说推荐" in os.getcwd():
-			unsuretag = "可能存在：" + s1 +"\n"  + s2 +"\n"
+			unsuretag = "可能存在：" + s1 + "\n" + s2 + "\n"
 		else:
-			unsuretag = "可能存在：" + s1 +"\n" #+ s2
+			unsuretag = "可能存在：" + s1 + "\n" # + s2
 	
 	tags1 = sortTags(tags1, cmp)
 	if tags2 != "":
@@ -153,7 +153,7 @@ def printInfo(path):
 		text = openText(path)
 		
 	elif ext == ".zip":
-		text = ""  #处理zip合集
+		text = ""  # 处理zip合集
 		path = unzipFile(path)
 		filelist = findFile(path, ".txt")
 		for i in range(len(filelist)):
@@ -209,5 +209,3 @@ if __name__ == "__main__":
 	else:
 		path = os.path.join(path, "Novels")
 	main()
-	
-	
