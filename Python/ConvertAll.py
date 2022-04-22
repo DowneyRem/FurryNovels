@@ -68,7 +68,7 @@ def getPath(path):
 	for i in range(0, len(list1)):
 		filepath = list1[i]
 		k = 0
-		for j in range(len(li)):  #不处理的文件夹
+		for j in range(len(li)):  # 不处理的文件夹
 			a = "\\{}\\".format(li[j])
 			if a in filepath:
 				k += 1
@@ -95,6 +95,6 @@ def main():
 
 if __name__ == "__main__":
 	path = os.getcwd()
-	path = path.replace("\工具","")
+	path = path.replace("\工具", "")
 	sharepath = path.replace("\小说推荐", "\兽人小说\小说推荐")
 	main()

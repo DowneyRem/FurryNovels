@@ -10,16 +10,19 @@ from platform import platform
 from pixivpy3 import AppPixivAPI
 from win32com.client import DispatchEx
 
-
 # get your refresh_token, and replace _REFRESH_TOKEN
 # https://github.com/upbit/pixivpy/issues/158#issuecomment-778919084
 REFRESH_TOKEN = "0zeYA-PllRYp1tfrsq_w3vHGU1rPy237JMf5oDt73c4"
 _TEST_WRITE = False
 sys.dont_write_bytecode = True
 
-
 if "Windows" in platform():
-	REQUESTS_KWARGS = {'proxies':{'https':'http://127.0.0.1:10808', }}
+	import winreg
+	
+	REQUESTS_KWARGS = {'proxies': {'https': 'http://127.0.0.1:10808', }}
+else:
+	REQUESTS_KWARGS = {}
+
 try:
 	aapi = AppPixivAPI(**REQUESTS_KWARGS)
 	aapi.auth(refresh_token=REFRESH_TOKEN)
@@ -35,7 +38,42 @@ def timethis(func):
 		end = time.perf_counter()
 		print('{}.{} : {}'.format(func.__module__, func.__name__, end - start))
 		return r
+	
 	return wrapper
+
+
+def openFileCheck(func):
+	@wraps(func)
+	def wrapper(*args, **kwargs):
+		arg = args[0]
+		if os.path.exists(arg):
+			try:
+				r = func(*args, **kwargs)
+				return r
+			except IOError:
+				print("文件被占用：{}".format(arg))
+		else:
+			print("文件不存在：{}".format(arg))
+	
+	return wrapper
+
+
+def getFileTime(path):
+	time1 = os.path.getctime(path)  # 文件创建日期，返回时间戳
+	time2 = os.path.getmtime(path)  # 文件最近修改时间
+	time3 = os.path.getatime(path)  # 文件最近访问时间
+	
+	list1 = [time1, time2, time3]
+	list2 = []
+	for i in range(len(list1)):
+		filetime = list1[i]
+		filetime = time.localtime(filetime)  # 返回时间元组
+		timeformat = "%Y-%m-%d %H:%M:%S %w"
+		timeformat = "%Y-%m-%d"
+		filetime = time.strftime(timeformat, filetime)
+		list2.append(filetime)
+	# print(filetime)
+	return list2
 
 
 def formatName(text):
@@ -50,10 +88,10 @@ def getNovelInfo(novel_id):
 	json_result = aapi.novel_detail(novel_id)
 	novel = json_result.novel
 	title = novel.title
-
+	
 	date = novel.create_date[0:10]
 	time = novel.create_date[11:19]
-	datetime = date+ " "+ time
+	datetime = date + " " + time
 	
 	bookmarks = novel.total_bookmarks
 	view = novel.total_view
@@ -74,10 +112,9 @@ def getIllustInfo(illust_id):
 	bookmarks = illust.total_bookmarks
 	comments = illust.total_comments
 	return title, datetime, view, bookmarks, comments
-	
+
 
 def getUserInfo(user_id):
-	string = ""
 	json_result = aapi.user_detail(user_id)
 	# print(json_result)
 	user = json_result.user
@@ -91,17 +128,17 @@ def getUserInfo(user_id):
 	webpage = profile.webpage
 	twitter = profile.twitter_url
 	total_follow_users = profile.total_follow_users
- 
+	
 	novels = profile.total_novels
 	series = profile.total_novel_series
 	illusts = profile.total_illusts
 	manga = profile.total_manga
- 
-	string = "{}\n系列小说：{}篇，共计：{}篇\n插画：{}张，漫画：{}章".format(name, series, novels, illusts, manga )
+	
+	string = "{}\n系列小说：{}篇，共计：{}篇\n插画：{}张，漫画：{}章".format(name, series, novels, illusts, manga)
 	string = string.replace("None", "0")
 	print(string)
 	return name, novels, series, illusts, manga
-	
+
 
 def getNovelsList(user_id):
 	def addlist(json_result):
@@ -146,9 +183,11 @@ def getIllustsList(user_id):
 	json_result = aapi.user_illusts(user_id, "illust")
 	addlist(json_result)
 	nextpage(json_result)
+	
 	json_result = aapi.user_illusts(user_id, "manga")
 	addlist(json_result)
 	nextpage(json_result)
+	
 	# print(illustslist)
 	return illustslist
 
@@ -156,21 +195,21 @@ def getIllustsList(user_id):
 @timethis
 def formatForCsv(user_id):
 	print("\n获取Pixiv数据中……")
-	text = "序号,名称,日期,点击,点赞,评论\n"  #获取到点赞其实是收藏，而不是"赞！"
+	text = "序号,名称,日期,点击,点赞,评论\n"  # 获取到点赞其实是收藏，而不是"赞！"
 	novelslist = getNovelsList(user_id)
 	illustslist = getIllustsList(user_id)
 	
 	for i in range(len(novelslist)):
 		id = novelslist[i]
-		num = len(novelslist) - i  ## i从0开始，不需要加1
+		num = len(novelslist) - i  # i从0开始，不需要加1
 		(title, datetime, view, bookmarks, comments) = getNovelInfo(id)
-		text += "{},{},{},{},{},{}\n".format(num, title ,datetime , view, bookmarks, comments)
-		
+		text += "{},{},{},{},{},{}\n".format(num, title, datetime, view, bookmarks, comments)
+	
 	for i in range(len(illustslist)):
 		id = illustslist[i]
 		num = len(novelslist) + len(illustslist) - i
 		(title, datetime, view, bookmarks, comments) = getIllustInfo(id)
-		text += "{},{},{},{},{},{}\n".format(num, title ,datetime , view, bookmarks, comments)
+		text += "{},{},{},{},{},{}\n".format(num, title, datetime, view, bookmarks, comments)
 	return text
 
 
@@ -237,21 +276,27 @@ def saveAsXlsx(user_id, path):
 
 
 # @timethis
-def openExcel(path):
-	try:
-		excel = DispatchEx('Excel.Application')  # 独立进程
-		excel.Visible = 1  # 0为后台运行
-		excel.DisplayAlerts = 0  # 不显示，不警告
-		xlsx = excel.Workbooks.Open(path)  # 打开文档
-		print("打开Excel……")
-	except:
-		print("文件打开失败或文件不存在")
+@openFileCheck
+def openExcel(path):  # 打开软件手动操作
+	excel = DispatchEx('Excel.Application')  # 独立进程
+	excel.Visible = 1  # 0为后台运行
+	excel.DisplayAlerts = 0  # 不显示，不警告
+	xlsx = excel.Workbooks.Open(path)  # 打开文档
+	print("打开Excel……")
+
+
+def desktop():
+	if "Windows" in platform():  # 其他平台我也没用过
+		key = winreg.OpenKey(winreg.HKEY_CURRENT_USER,
+		                     r'Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders')
+		desktop = winreg.QueryValueEx(key, "Desktop")[0]
+		return desktop
 
 
 def wrong():
 	print("输入错误，请重新输入")
 	main()
-	
+
 
 # @timethis
 def main():
@@ -266,7 +311,6 @@ def main():
 			except:
 				fliepath = saveAsCsv(id, path)
 			openExcel(fliepath)
-			# main()
 		else:
 			wrong()
 	else:
@@ -274,6 +318,25 @@ def main():
 
 
 if __name__ == '__main__':
-	path = os.getcwd()
-	main()
+	def main2():
+		path = os.getcwd()
+		path = path.replace("写作\\小说推荐\\工具", "")
+		path = os.path.join(path, "Office Documents", "WPS Cloud Files")
+		xlsxpath = os.path.join(path, "唐门小说点赞统计.xlsx")
+		fileModifyTime = getFileTime(xlsxpath)[1]
+		today = time.strftime("%Y-%m-%d", time.localtime())
+		
+		if fileModifyTime != today and time.localtime()[6] >= 5 - 1:  # 周一为0，需要减一
+			path = desktop()
+			datapath = saveAsXlsx(16721009, path)
+			openExcel(datapath)
+		else:
+			xlsxpath = os.path.join(path, "唐门小说更新统计.xlsx")
+		openExcel(xlsxpath)
 	
+	
+	path = os.getcwd()
+	if "工具" not in path:
+		main()
+	else:
+		main2()
