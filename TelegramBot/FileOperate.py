@@ -120,31 +120,31 @@ def openText4(path):
 
 @openFileCheck
 def openDocx(path):
-		docx = Document(path)
-		text = ""
-		for para in docx.paragraphs:
-			if para.style.name == "Normal Indent":  # 正文缩进
-				text += "　　" + para.text + "\n"
-			else:
-				text += para.text + "\n"  # 除正文缩进外的其他所有
-		return text
+	docx = Document(path)
+	text = ""
+	for para in docx.paragraphs:
+		if para.style.name == "Normal Indent":  # 正文缩进
+			text += "　　" + para.text + "\n"
+		else:
+			text += para.text + "\n"  # 除正文缩进外的其他所有
+	return text
 		
 		
 @openFileCheck
 def openDocx4(path):
-		docx = Document(path)
+	docx = Document(path)
 	text = ""; j = 1
-		for para in docx.paragraphs:
-			if j < 5:  # 只读取前4行内容
-				j += 1
-				if para.style.name == "Normal Indent":  # 正文缩进
-					text += "　　" + para.text + "\n\t"
-				else:
-					text += "" + para.text + "\n\t"  # 除正文缩进外的其他所有
+	for para in docx.paragraphs:
+		if j < 5:  # 只读取前4行内容
+			j += 1
+			if para.style.name == "Normal Indent":  # 正文缩进
+				text += "　　" + para.text + "\n\t"
 			else:
-				break
-		textlist = text.split("\t")  # 保留行尾换行符
-		return textlist
+				text += "" + para.text + "\n\t"  # 除正文缩进外的其他所有
+		else:
+			break
+	textlist = text.split("\t")  # 保留行尾换行符
+	return textlist
 
 
 @openFileCheck
