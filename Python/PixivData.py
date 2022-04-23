@@ -4,9 +4,11 @@ import os
 import re
 import sys
 import time
-import pandas as pd
+from datetime import date, timedelta
 from functools import wraps
 from platform import platform
+
+import pandas as pd
 from pixivpy3 import AppPixivAPI
 from win32com.client import DispatchEx
 
@@ -18,7 +20,6 @@ sys.dont_write_bytecode = True
 
 if "Windows" in platform():
 	import winreg
-	
 	REQUESTS_KWARGS = {'proxies': {'https': 'http://127.0.0.1:10808', }}
 else:
 	REQUESTS_KWARGS = {}
@@ -38,7 +39,6 @@ def timethis(func):
 		end = time.perf_counter()
 		print('{}.{} : {}'.format(func.__module__, func.__name__, end - start))
 		return r
-	
 	return wrapper
 
 
@@ -50,11 +50,10 @@ def openFileCheck(func):
 			try:
 				r = func(*args, **kwargs)
 				return r
-			except IOError:
+			except IOError as e:
 				print("文件被占用：{}".format(arg))
 		else:
 			print("文件不存在：{}".format(arg))
-	
 	return wrapper
 
 
@@ -281,8 +280,8 @@ def openExcel(path):  # 打开软件手动操作
 	excel = DispatchEx('Excel.Application')  # 独立进程
 	excel.Visible = 1  # 0为后台运行
 	excel.DisplayAlerts = 0  # 不显示，不警告
-	xlsx = excel.Workbooks.Open(path)  # 打开文档
 	print("打开Excel……")
+	xlsx = excel.Workbooks.Open(path)  # 打开文档
 
 
 def desktop():
@@ -323,15 +322,19 @@ if __name__ == '__main__':
 		path = path.replace("写作\\小说推荐\\工具", "")
 		path = os.path.join(path, "Office Documents", "WPS Cloud Files")
 		xlsxpath = os.path.join(path, "唐门小说点赞统计.xlsx")
-		fileModifyTime = getFileTime(xlsxpath)[1]
-		today = time.strftime("%Y-%m-%d", time.localtime())
 		
-		if fileModifyTime != today and time.localtime()[6] >= 5 - 1:  # 周一为0，需要减一
+		fileModifyTime = os.path.getmtime(xlsxpath)
+		fileModifyTime = date.fromtimestamp(fileModifyTime)
+		today = date.today()
+		today_wday = today.isoweekday()
+		
+		if today_wday >= 5 and today - fileModifyTime >= timedelta(7):
 			path = desktop()
 			datapath = saveAsXlsx(16721009, path)
 			openExcel(datapath)
 		else:
 			xlsxpath = os.path.join(path, "唐门小说更新统计.xlsx")
+		# print(xlsxpath)
 		openExcel(xlsxpath)
 	
 	
