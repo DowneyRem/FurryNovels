@@ -23,7 +23,6 @@ def timethis(func):
 		end = time.perf_counter()
 		print('{}.{} : {}'.format(func.__module__, func.__name__, end - start))
 		return r
-	
 	return wrapper
 
 
@@ -39,7 +38,6 @@ def openFileCheck(func):
 				print("文件被占用：{}".format(arg))
 		else:
 			print("文件不存在：{}".format(arg))
-	
 	return wrapper
 
 
@@ -52,7 +50,6 @@ def saveFileCheck(func):
 			os.makedirs(dir)
 		r = func(*args, **kwargs)
 		return r
-	
 	return wrapper
 
 
@@ -72,7 +69,7 @@ def findFile(path, *extnames):
 		dir = os.path.join(path, dir)
 		if os.path.isdir(dir):
 			findFile(dir, *extnames)
-			
+		
 		if os.path.isfile(dir):
 			if len(extnames) > 0:
 				for extname in extnames:
@@ -128,8 +125,8 @@ def openDocx(path):
 		else:
 			text += para.text + "\n"  # 除正文缩进外的其他所有
 	return text
-		
-		
+
+
 @openFileCheck
 def openDocx4(path):
 	docx = Document(path)
@@ -160,18 +157,8 @@ def getFileTime(path):
 	time1 = os.path.getctime(path)  # 文件创建日期，返回时间戳
 	time2 = os.path.getmtime(path)  # 文件最近修改时间
 	time3 = os.path.getatime(path)  # 文件最近访问时间
-	
-	list1 = [time1, time2, time3]
-	list2 = []
-	for i in range(len(list1)):
-		filetime = list1[i]
-		filetime = time.localtime(filetime)  # 返回时间元组
-		# timeformat = "%Y-%m-%d %H:%M:%S %w"
-		timeformat = "%Y-%m-%d"
-		filetime = time.strftime(timeformat, filetime)
-		list2.append(filetime)
-	# print(filetime)
-	return list2
+	timelist = [time1, time2, time3]
+	return timelist
 
 
 @saveFileCheck
@@ -190,8 +177,8 @@ def saveDocx(path, text):
 	s.Text = text  # 写入文本
 	docx.Application.Run("小说排版")  # 运行宏
 	
-	docx.SaveAs2(path, 16)   # 保存文档并退出word
-	print("已保存：【{}]】".format(name))
+	docx.SaveAs2(path, 16)  # 保存文档并退出word
+	print("已保存：【{}】".format(name))
 	docx.Close(True)
 	word.Quit()
 
@@ -203,9 +190,9 @@ def saveText(path, text):
 	try:
 		with open(path, "w", encoding="UTF8") as f:
 			f.write(text)
-		# print("已保存：【{}]】".format(name))
+		# print("已保存：【{}】".format(name))
 	except IOError:
-		print("保存失败：【{}]】".format(name))
+		print("保存失败：【{}】".format(name))
 
 
 # for循环内部，使用a+模式，写入测试文件
@@ -215,9 +202,9 @@ def saveTextDesktop(name, text):
 	try:
 		with open(path, "a+", encoding="UTF8") as f:
 			f.write(text)
-		# print("已保存：【{}]】".format(name))
+		# print("已保存：【{}】".format(name))
 	except IOError:
-		print("保存失败：【{}]】".format(name))
+		print("保存失败：【{}】".format(name))
 
 
 def saveCsv(path, text):
@@ -227,9 +214,9 @@ def saveCsv(path, text):
 	try:
 		with open(path, "w", encoding="UTF-8-sig") as f:
 			f.write(text)
-	# print("已保存为：【{}]】".format(name))
+	# print("已保存为：【{}】".format(name))
 	except IOError:
-		print("保存失败：【{}]】".format(name))
+		print("保存失败：【{}】".format(name))
 
 
 def desktop():
@@ -237,7 +224,7 @@ def desktop():
 		key = winreg.OpenKey(winreg.HKEY_CURRENT_USER,
 		                     r'Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders')
 		return winreg.QueryValueEx(key, "Desktop")[0]
-	
+
 
 def monthNow():
 	year = str(time.localtime()[0])
@@ -270,25 +257,25 @@ def removeFile(path):
 	os.makedirs(path)
 	if os.path.isfile(path):
 		os.remove(path)
-		
-		
+
+
 def zipFile(path, delete=1):
 	# 传入某文件或文件夹路径后，将其所在文件夹打包压缩
 	# delete 为0或为""时，压缩后删除源文件
 	
 	if os.path.isdir(path):
-		dir = path    # 文件上级文件夹
+		dir = path  # 文件上级文件夹
 	elif os.path.isfile(path):
 		(dir, name) = os.path.split(path)
 	else:
 		print("不存在 {}".format(path))
 		os._exit(0)
-		
+	
 	zippath = os.path.join(dir + ".zip")
 	if os.path.exists(zippath):
-		os.remove(zippath) # 重新压缩
-		
-	list = findFile(dir, ) # 获取目录下所有文件
+		os.remove(zippath)  # 重新压缩
+	
+	list = findFile(dir, )  # 获取目录下所有文件
 	z = zipfile.ZipFile(zippath, 'w', zipfile.ZIP_DEFLATED)
 	for i in range(len(list)):
 		path = list[i]
@@ -296,7 +283,7 @@ def zipFile(path, delete=1):
 		filedir = filedir.replace(dir, "")
 		filedir = os.path.join(filedir, name)
 		# print(filedir)
-		z.write(filename=path, arcname=filedir)   # 压缩的文件，zip内路径
+		z.write(filename=path, arcname=filedir)  # 压缩的文件，zip内路径
 	z.close()
 	
 	if delete == 0 or delete == "":
@@ -305,7 +292,7 @@ def zipFile(path, delete=1):
 			print("【已经删除zip的源文件夹】")
 		except IOError:
 			print("【zip的源文件夹删除失败】")
-			
+	
 	zipname = os.path.split(zippath)[1]
 	print("【{}】压缩完成".format(zipname))
 	return zippath
@@ -315,13 +302,13 @@ def unzipFile(path, delete=1):
 	# 传入zip后，解压至以zip文件名建立的新文件夹
 	# delete 为0或为""时，解压后删除源文件
 	name = os.path.split(path)[1]
-	dir = os.path.splitext(path)[0]   # 解压后的文件夹
+	dir = os.path.splitext(path)[0]  # 解压后的文件夹
 	if os.path.exists(dir):
 		removeFile(dir)
 	
 	if not zipfile.is_zipfile(path):
 		print("【{}】不存在或不是zip文件".format(name))
-		
+	
 	else:
 		z = zipfile.ZipFile(path, "r")
 		for file in z.namelist():

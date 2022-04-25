@@ -4,13 +4,14 @@ import os
 import re
 import sys
 import math
+from platform import platform
+
 import numpy as np
 from pixivpy3 import AppPixivAPI
-from platform import platform
+
 from FileOperate import zipFile, saveText, formatFileName, monthNow, makeDirs
 from Language import getLanguage
 from config import REFRESH_TOKEN
-
 
 if "小说推荐" in os.getcwd():
 	from FileOperate import saveDocx
@@ -198,8 +199,9 @@ def formatNovelText(text):
 	return text
 
 
-def formatPixivText(text, novel_id):
+def formatPixivText(text):
 	# 处理Pixiv 标识符
+	
 	# [newpage]  [chapter: 本章标题]
 	text = text.replace("[newpage]", "\n\n")
 	a = re.findall("\[chapter:(.*)\]", text)
@@ -215,6 +217,7 @@ def formatPixivText(text, novel_id):
 			string = "第{}节 {}".format(i + 1, string)
 		text = re.sub("\[chapter:(.*)\]", string, text, 1)
 	
+	
 	# [jump: 链接目标的页面编号]
 	a = re.findall("\[jump:(.*)\]", text)
 	for i in range(len(a)):
@@ -222,18 +225,21 @@ def formatPixivText(text, novel_id):
 		string = "跳转至第{}节".format(string)
 		text = re.sub("\[jump:(.*)\]", string, text, 1)
 	
+	
 	# [pixivimage: 作品ID]
-	a = re.findall("\[pixivimage:(.*)\]", text)
+	a = re.findall("\[pixivimage: (.*)\]", text)
 	for i in range(len(a)):
-		string = a[i]
-		string = "插图：https://www.pixiv.net/artworks/".format(string)
+		string = a[i].strip(" ")
+		string = "插图：https://www.pixiv.net/artworks/{}".format(string)
 		text = re.sub("\[pixivimage:(.*)\]", string, text, 1)
+	
 	
 	# [uploadedimage: 上传图片自动生成的ID]
 	# 会被 pixivpy 自动转换成一下这一大串
-	stringpart = "jumpuri:If you would like to view illustrations, please use your desktop browser.>https://www.pixiv.net/n/"
-	autostring = "[[{}{}]]".format(stringpart, novel_id)
-	text = text.replace(autostring, "【此文内有插图，请在Pixv查看】")
+	pattern = "\[\[jumpuri:If you would like to view illustrations, please use your desktop browser.>https://www.pixiv.net/n/[0-9]{5,}\]\]"
+	string = "【本文内有插图，请在Pixv查看】"
+	text = re.sub(pattern, string, text)
+	
 	
 	# [[jumpuri: 标题 > 链接目标的URL]]
 	a = re.findall("\[{2}jumpuri: *(.*) *> *(.*)\]{2}", text)
@@ -246,11 +252,6 @@ def formatPixivText(text, novel_id):
 			string = "{}【{}】".format(name, link)
 			text = re.sub("\[{2}jumpuri: *(.*) *> *(.*)\]{2}", string, text, 1)
 	
-	# [uploadedimage: 上传图片自动生成的ID]
-	# 会被 pixivpy 自动转换成一下这一大串
-	stringpart = "jumpuri:If you would like to view illustrations, please use your desktop browser.>https://www.pixiv.net/n/"
-	autostring = "[[{}{}]]".format(stringpart, novel_id)
-	text = text.replace(autostring, "【此文内有插图，请在Pixv查看】")
 	return text
 
 
@@ -262,7 +263,7 @@ def getNovelText(novel_id):
 	series_next = json_result.series_next
 	
 	text = formatNovelText(text)
-	text = formatPixivText(text, novel_id)
+	text = formatPixivText(text)
 	# print (text)
 	return text
 
