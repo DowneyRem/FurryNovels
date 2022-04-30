@@ -433,7 +433,7 @@ dict = {
 	"chinese": "",
 	"Chinese": "",
 	
-}
+	}
 
 noveldict = {}
 noveldict.update(dict)

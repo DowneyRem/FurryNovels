@@ -4,6 +4,7 @@ import os
 import re
 from platform import platform
 from functools import cmp_to_key
+
 from DictNovel import noveldict, cmp  # 小说标签
 from DictText import textdict  # 正文关键词
 from DictRace import racedict  # 种族关键词
@@ -11,7 +12,6 @@ from FileOperate import findFile, openText, openText4, openDocx, openDocx4, unzi
 from PixivNovels import getSeriesId, formatSeriesInfo
 from Language import getLanguage
 from config import cc1, cc2
-
 
 if "小说推荐" in os.getcwd():
 	from FileOperate import monthNow, openNowDir
@@ -130,7 +130,7 @@ def getInfo(text, textlist):
 		if "小说推荐" in os.getcwd():
 			unsuretag = "可能存在：" + s1 + "\n" + s2 + "\n"
 		else:
-			unsuretag = "可能存在：" + s1 + "\n"  # + s2
+			unsuretag = "可能存在：" + s1 + "\n" # + s2
 	
 	tags1 = sortTags(tags1, cmp)
 	if tags2 != "":

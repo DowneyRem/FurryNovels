@@ -10,7 +10,7 @@ from platform import platform
 
 import pandas as pd
 from pixivpy3 import AppPixivAPI
-from win32com.client import DispatchEx
+from win32com.client import DispatchEx, Dispatch
 
 # get your refresh_token, and replace _REFRESH_TOKEN
 # https://github.com/upbit/pixivpy/issues/158#issuecomment-778919084
@@ -234,7 +234,7 @@ def saveAsCsv(user_id, path):
 	return path
 
 
-@timethis
+# @timethis
 def formatForDataFrame(user_id):
 	li = []
 	print("\n获取Pixiv数据中……")
@@ -253,6 +253,7 @@ def formatForDataFrame(user_id):
 	return li
 
 
+@timethis
 def saveAsXlsx(user_id, path):
 	data = formatForDataFrame(user_id)
 	col = "名称,日期,点击,点赞,评论".split(",")
@@ -274,16 +275,50 @@ def saveAsXlsx(user_id, path):
 		return None
 
 
-# @timethis
+@timethis
 @openFileCheck
 def openExcel(path):  # 打开软件手动操作
-	excel = DispatchEx('Excel.Application')  # 独立进程
+	# excel = DispatchEx('Excel.Application')  # 工作簿间独立进程
+	excel = Dispatch('Excel.Application')
 	excel.Visible = 1  # 0为后台运行
-	excel.DisplayAlerts = 0  # 不显示，不警告
+	excel.DisplayAlerts = 0  # 不显示警告
 	print("打开Excel……")
-	xlsx = excel.Workbooks.Open(path)  # 打开文档
+	excel.Workbooks.Open(path, 0)  # 打开文档
 
 
+@timethis
+@openFileCheck
+def editExcelDoc(path):  # 打开软件自动操作，需要录制宏
+	extdict={
+		".xlsb": "50",  # Excel 二进制工作簿
+		".xlsx": "51",  # 默认/Open XML 工作簿
+		".xlsm": "52",  # 启用宏的 Open XML 工作簿
+		".xltm": "53",  # 启用宏的 Open XML 模板
+		".xltx": "54",  # Open XML 模板
+		".xls" : "56",  # Excel 97-2003 工作簿
+		".csv" : "62",  # UTF8 CSV
+	}
+	
+	# excel = DispatchEx('Excel.Application')  # 工作簿间独立进程
+	excel = Dispatch('Excel.Application')  # 工作簿共用进程
+	excel.Visible = 1  # 0为后台运行
+	excel.DisplayAlerts = 0  # 不显示警告
+	print("处理数据中……")
+	wb = excel.Workbooks.Open(path, 1)  # 打开文档；更新链接
+	wb.Application.Run("自动化")  # 运行宏
+
+	#保存，并另存为 xlsx
+	wb.Save()
+	path = os.path.splitext(path)[0] + ".xlsx"
+	ext = os.path.splitext(path)[1]
+	extnum = extdict.get(ext)
+	wb.SaveAs(path, extnum)
+	
+	wb.Close(True)
+	excel.Quit()
+	return path
+	
+	
 def desktop():
 	if "Windows" in platform():  # 其他平台我也没用过
 		key = winreg.OpenKey(winreg.HKEY_CURRENT_USER,
@@ -297,7 +332,7 @@ def wrong():
 	main()
 
 
-# @timethis
+@timethis
 def main():
 	print("\n请输入Pixiv作者链接：")
 	string = input()
@@ -321,23 +356,23 @@ if __name__ == '__main__':
 		path = os.getcwd()
 		path = path.replace("写作\\小说推荐\\工具", "")
 		path = os.path.join(path, "Office Documents", "WPS Cloud Files")
-		xlsxpath = os.path.join(path, "唐门小说点赞统计.xlsx")
+		xlsxpath = os.path.join(path, "唐门小说点赞统计.xlsm")
 		
 		fileModifyTime = os.path.getmtime(xlsxpath)
 		fileModifyTime = date.fromtimestamp(fileModifyTime)
 		today = date.today()
 		today_wday = today.isoweekday()
 		
-		if today_wday >= 5 and today - fileModifyTime >= timedelta(7):
+		if today_wday >= 5 and today - fileModifyTime >= timedelta(5):
 			path = desktop()
 			datapath = saveAsXlsx(16721009, path)
 			openExcel(datapath)
+			path = editExcelDoc(xlsxpath)
 		else:
-			xlsxpath = os.path.join(path, "唐门小说更新统计.xlsx")
-		# print(xlsxpath)
-		openExcel(xlsxpath)
-	
-	
+			path = os.path.join(path, "唐门小说更新统计.xlsx")
+		openExcel(path)
+
+
 	path = os.getcwd()
 	if "工具" not in path:
 		main()

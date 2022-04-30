@@ -6,7 +6,6 @@ from Language import getLanguage
 from config import cc1, cc2
 
 
-
 def setPath(path):
 	path0 = path.replace("\小说推荐", "\兽人小说\小说推荐\频道版")
 	path0 = path0.replace(".docx", ".txt")

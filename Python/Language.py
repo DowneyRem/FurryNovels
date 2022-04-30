@@ -1,5 +1,5 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+#!/usr/bin/python
+# -*- coding: UTF-8 -*-
 
 
 def getLanguage(text):  # 添加语言标签
@@ -30,3 +30,7 @@ def getLanguage(text):  # 添加语言标签
 		tags += "#en"
 	# print(tags)
 	return tags
+
+
+if __name__ == "__main__":
+	pass
