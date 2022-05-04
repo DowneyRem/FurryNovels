@@ -461,8 +461,8 @@ def cmp(a, b):  # 按dict内部顺序进行排序
 		return -1
 	else:
 		return 0
-
-
+	
+	
 def saveDict2Md(dict, name):
 	text = "### 关键词标签表\n"
 	text = text + "\n| 标签 | 关键词 | "

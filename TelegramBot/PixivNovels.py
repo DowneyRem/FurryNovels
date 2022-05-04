@@ -112,18 +112,20 @@ def formatNovelName(novel_id):
 			name = text[0][0].strip()
 	
 	elif re.findall("([给給]?.+?的?(?:委托|赠文|无偿))", name):
-	# pattern = "((?:给|給)?.+?的?(?:委托|赠文|无偿))(?::|：|;|；|,|，)?(.+?)((?:（| ).*）?)"
-	pattern = "((?:给|給)?.+?的?(?:委托|赠文|无偿))(?::|：|;|；|,|，)?(.+)"
-	text = re.findall(pattern, name)
-	if text != []:
-		# print(text)
-		a = text[0][0].strip()
-		b = text[0][1].strip()
+		# pattern = "((?:给|給)?.+?的?(?:委托|赠文|无偿))(?::|：|;|；|,|，)?(.+?)((?:（| ).*）?)"
+		pattern = "((?:给|給)?.+?的?(?:委托|赠文|无偿))(?::|：|;|；|,|，)?(.+)"
+		text = re.findall(pattern, name)
+		if text != []:
+			# print(text)
+			a = text[0][0].strip()
+			b = text[0][1].strip()
 			b = re.sub("[(（]?[0-9]+([)）])?", "", b)
-		b = b.replace("摸鱼", "")
-		
-		if len(b) >= 1:
-			name = text[0][1].strip()
+			b = b.replace("摸鱼", "")
+			
+			if len(b) >= 1:
+				name = text[0][1].strip()
+				
+	# print(name)
 	return name
 
 
@@ -323,6 +325,7 @@ def getNovelsListFormSeries(series_id):
 
 def getSeriesInfo(series_id):
 	json_result = aapi.novel_series(series_id, last_order=None)
+	# print(json_result)
 	detail = json_result.novel_series_detail
 	title = detail.title  # 系列标题
 	author = getAuthorName(detail)[0]
@@ -472,6 +475,7 @@ def saveSeries(series_id, path):
 			return num
 	
 	num = getnum(series_id)
+	# print(num)
 	if num > +60:
 		filepath = saveSeriesAsTxt(series_id, path)
 	if num < -60:
@@ -491,22 +495,28 @@ def getAuthorInfo(user_id):
 	id = user.id
 	name = user.name
 	account = user.account
-	profile = user.profile_image_urls.medium
+	url = user.profile_image_urls.medium
 	comment = user.comment
 	
 	profile = json_result.profile
 	webpage = profile.webpage
 	twitter = profile.twitter_url
-	total_follow_users = profile.total_follow_users
+	
 	illusts = profile.total_illusts
 	manga = profile.total_manga
-	
+	iseries = profile.total_illust_series
 	novels = profile.total_novels
-	series = profile.total_novel_series
-	string = "{}({})\n系列小说：{}篇\n共计：{}篇".format(name, id, series, novels)
+	nseries = profile.total_novel_series
+	string = "{}({})\n小说：{}篇；系列：{}个\n插画：{}幅；系列：{}个"\
+		.format(name, id, novels, nseries, illusts+manga, iseries)
+	# print(string)
 	
-	print(string)
-	return name, novels, series, string
+	name = formatFileName(name) + ".jpg"
+	aapi.download(url, path="Photos", name=name)
+	iconpath = os.path.join(os.getcwd(), "Photos", name)
+	
+	# return name, id, novels, nseries, illusts+manga, iseries, iconpath
+	return string, iconpath
 
 
 def getNovelsListFromAuthor(user_id):
@@ -677,5 +687,9 @@ if __name__ == '__main__':
 		path = path.replace("\\工具", "")
 		path = os.path.join(path, "备用")
 	else:
-		path = os.path.join(path, "Novels")
+		path = os.path.join(os.getcwd(), "Photos")
+		makeDirs(path)
+		path = os.path.join(os.getcwd(), "Novels")
+		makeDirs(path)
+		
 	main()
