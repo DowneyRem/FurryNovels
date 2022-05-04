@@ -9,7 +9,7 @@ from platform import platform
 
 if "Windows" in platform():
 	import winreg
-	
+
 	if "小说推荐" in os.getcwd():
 		from docx.api import Document
 		from win32com.client import Dispatch, DispatchEx

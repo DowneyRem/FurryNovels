@@ -151,7 +151,7 @@ def printInfo(path):
 	elif ext == ".txt":
 		textlist = openText4(path)
 		text = openText(path)
-	
+		
 	elif ext == ".zip":
 		text = ""  # 处理zip合集
 		path = unzipFile(path)
@@ -159,7 +159,7 @@ def printInfo(path):
 		for i in range(len(filelist)):
 			file = filelist[i]
 			text += openText(file)
-		
+
 		urltext = openText4(filelist[1])[2]
 		novelid = re.findall("[0-9]{5,}", urltext)[0]
 		seriesid = getSeriesId(novelid)[0]
@@ -168,7 +168,7 @@ def printInfo(path):
 		caption = re.sub("其他：.*\n?", "", caption, 1)
 		caption = caption.replace("\n", "\n\t")
 		textlist = caption.split("\t")
-	
+		
 	else:
 		print("文件类别不在可以处理的范围内")
 	
@@ -188,7 +188,7 @@ def getPath(path):
 		printInfo(filepath)
 		if dirstr in filepath:
 			j += 1
-	
+			
 	if "小说推荐" in os.getcwd():
 		if j != 0:
 			openNowDir()
