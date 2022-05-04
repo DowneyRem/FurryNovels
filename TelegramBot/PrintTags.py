@@ -32,7 +32,7 @@ def sortTags(set, cmp):  # 按dict内顺序对转换后的标签排序
 	li.sort(key=cmp_to_key(cmp))
 	
 	for i in range(len(li)):
-		taglist = li[i].split()    # 一关键词匹配多标签
+		taglist = li[i].split()  # 一关键词匹配多标签
 		for j in range(len(taglist)):
 			tag = taglist[j]
 			# print(tag)
@@ -122,7 +122,7 @@ def getInfo(text, textlist):
 	unsuretag = ""
 	if s1 != set():
 		s1 = setSpilt(s1)
-		tags1 = setSpilt(tags1)    # 拆分一关键词对多个标签
+		tags1 = setSpilt(tags1)  # 拆分一关键词对多个标签
 		s1 = s1.difference(tags1)  # 去重，获取作者未标注的标签
 		s1 = sortTags(s1, cmp)
 		s2 = sortTags(s2, cmp)
@@ -151,7 +151,7 @@ def printInfo(path):
 	elif ext == ".txt":
 		textlist = openText4(path)
 		text = openText(path)
-		
+	
 	elif ext == ".zip":
 		text = ""  # 处理zip合集
 		path = unzipFile(path)
@@ -159,16 +159,16 @@ def printInfo(path):
 		for i in range(len(filelist)):
 			file = filelist[i]
 			text += openText(file)
-
+		
 		urltext = openText4(filelist[1])[2]
 		novelid = re.findall("[0-9]{5,}", urltext)[0]
 		seriesid = getSeriesId(novelid)[0]
 		
-		caption  = formatSeriesInfo(seriesid)
-		caption  = re.sub("其他：.*\n?", "", caption, 1)
-		caption  = caption.replace("\n", "\n\t")
+		caption = formatSeriesInfo(seriesid)
+		caption = re.sub("其他：.*\n?", "", caption, 1)
+		caption = caption.replace("\n", "\n\t")
 		textlist = caption.split("\t")
-		
+	
 	else:
 		print("文件类别不在可以处理的范围内")
 	
@@ -188,7 +188,7 @@ def getPath(path):
 		printInfo(filepath)
 		if dirstr in filepath:
 			j += 1
-			
+	
 	if "小说推荐" in os.getcwd():
 		if j != 0:
 			openNowDir()

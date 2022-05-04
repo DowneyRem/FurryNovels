@@ -23,8 +23,11 @@ if "Windows" in platform():
 	REQUESTS_KWARGS = {'proxies': {'https': 'http://127.0.0.1:10808', }}
 elif "Linux" in platform():
 	REQUESTS_KWARGS = {}
+	
 try:
 	aapi = AppPixivAPI(**REQUESTS_KWARGS)
+	# aapi.set_additional_headers({'Accept-Language':'en-US'})
+	aapi.set_accept_language("en-us")  # zh-cn
 	aapi.auth(refresh_token=REFRESH_TOKEN)
 except:
 	print("请检查网络可用性或更换REFRESH_TOKEN")
@@ -58,12 +61,12 @@ def getTags(novel_id, set):
 	return set
 
 
-def getAuthorName(novel):
-	# 作者 昵称，id，账户，头像图片链接
-	name = novel.user.name
-	id = novel.user.id
-	account = novel.user.account
-	profile_image_urls = novel.user.profile_image_urls.medium
+def getAuthorName(json):
+	#账户名，id，头像图片；支持小说，小说系列，插画，漫画
+	user = json.user
+	id = user.id
+	name = user.name
+	account = user.account
 	return name, id
 
 
@@ -87,6 +90,7 @@ def getNovelInfo(novel_id):
 	author = getAuthorName(novel)[0]
 	authorid = getAuthorName(novel)[1]
 	caption = novel.caption
+	caption = formatCaption(caption)
 	view = novel.total_view
 	bookmarks = novel.total_bookmarks
 	comments = novel.total_comments
@@ -98,6 +102,16 @@ def getNovelInfo(novel_id):
 
 def formatNovelName(novel_id):
 	name = getNovelInfo(novel_id)[0]
+	
+	if re.findall("[(（].*(委托|赠给).*[)）]", name): #梦川云岚OwO，优化
+		# 赏金猎人2——（果果委托)；克隆实验——（赠给艾兰）
+		pattern = "(.*)((?:—|-|_){2,} ?.*)"
+		if re.findall(pattern, name):
+			text = re.findall(pattern, name)
+			# print(text)
+			name = text[0][0].strip()
+	
+	elif re.findall("([给給]?.+?的?(?:委托|赠文|无偿))", name):
 	# pattern = "((?:给|給)?.+?的?(?:委托|赠文|无偿))(?::|：|;|；|,|，)?(.+?)((?:（| ).*）?)"
 	pattern = "((?:给|給)?.+?的?(?:委托|赠文|无偿))(?::|：|;|；|,|，)?(.+)"
 	text = re.findall(pattern, name)
@@ -105,7 +119,7 @@ def formatNovelName(novel_id):
 		# print(text)
 		a = text[0][0].strip()
 		b = text[0][1].strip()
-		b = re.sub("(\(|（)?[0-9]{5,}(\)|）)?", "", b)
+			b = re.sub("[(（]?[0-9]+([)）])?", "", b)
 		b = b.replace("摸鱼", "")
 		
 		if len(b) >= 1:
@@ -128,7 +142,7 @@ def formatCaption(caption):
 		string = a[i]
 		# print(string)
 		id = re.search("[0-9]{5,}", string).group()
-		link = "https://www.pixiv.net/artworks/{}".format(id)
+		link = " https://www.pixiv.net/artworks/{} ".format(id)
 		caption = caption.replace(string, link)
 	
 	# <a href="pixiv://novels/12345">novel/12345</a>
@@ -137,7 +151,7 @@ def formatCaption(caption):
 	for i in range(len(a)):
 		string = a[i]
 		id = re.search("[0-9]{5,}", string).group()
-		link = "https://www.pixiv.net/novel/show.php?id={}".format(id)
+		link = " https://www.pixiv.net/novel/show.php?id={} ".format(id)
 		caption = caption.replace(string, link)
 	
 	# <a href="pixiv://users/12345">user/12345</a>
@@ -146,7 +160,7 @@ def formatCaption(caption):
 	for i in range(len(a)):
 		string = a[i]
 		id = re.search("[0-9]{5,}", string).group()
-		link = "https://www.pixiv.net/users/{}".format(id)
+		link = " https://www.pixiv.net/users/{} ".format(id)
 		caption = caption.replace(string, link)
 	
 	# 一般a标签
@@ -154,17 +168,11 @@ def formatCaption(caption):
 	pattern = '''<a href="(https://.*)" target=(?:'|")_blank(?:'|").*>https://.*</a>'''
 	a = re.findall(pattern, caption)
 	for i in range(len(a)):
-		link = a[i]
+		link = " {} ".format(a[i])
 		caption = re.sub(pattern, link, caption, 1)
 	
 	caption = caption.replace("\n\n", "\n")
 	return caption
-
-
-def getLang(novel_id):
-	text = getNovelText(novel_id)
-	lang = getLanguage(text)
-	return lang
 
 
 def formatNovelInfo(novel_id):
@@ -175,7 +183,6 @@ def formatNovelInfo(novel_id):
 	
 	if caption != "":
 		caption = "其他：{}\n".format(caption)
-		caption = formatCaption(caption)
 	
 	s = set()
 	s = getTags(novel_id, s)
@@ -204,7 +211,7 @@ def formatPixivText(text):
 	
 	# [newpage]  [chapter: 本章标题]
 	text = text.replace("[newpage]", "\n\n")
-	a = re.findall("\[chapter:(.*)\]", text)
+	a = re.findall("\[chapter:(.*)]", text)
 	for i in range(len(a)):
 		string = a[i]
 		if "第" in string and "章" in string:
@@ -215,42 +222,42 @@ def formatPixivText(text):
 			string = "第{}节".format(string)
 		else:
 			string = "第{}节 {}".format(i + 1, string)
-		text = re.sub("\[chapter:(.*)\]", string, text, 1)
+		text = re.sub("\[chapter:(.*)]", string, text, 1)
 	
 	
 	# [jump: 链接目标的页面编号]
-	a = re.findall("\[jump:(.*)\]", text)
+	a = re.findall("\[jump:(.*)]", text)
 	for i in range(len(a)):
 		string = a[i]
 		string = "跳转至第{}节".format(string)
-		text = re.sub("\[jump:(.*)\]", string, text, 1)
+		text = re.sub("\[jump:(.*)]", string, text, 1)
 	
 	
 	# [pixivimage: 作品ID]
-	a = re.findall("\[pixivimage: (.*)\]", text)
+	a = re.findall("\[pixivimage: (.*)]", text)
 	for i in range(len(a)):
 		string = a[i].strip(" ")
 		string = "插图：https://www.pixiv.net/artworks/{}".format(string)
-		text = re.sub("\[pixivimage:(.*)\]", string, text, 1)
+		text = re.sub("\[pixivimage:(.*)]", string, text, 1)
 	
 	
 	# [uploadedimage: 上传图片自动生成的ID]
 	# 会被 pixivpy 自动转换成一下这一大串
 	pattern = "\[\[jumpuri:If you would like to view illustrations, please use your desktop browser.>https://www.pixiv.net/n/[0-9]{5,}\]\]"
-	string = "【本文内有插图，请在Pixv查看】"
+	string = "【本文内有插图，请在Pixiv查看】"
 	text = re.sub(pattern, string, text)
 	
 	
 	# [[jumpuri: 标题 > 链接目标的URL]]
-	a = re.findall("\[{2}jumpuri: *(.*) *> *(.*)\]{2}", text)
+	a = re.findall("\[{2}jumpuri: *(.*) *> *(.*)]{2}", text)
 	for i in range(len(a)):
 		name = a[i][0]
 		link = a[i][1]
 		if link in name:
-			text = re.sub("\[{2}jumpuri: *(.*) *> *(.*)\]{2}", link, text, 1)
+			text = re.sub("\[{2}jumpuri: *(.*) *> *(.*)]{2}", link, text, 1)
 		else:
 			string = "{}【{}】".format(name, link)
-			text = re.sub("\[{2}jumpuri: *(.*) *> *(.*)\]{2}", string, text, 1)
+			text = re.sub("\[{2}jumpuri: *(.*) *> *(.*)]{2}", string, text, 1)
 	
 	return text
 
@@ -321,12 +328,17 @@ def getSeriesInfo(series_id):
 	author = getAuthorName(detail)[0]
 	caption = detail.caption  # 系列简介
 	count = detail.content_count  # 系列内小说数
-	# print(title, author, count, caption)
+	url = json_result.novels[0].image_urls.medium
+	
+	# name = formatFileName(title) + ".jpg"
+	# aapi.download(url, path="Photos", name=name)
+	# iconpath = os.path.join(os.getcwd(), "Photos", name)
+	# print(title, author, count, caption, iconpath)
 	return title, author, caption, count
 
 
 def formatSeriesInfo(series_id):
-	(title, author, caption, count) = getSeriesInfo(series_id)
+	(title, author, caption, count) = getSeriesInfo(series_id)[0:4]
 	author = "作者：{}\n".format(author)
 	
 	if caption != "":
@@ -439,7 +451,7 @@ def saveSeries(series_id, path):
 		seriesName = seriesName.replace("系列", "")
 		
 		if "委托" in seriesName or "委托" in seriesCaption:
-			return -100, count
+			return count-100
 		else:
 			num = 0
 			for i in range(len(list)):
@@ -474,6 +486,7 @@ def saveSeries(series_id, path):
 def getAuthorInfo(user_id):
 	string = ""
 	json_result = aapi.user_detail(user_id)
+	# print(json_result)
 	user = json_result.user
 	id = user.id
 	name = user.name

@@ -20,7 +20,7 @@ def getLanguage(text):  # 添加语言标签
 		return j
 	
 	
-	if countChar(list3) >= 0.6 * len(list3):
+	if   countChar(list3) >= 0.6 * len(list3):
 		tags += "#ja"
 	elif countChar(list2) >= 0.6 * len(list2):
 		tags += "#zh_tw"

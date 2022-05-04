@@ -12,7 +12,7 @@ from telegram import (ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardMa
 from telegram.ext import (Updater, CommandHandler, MessageHandler, Filters, ConversationHandler, CallbackQueryHandler)
 # from telegram.utils.request import Request
 
-from PixivNovels import (saveNovel, saveSeriesAsTxt, saveSeriesAsZip, saveAuthor, getNovelInfo, getAuthorInfo, getSeriesId, novelAnalyse, seriesAnalyse, formatNovelInfo, formatSeriesInfo)
+from PixivNovels import (saveNovel, saveSeriesAsTxt, saveSeriesAsZip, saveAuthor, getNovelInfo,  getSeriesInfo, getAuthorInfo, getSeriesId, getTags, set2Text, novelAnalyse, seriesAnalyse, formatNovelInfo, formatSeriesInfo)
 from PrintTags import printInfo, getInfo
 from FileOperate import findFile, openText, removeFile, unzipFile
 from Convert import convert
@@ -89,8 +89,14 @@ def download(update, context):
 		data = query.data
 		method = int(data[0])
 		id = data[2:] #传入的id已做过分类处理
-		
-		if   method == 1:
+		(filepath, caption, recommend) = downloadA(method, id)
+		upload(filepath, caption, recommend)
+
+
+	def downloadA(method, id):
+		caption = ""
+		recommend = -100
+		if method == 1:
 			myprint("下载单章中……")
 			filepath = saveNovel(id, path)
 			myprint("下载完成，等待上传中……")
@@ -113,7 +119,7 @@ def download(update, context):
 			caption = caption.replace("\n", "\n\t")
 			caption = caption.split("\t")
 			textlist = caption[0:4]
-			text = " " #为了快速上传，不检测正文；避免后续报错，text不为空
+			text = " "  # 为了快速上传，不检测正文；避免后续报错，text不为空
 			caption = getInfo(text, textlist)
 			recommend = seriesAnalyse(id)
 		
@@ -121,14 +127,12 @@ def download(update, context):
 			myprint("下载作者小说zip合集中……")
 			filepath = saveAuthor(id, path)
 			myprint("下载完成，等待上传中……")
-			caption = getAuthorInfo(id)[3]
-			recommend = -100
-		# elif method == 5:
-		# 	pass
+			caption = getAuthorInfo(id)[0]
+			print(caption)
 		
 		recommend = round(recommend, 2)
 		return filepath, caption, recommend
-	
+		
 	
 	def furry(caption):
 		furrynum = 0
@@ -138,114 +142,131 @@ def download(update, context):
 			race = racelist[i]
 			if race in caption:
 				furrynum += 1
+		
+		if "Furry" in caption or "furry" in caption or "kemono" in caption:
+			furrynum += 5
 		print("福瑞指数：{}".format(furrynum))
 		return furrynum
 	
 	
-	query = update.callback_query
-	# print(query.message)
-	username = query.message.chat.first_name
-	if query.data !="":  #清除按钮
-		query.edit_message_reply_markup(InlineKeyboardMarkup([[]]))
-	
-	(filepath, caption, recommend) = downloadAll(query)
-	furrynum = furry(caption)
-	uploadToUser(filepath, caption)
-	
-	caption += "\n来自 {} 的分享".format(username)
-	if recommend >= -100:
-		caption += "\n推荐指数： {} ".format(recommend)
-		caption += "@FurryNovels"
+	def upload(filepath, caption, recommend):
+		furrynum = furry(caption)
+		uploadToUser(filepath, caption)
 		
-	if furrynum >= 3 and "zh" in caption and (".zip" not in filepath):
-		uploadToChannel("@FurryReading", filepath, caption)
-	if furrynum >= 3 and recommend >= 5 and "zh" in caption:
-		# uploadToChannel("@FurryNovels", filepath, caption)
-		pass
+		username = query.message.chat.first_name
+		caption += "\n来自 {} 的分享".format(username)
+		if recommend > -100:
+			caption += "\n推荐指数： {} @FurryNovels".format(recommend)
+		
+		if "Windows" in platform():  # 测试用频道
+			uploadToChannel("-1001286539630", filepath, caption)
+		elif furrynum >= 3 and (".zip" not in filepath):  # 兽人小说且不为zip
+			uploadToChannel("@FurryReading", filepath, caption)
+			if "zh" in caption and recommend >= 5:  # 中文，优秀，小说
+				uploadToChannel("@FurryNovels", filepath, caption)
+		print("")
 	
 	
+	query = update.callback_query
+	if query.data != "":  # 清除按钮
+		query.edit_message_reply_markup(InlineKeyboardMarkup([[]]))
+	# print(query.message)
+	downloadAll(query)
+
+
 def botmain(update, context):
 	def myprint(text):
 		print(text)
 		update.message.reply_text(text)
 	
-	def wrongType():
-		if "频道" in string or "頻道" in string:
-			myprint("关注我们的频道 @FurryNovels 可获取更新哦", )
-		elif "群" in string:
-			myprint("群组链接： https://t.me/FurryNovels/27 ", )
+	
+	def wrongType(text):
+		if "频道" in text or "頻道" in text:
+			myprint("欢迎关注我们的频道 @FurryNovels @FurryReading")
+		elif "群" in text:
+			myprint("群组链接： https://t.me/FurryNovels/27")
+		elif "分享" in text or "投稿" in text:
+			myprint("向我发送Pixiv的小说链接就可以了")
 		else:
-			myprint("输入有误，请重新输入Pixiv小说网址", )
+			myprint("输入有误，请重新输入Pixiv小说网址")
 	
 	
 	def testSeries(novel_id):
+		user_id = getNovelInfo(novel_id)[6]
+		(title, author, caption) = getNovelInfo(novel_id)[0:3]
+		tags = getTags(novel_id, set())
+		tags = set2Text(tags)
+		text = "{}\n作者：{}\n标签：{}".format(title, author, tags)
+		
 		if getSeriesId(novel_id)[0] is None:
-			user_id = getNovelInfo(novel_id)[6]
-			update.message.reply_text("请选择下载方式",
-				reply_markup=InlineKeyboardMarkup([[
-						InlineKeyboardButton("下载当前章节为txt文件", callback_data="{}:{}".format(1, novel_id)),
-						InlineKeyboardButton("下载作者小说为zip合集", callback_data="{}:{}".format(4, user_id)),
-					]]))
+			update.message.reply_text(text, reply_markup=InlineKeyboardMarkup([[
+			InlineKeyboardButton("下载本章为txt文件", callback_data="{}:{}".format(1, novel_id)),
+			InlineKeyboardButton("下载此作者全部小说", callback_data="{}:{}".format(4, user_id)),
+				]]),disable_web_page_preview=1)
 		
 		else:
 			series_id = getSeriesId(novel_id)[0]
-			update.message.reply_text("请选择下载方式",
-				reply_markup=InlineKeyboardMarkup([
-					[
-						InlineKeyboardButton("下载当前章节为txt文件", callback_data="{}:{}".format(1, novel_id)),
-					], [
-						InlineKeyboardButton("下载所在系列为txt合集", callback_data="{}:{}".format(2, series_id)),
-						InlineKeyboardButton("下载所在系列为zip合集", callback_data="{}:{}".format(3, series_id)),
-					]]))
+			(title, author, caption, count)  = getSeriesInfo(series_id)[0:4]
+			text += "\n\n系列：{}，共{}篇\n".format(title, count)
+			update.message.reply_text(text, reply_markup=InlineKeyboardMarkup(
+		[[
+			InlineKeyboardButton("下载本章为txt文件", callback_data="{}:{}".format(1, novel_id)),
+			InlineKeyboardButton("下载此作者全部小说", callback_data="{}:{}".format(4, user_id)),
+		], [
+			InlineKeyboardButton("下载系列为txt合集", callback_data="{}:{}".format(2, series_id)),
+			InlineKeyboardButton("下载系列为zip合集", callback_data="{}:{}".format(3, series_id)),		]]))
 			
 			
 	def saveSeries(series_id):
-		update.message.reply_text("请选择下载方式",
-			reply_markup=InlineKeyboardMarkup(
-				[[
-					InlineKeyboardButton("下载系列为txt合集", callback_data="{}:{}".format(2, series_id)),
-					InlineKeyboardButton("下载系列为zip合集", callback_data="{}:{}".format(3, series_id)),
-				]]))
+		(title, author, caption, count) = getSeriesInfo(series_id)[0:4]
+		text = "系列：{}，共{}篇\nBy {}\n\n{}".format(title, count, author, caption)
+		update.message.reply_text(text, reply_markup=InlineKeyboardMarkup([[
+			InlineKeyboardButton("下载系列为txt合集", callback_data="{}:{}".format(2, series_id)),
+			InlineKeyboardButton("下载系列为zip合集", callback_data="{}:{}".format(3, series_id)),
+		]]))
+		
 		
 	def saveAuthor(user_id):
-		update.message.reply_text("请选择下载方式",
-			reply_markup=InlineKeyboardMarkup(
-				[[
-					InlineKeyboardButton("查看作者简介", callback_data="{}:{}".format(5, user_id)),
-					InlineKeyboardButton("下载作者小说为zip合集", callback_data="{}:{}".format(4, user_id)),
-				]]))
-		
+		photo = open(getAuthorInfo(user_id)[1], 'rb')
+		caption = getAuthorInfo(user_id)[0]
+		update.message.chat.send_photo(photo, caption,reply_markup=InlineKeyboardMarkup([[
+		    InlineKeyboardButton("下载此作者全部小说", callback_data="{}:{}".format(4, user_id)),
+		    # InlineKeyboardButton("精确下载", callback_data="{}:{}".format(6, user_id)),
+	    ]]))
+
+	
+	def savePixiv(text, id):
+		if "user" in text:  #去末尾s，兼容linpx
+			saveAuthor(id)
+		elif "novel/series" in text:
+			saveSeries(id)
+		elif "novel" in text:
+			testSeries(id)
+		elif "artworks" in text:
+			myprint("不支持下载插画，请重新输入")
+	
 	
 	def getId(update, context):
-		string = update.message.text
+		text = update.message.text
 		messageid = update.message.message_id
-
-		if re.search("[0-9]{5,}", string):
-			id = re.search("[0-9]+", string).group()
-			if "pixiv.net" in string:
-				
-				if "users" in string:
-					saveAuthor(id)
-				elif "novel/series" in string:
-					myprint("开始下载系列小说……", )
-					saveSeries(id)
-				elif "novel" in string:
-					testSeries(id)
-				elif "artworks" in string:
-					myprint("不支持下载插画，请重新输入")
-				
-			else:
+		pat = "(?:https?|ftp|file)://[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]"
+		if re.findall(pat, text):   # 获取网址链接
+			text = re.findall(pat, text)[0]
+			id = re.findall("[0-9]{5,}", text)[0]
+			if "pixiv" in text:  #支持Pixiv与linpx
+				savePixiv(text, id)
+			elif "/pn/" in text:   #兼容linpx分享链接
 				testSeries(id)
+			else:
+				myprint("请发送Pixiv/Linpx链接，暂不支持其他网站")
 		else:
-			wrongType()
+			wrongType(text)
 	
-	string = update.message.text
+	
 	getId(update, context)
 
 
-
 def main():
-	# bot = Bot(token=BOT_TOKEN)
 	updater = Updater(BOT_TOKEN, use_context=True, request_kwargs=REQUESTS_KWARGS)
 	if "Windows" in platform():
 		updater.start_polling()

@@ -3,8 +3,8 @@
 import os
 import pickle
 from FileOperate import saveText
-from DictText import textdict   # 正文关键词
-from DictRace import racedict   # 种族关键词
+from DictText import textdict  # 正文关键词
+from DictRace import racedict  # 种族关键词
 
 
 # 适用于标签的标签关键词
@@ -461,8 +461,8 @@ def cmp(a, b):  # 按dict内部顺序进行排序
 		return -1
 	else:
 		return 0
-	
-	
+
+
 def saveDict2Md(dict, name):
 	text = "### 关键词标签表\n"
 	text = text + "\n| 标签 | 关键词 | "
