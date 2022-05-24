@@ -2,3 +2,8 @@ python-telegram-bot  >= 13.4
 pixivpy
 opencc
 numpy
+pyzipper
+# use pyzipper, instead of zipfile
+webdavclient3
+# webdav4
+# webdav4 is ok too
