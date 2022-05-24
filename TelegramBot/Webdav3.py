@@ -1,41 +1,22 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
-import os, shutil
+import os
 import time
 from webdav3.client import Client
 
-# from FileOperate import removeFile, timethis
-# from config import webdavdict3 as webdavdict
+from FileOperate import removeFile, timethis
+from config import webdavdict3 as webdavdict
 
 
-webdavdict = {
-	"jianguoyun": {
-		"baseurl": "https://dav.jianguoyun.com/dav/",
-		"username": "",  # 你的账号，支持多组
-		"password": ""   # 你的密码
-	},
-}
+# webdavdict = {
+# 	"jianguoyun": {
+# 		"baseurl": "https://dav.jianguoyun.com/dav/",
+# 		"username": "",  # 你的账号，支持多组
+# 		"password": ""   # 你的密码
+# 	},
+# }
 
 
-def timethis(func):
-	@wraps(func)
-	def wrapper(*args, **kwargs):
-		start = time.perf_counter()
-		r = func(*args, **kwargs)
-		end = time.perf_counter()
-		print('{}.{} : {}'.format(func.__module__, func.__name__, end - start))
-		return r
-	return wrapper
-
-
-def removeFile(path):
-	if os.path.isdir(path):
-		shutil.rmtree(path)
-	os.makedirs(path)
-	if os.path.isfile(path):
-		os.remove(path)
-		
-		
 def monthNow():
 	year = str(time.localtime()[0])
 	month = str(time.localtime()[1])
