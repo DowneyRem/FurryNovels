@@ -3,13 +3,13 @@
 import os
 import time
 import shutil
-import zipfile
+# import zipfile as zf
+import pyzipper as zf
 from functools import wraps
 from platform import platform
 
 if "Windows" in platform():
 	import winreg
-
 	if "小说推荐" in os.getcwd():
 		from docx.api import Document
 		from win32com.client import Dispatch, DispatchEx
@@ -259,9 +259,11 @@ def removeFile(path):
 		os.remove(path)
 
 
-def zipFile(path, delete=1):
+
+def zipFile(path, password="", delete=0):
+    # 使用 pyzipper 可用aes256进行加密压缩
 	# 传入某文件或文件夹路径后，将其所在文件夹打包压缩
-	# delete 为0或为""时，压缩后删除源文件
+	# delete 不为0时，压缩后删除源文件
 	
 	if os.path.isdir(path):
 		dir = path  # 文件上级文件夹
@@ -275,8 +277,11 @@ def zipFile(path, delete=1):
 	if os.path.exists(zippath):
 		os.remove(zippath)  # 重新压缩
 	
+	print("开始压缩：{}".format(zippath))
 	list = findFile(dir, )  # 获取目录下所有文件
-	z = zipfile.ZipFile(zippath, 'w', zipfile.ZIP_DEFLATED)
+	with zf.AESZipFile(zippath, 'w', compression=zf.ZIP_LZMA, encryption=zf.WZ_AES) as z:
+	# with zf.ZipFile(zippath, 'w', compression=zf.ZIP_DEFLATED) as z:
+		z.setpassword(password.encode(encoding="utf-8"))
 	for i in range(len(list)):
 		path = list[i]
 		(filedir, name) = os.path.split(path)
@@ -284,9 +289,8 @@ def zipFile(path, delete=1):
 		filedir = os.path.join(filedir, name)
 		# print(filedir)
 		z.write(filename=path, arcname=filedir)  # 压缩的文件，zip内路径
-	z.close()
 	
-	if delete == 0 or delete == "":
+	if delete != 0:
 		try:
 			shutil.rmtree(dir)   # 删除文件夹
 			print("【已经删除zip的源文件夹】")
@@ -298,29 +302,43 @@ def zipFile(path, delete=1):
 	return zippath
 
 
-def unzipFile(path, delete=1):
-	# 传入zip后，解压至以zip文件名建立的新文件夹
+def unzipFile(path, password="", delete=1):
+	# 使用 pyzipper 可解压加密的zip文件（ase256 与 ZipCrypto）
+	# 传入zip后，解压zip
 	# delete 为0或为""时，解压后删除源文件
+	# 软件压缩设置：勾选zip使用Unicode文件名，避免解压后文件名乱码
+	
 	name = os.path.split(path)[1]
-	dir = os.path.splitext(path)[0]  # 解压后的文件夹
+	dir = os.path.splitext(path)[0]
 	if os.path.exists(dir):
 		removeFile(dir)
 	
-	if not zipfile.is_zipfile(path):
+	if not zf.is_zipfile(path):
 		print("【{}】不存在或不是zip文件".format(name))
+		os._exit(0)
 	
 	else:
-		z = zipfile.ZipFile(path, "r")
-		for file in z.namelist():
-			z.extract(file, dir)
-		z.close()
+		with zf.AESZipFile(path, "r") as z:
+		# with zf.ZipFile(path, "r") as z:
+			if z.namelist()[0].endswith("/"): 	# 判断解压后的文件夹
+				dir = os.path.split(path)[0]
+			else:
+				dir = os.path.splitext(path)[0]
+			try:
+				print("【{}】解压中……".format(name))
+				comment = z.comment.decode(encoding="utf-8")
+				if comment:
+					print("压缩文件注释:{}".format(comment))
+				z.extractall(dir, members=z.namelist(), pwd=password.encode('utf-8'))
 		print("【{}】已经完成解压".format(name))
+			except RuntimeError:
+				print("密码【{}】错误，解压失败".format(password))
 		
 		if delete == 0 or delete == "":
 			try:
 				removeFile(path)  # 删除zip文件
 				print("【{}】已经删除".format(name))
-			except UnicodeError:
+			except IOError:
 				print("【{}】删除失败".format(name))
 	return dir
 
