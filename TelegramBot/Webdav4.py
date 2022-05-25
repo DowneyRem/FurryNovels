@@ -71,11 +71,11 @@ def upload(webdav:dict, path):
 		client.upload_file(path, webdavPath,True)
 		print("【{}】已上传至：{}".format(name, url))
 	except FileNotFoundError as e:
-		print("目录不存在，上传失败：{}".format(name))
-		logging.warning(e)
+		print("目录不存在，{}上传失败：{}".format(name, e))
+		# logging.warning(e)
 	except (HTTPError, ConnectError) as e:
-		print("【{}】上传 {} 失败".format(name, url))
-		logging.warning(e)
+		print("【{}】上传 {} 失败：{}".format(name, url, e))
+		# logging.warning(e)
 	except Exception as e:
 		logging.exception(e)
 	
@@ -97,6 +97,34 @@ def uploadAll(path, delete=0):
 			print("【{}】已经删除".format(name))
 		except IOError:
 			print("【{}】删除失败".format(name))
+
+
+def remove(webdav: dict, path):
+	# path="2022/05"时，只删除05文件夹及其子文件（夹）
+	baseurl = webdav.get("baseurl")
+	username = webdav.get("username")
+	password = webdav.get("password")
+	client = Client(baseurl, auth=(username, password), proxies={})
+	url = baseurl.split("/")[2]
+	
+	if client.exists(path):
+		try:
+			client.remove(path)
+			print("【{}】在 {} 已经删除".format(path, url))
+		except HTTPError as e:
+			print("【{}】在 {} 删除失败：{}".format(path, url, e))
+			# logging.warning(e)
+		except Exception as e:
+			logging.exception(e)
+	
+	
+def removeAll(path):
+	webdavs = list(webdavdict.keys())
+	# print(webdavs)
+	for webdav in webdavs:
+		webdav = webdavdict.get(webdav)
+		print(webdav)
+		remove(webdav, path)
 
 
 if __name__ == '__main__':
