@@ -2,7 +2,10 @@
 # -*- coding: UTF-8 -*-
 import os
 import time
-from webdav4.client import Client
+import logging
+
+from webdav4.client import Client, HTTPError
+from httpx import ConnectError
 
 from FileOperate import removeFile, timethis
 from config import webdavdict4 as webdavdict
@@ -10,10 +13,9 @@ from config import webdavdict4 as webdavdict
 
 # webdavdict = {
 # 	"jianguoyun": {
-# 		'webdav_hostname': "https://dav.jianguoyun.com/dav/",
-# 		'webdav_login': "",     # 你的账号，支持多组
-# 		'webdav_password': "",  # 你的密码
-# 		'disable_check': True,  # 有的网盘不支持check功能
+# 		"baseurl": "https://dav.jianguoyun.com/dav/",
+# 		"username": "",  # 你的账号，支持多组
+# 		"password": ""   # 你的密码
 # 	},
 # }
 
@@ -53,10 +55,12 @@ def upload(webdav:dict, path):
 	password = webdav.get("password")
 	client = Client(baseurl, auth=(username, password), proxies={})
 	
+	url = baseurl.split("/")[2]
 	name = os.path.split(path)[1]
 	webdavPath = "兽人小说/{}/{}".format(monthNow(), name)
 	# print(webdavPath)
 	dir = os.path.split(webdavPath)[0]
+	
 	try:
 		if not client.exists(dir):
 			makedirs(webdavPath)
@@ -65,21 +69,25 @@ def upload(webdav:dict, path):
 	
 	try:
 		client.upload_file(path, webdavPath,True)
-		url = baseurl.split("/")[2]
-		print("{} 已上传至：{}".format(name, url))
-	except FileNotFoundError:
+		print("【{}】已上传至：{}".format(name, url))
+	except FileNotFoundError as e:
 		print("目录不存在，上传失败：{}".format(name))
-	except:  #httpx.ConnectError
-		print("网络问题，检查代理等")
+		logging.warning(e)
+	except (HTTPError, ConnectError) as e:
+		print("【{}】上传 {} 失败".format(name, url))
+		logging.warning(e)
+	except Exception as e:
+		logging.exception(e)
 	
 	
 # @timethis
 def uploadAll(path, delete=0):
 	# delete 不为0时，上传后删除源文件
 	webdavs = list(webdavdict.keys())
-	print(webdavs)
+	# print(webdavs)
 	for webdav in webdavs:
 		webdav = webdavdict.get(webdav)
+		# print(webdav)
 		upload(webdav, path)
 		
 	if delete != 0:
