@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import logging
 import os
 import re
 import sys
@@ -29,8 +30,9 @@ try:
 	# aapi.set_additional_headers({'Accept-Language':'en-US'})
 	aapi.set_accept_language("en-us")  # zh-cn
 	aapi.auth(refresh_token=REFRESH_TOKEN)
-except:
+except Exception as e:
 	print("请检查网络可用性或更换REFRESH_TOKEN")
+	logging.exception(e)
 
 
 def set2Text(set):
