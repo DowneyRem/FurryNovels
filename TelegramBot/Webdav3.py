@@ -43,8 +43,8 @@ def upload(options, path):
 		client.upload(webdavPath, path)
 		print("【{}】已上传至：{}".format(name, url))
 	except (ResponseErrorCode, NoConnection) as e:
-		print("【{}】上传 {} 失败".format(name, url))
-		logging.warning(e)
+		print("【{}】上传 {} 失败：".format(name, url ,e))
+		# logging.warning(e)
 	except Exception as e:
 		logging.exception(e)
 		
@@ -66,7 +66,32 @@ def uploadAll(path, delete=0):
 			print("【{}】已经删除".format(name))
 		except IOError:
 			print("【{}】删除失败".format(name))
+			
+			
+def remove(options, path):
+	client = Client(options)
+	url = options.get("webdav_hostname").split("/")[2]
 
-
+	if client.check(path):
+		try:
+			client.clean(path)
+			print("【{}】在 {} 已经删除".format(path, url))
+		except (ResponseErrorCode, NoConnection) as e:
+			print("【{}】在 {} 删除失败：{}".format(path, url, e))
+			logging.warning(e)
+		except Exception as e:
+			logging.exception(e)
+		
+		
+def removeAll(path, delete=0):
+	# delete 不为0时，上传后删除源文件
+	webdavs = list(webdavdict.items())
+	# print(list(webdavdict.keys()))
+	for webdav in webdavs:
+		# print(webdav[0])
+		options = webdav[1]
+		remove(options, path)
+		
+		
 if __name__ == '__main__':
 	pass
