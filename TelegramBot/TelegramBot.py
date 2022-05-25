@@ -14,8 +14,9 @@ from telegram.ext import (Updater, CommandHandler, MessageHandler, Filters, Conv
 
 from PixivNovels import (saveNovel, saveSeriesAsTxt, saveSeriesAsZip, saveAuthor, getNovelInfo,  getSeriesInfo, getAuthorInfo, getSeriesId, getTags, set2Text, novelAnalyse, seriesAnalyse, formatNovelInfo, formatSeriesInfo)
 from PrintTags import printInfo, getInfo
-from FileOperate import findFile, openText, removeFile, unzipFile
+from FileOperate import removeFile, zipFile, unzipFile, timethis
 from Convert import convert
+from Webdav4 import uploadAll as uploadWebdav
 from DictRace import racedict
 from config import *
 
@@ -64,8 +65,10 @@ def download(update, context):
 		query.message.chat.send_message(text)
 	
 	
+	@timethis
 	def uploadToUser(path, caption):
-		print("上传至用户")
+		username = query.message.chat.first_name
+		print("上传至用户：{}".format(username))
 		document = open(path, 'rb')
 		name = os.path.split(path)[1]
 		query.message.chat.send_document(document, name, caption)
@@ -76,15 +79,17 @@ def download(update, context):
 		context.bot.delete_message(chatid, messageid +0)
 		context.bot.delete_message(chatid, messageid +1)
 		context.bot.delete_message(chatid, messageid +2)
-		
-		
+	
+	
+	@timethis
 	def uploadToChannel(channel, path, caption):
 		print("上传至频道：{}".format(channel))
 		document = open(path, 'rb')
 		name = os.path.split(path)[1]
 		context.bot.send_document(channel, document, name, caption)
 		
-	
+		
+	@timethis
 	def downloadAll(query):
 		data = query.data
 		method = int(data[0])
@@ -149,6 +154,7 @@ def download(update, context):
 		return furrynum
 	
 	
+	@timethis
 	def upload(filepath, caption, recommend):
 		furrynum = furry(caption)
 		uploadToUser(filepath, caption)
@@ -164,6 +170,9 @@ def download(update, context):
 			uploadToChannel("@FurryReading", filepath, caption)
 			if "zh" in caption and recommend >= 5:  # 中文，优秀，小说
 				uploadToChannel("@FurryNovels", filepath, caption)
+		
+		filepath = zipFile(filepath, "furry")  #加密压缩，上传Webdav
+		uploadWebdav(filepath, delete=1)
 		print("")
 	
 	
