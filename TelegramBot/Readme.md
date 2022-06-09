@@ -2,20 +2,7 @@
 
 请根据不同平台调整并部署
 
-### 依赖详见 Requirement.txt
-
-```
-## 必需
-pip install python-telegram-bot
-pip install pixivpy
-pip install opencc
-pip install numpy
-
-## 非必需
-pip install python-docx
-## 你的bot不会跑在Windows上吧？
-pip install pywin32
-```
+依赖详见 Requirement.txt
 
 ### 与非公开版的区别
 
@@ -25,21 +12,17 @@ pip install pywin32
 
 - 其他运行 bot 所需要的服务
 
-### 与 Python目录的区别
+### 与 Local Version 目录的区别
 
 - 使用场景不同
   - TelegramBot 目录下为bot使用的版本
-  - Python 目录下文件为个龙使用的版本
+  - Python 目录下文件为个龙使用的版本（已停用）
 
-- 文件基本相同（已经为不同运行方式做出优化）
-  - 少数文件不同
-    - Convert.py 与 ConertAll.py (转换逻辑不同)
-    - PixivData.py 用于获取个龙小说的数据
-    - Word.py 其实代码在 FileOperate.py 也有一份
-    - TelegramBot.py (废话)
-  - 其他文件完全一致
-    - 毕竟维护两份相似但又不完全一致的代码很让龙头痛的……
-
+- 少数文件不同
+  - Convert.py 与 ConertAll.py (转换逻辑不同)
+  - TelegramBot.py (废话)
+  - Webdav3 与 Webdav4
+  
   
 
 ## 主页功能与使用方法
