@@ -16,7 +16,7 @@ REFRESH_TOKEN = "0zeYA-PllRYp1tfrsq_w3vHGU1rPy237JMf5oDt73c4"
 # 你的 Telegram Bot Token
 # 获取方式 @BotFather
 BOT_TOKEN = ""
-
+TEST_TOKEN = ""
 
 heroku_app_name = ""
 webhook_listen = '0.0.0.0'

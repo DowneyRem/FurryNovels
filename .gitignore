@@ -1,7 +1,4 @@
-TelegramBot/.idea
-TelegramBot/__pycache__
-TelegramBot/Novels
-TelegramBot/config.py
-Python/.idea
-Python/__pycache__
+.idea
+__pycache__
+config.py
 TelegramBot/config.py
