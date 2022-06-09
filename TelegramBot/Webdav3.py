@@ -7,8 +7,8 @@ import logging
 from webdav3.client import Client
 from webdav3.exceptions import *
 
-from FileOperate import removeFile, timethis
-from config import webdavdict3 as webdavdict
+from FileOperate import removeFile, zipFile, timethis
+from config import webdavdict3 as webdavdict, encryptlist
 
 
 # webdavdict = {
@@ -36,37 +36,45 @@ def upload(options, path):
 	
 	url = options.get("webdav_hostname").split("/")[2]
 	name = os.path.split(path)[1]
-	webdavPath = "兽人小说/{}/{}".format(monthNow(), name)
+	if "jianguoyun" in url:  # 坚果云根目录无法分享
+		webdavPath = "/兽人小说/兽人小说/{}/{}".format(monthNow(), name)
+	else:
+		webdavPath = "兽人小说/{}/{}".format(monthNow(), name)
 	# print(webdavPath)
 	
 	try:
 		client.upload(webdavPath, path)
 		print("【{}】已上传至：{}".format(name, url))
 	except (ResponseErrorCode, NoConnection) as e:
-		print("【{}】上传 {} 失败：".format(name, url ,e))
-		# logging.warning(e)
+		print("【{}】上传 {} 失败：".format(name, url))
+		logging.warning(e)
 	except Exception as e:
 		logging.exception(e)
 		
 		
 # @timethis
-def uploadAll(path, delete=0):
+def uploadAll(path, *, encrypt=0, delete=0):
 	# delete 不为0时，上传后删除源文件
-	webdavs = list(webdavdict.items())
-	# print(list(webdavdict.keys()))
-	for webdav in webdavs:
-		# print(webdav[0])
-		options = webdav[1]
-		upload(options, path)
 	
+	zippath = "{}.zip".format(os.path.splitext(path)[0])  #压缩后路径
+	webdavs = list(webdavdict.items())
+	for webdav in webdavs:
+		options = webdav[1]
+		url = options.get("webdav_hostname")
+		if encrypt == 1 or url in encryptlist :
+			if not os.path.exists(zippath):
+				filepath = zipFile(path, "furry")
+			else:
+				filepath = zippath
+		else:
+			filepath = path
+		upload(options, filepath)
+		
+	if os.path.exists(zippath):
+		removeFile(zippath)
 	if delete != 0:
-		name = os.path.split(path)[1]
-		try:
-			removeFile(path)  # 删除源文件
-			print("【{}】已经删除".format(name))
-		except IOError:
-			print("【{}】删除失败".format(name))
-			
+		removeFile(path)  # 删除源文件
+		
 			
 def remove(options, path):
 	client = Client(options)
@@ -77,18 +85,17 @@ def remove(options, path):
 			client.clean(path)
 			print("【{}】在 {} 已经删除".format(path, url))
 		except (ResponseErrorCode, NoConnection) as e:
-			print("【{}】在 {} 删除失败：{}".format(path, url, e))
+			print("【{}】在 {} 删除失败".format(path, url))
 			logging.warning(e)
 		except Exception as e:
 			logging.exception(e)
+	else:
+		logging.info("{} 不存在 {}".format(path, url))
 		
 		
-def removeAll(path, delete=0):
-	# delete 不为0时，上传后删除源文件
+def removeAll(path):
 	webdavs = list(webdavdict.items())
-	# print(list(webdavdict.keys()))
 	for webdav in webdavs:
-		# print(webdav[0])
 		options = webdav[1]
 		remove(options, path)
 		

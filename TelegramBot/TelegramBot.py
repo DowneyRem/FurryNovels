@@ -4,7 +4,6 @@ import os
 import re
 import signal
 import logging
-from functools import wraps
 from platform import platform
 
 from telegram.ext import messagequeue as mq
@@ -21,9 +20,13 @@ from DictRace import racedict
 from config import *
 
 
-# logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-#                     level=logging.INFO)
-# logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO,
+		format='%(levelname)s %(asctime)s [%(filename)s:%(lineno)d] %(message)s',
+		datefmt='%Y.%m.%d. %H:%M:%S',
+		# filename='parser_result.log',
+		# filemode='w'
+)
+logger = logging.getLogger(__name__)
 
 
 
@@ -42,8 +45,8 @@ def help(update, context):
 """)
 
 
-# def error(update, context):
-# 	logger.warning('Update "%s" caused error "%s"', update, context.error)
+def error(update, context):
+	logger.warning('Update "%s" caused error "%s"', update, context.error)
 
 
 def ping(update, context):
@@ -65,30 +68,6 @@ def download(update, context):
 		query.message.chat.send_message(text)
 	
 	
-	@timethis
-	def uploadToUser(path, caption):
-		username = query.message.chat.first_name
-		print("上传至用户：{}".format(username))
-		document = open(path, 'rb')
-		name = os.path.split(path)[1]
-		query.message.chat.send_document(document, name, caption)
-		
-		chatid = query.message.chat.id
-		messageid = query.message.message_id
-		# context.bot.delete_message(chatid, messageid -1)
-		context.bot.delete_message(chatid, messageid +0)
-		context.bot.delete_message(chatid, messageid +1)
-		context.bot.delete_message(chatid, messageid +2)
-	
-	
-	@timethis
-	def uploadToChannel(channel, path, caption):
-		print("上传至频道：{}".format(channel))
-		document = open(path, 'rb')
-		name = os.path.split(path)[1]
-		context.bot.send_document(channel, document, name, caption)
-		
-		
 	@timethis
 	def downloadAll(query):
 		data = query.data
@@ -137,7 +116,41 @@ def download(update, context):
 		
 		recommend = round(recommend, 2)
 		return filepath, caption, recommend
+	
+	
+	@timethis
+	def uploadToUser(path, caption):
+		username = query.message.chat.first_name
+		id = query.message.chat.id
+		print("上传至用户：{} ({})".format(username, id))
+		document = open(path, 'rb')
+		name = os.path.split(path)[1]
+		query.message.chat.send_document(document, name, caption)
 		
+		chatid = query.message.chat.id
+		messageid = query.message.message_id
+		# context.bot.delete_message(chatid, messageid -1)
+		context.bot.delete_message(chatid, messageid + 0)
+		context.bot.delete_message(chatid, messageid + 1)
+		context.bot.delete_message(chatid, messageid + 2)
+	
+	
+	@timethis
+	def uploadToChannel(channel, path, caption):
+		print("上传至频道：{}".format(channel))
+		document = open(path, 'rb')
+		name = os.path.split(path)[1]
+		context.bot.send_document(channel, document, name, caption)
+	
+	
+	def sendMsgToChannel(channel, caption, msg=""):
+		name = caption.split("\n")[0]
+		link = caption.split("\n")[-4]
+		username = query.message.chat.first_name.replace(" ","")
+		id = query.message.chat.id
+		message = f"{msg} #{username} #u{id}\n{name}\n{link}"
+		context.bot.send_message(channel, message, disable_web_page_preview=1, disable_notification=0)
+	
 	
 	def furry(caption):
 		furrynum = 0
@@ -156,23 +169,26 @@ def download(update, context):
 	
 	@timethis
 	def upload(filepath, caption, recommend):
-		furrynum = furry(caption)
 		uploadToUser(filepath, caption)
 		
+		furrynum = furry(caption)
 		username = query.message.chat.first_name
 		caption += "\n来自 {} 的分享".format(username)
 		if recommend > -100:
 			caption += "\n推荐指数： {} @FurryNovels".format(recommend)
-		
+			
 		if "Windows" in platform():  # 测试用频道
 			uploadToChannel("-1001286539630", filepath, caption)
+			sendMsgToChannel("-1001286539630", caption, msg="#测试")
 		elif furrynum >= 3 and (".zip" not in filepath):  # 兽人小说且不为zip
 			uploadToChannel("@FurryReading", filepath, caption)
-			if "zh" in caption and recommend >= 5:  # 中文，优秀，小说
+			sendMsgToChannel("-1001286539630", caption, msg="#兽人小说")
+			uploadWebdav(filepath)
+			
+			if "zh" in caption and recommend >= 7:  # 中文，优秀，小说
 				uploadToChannel("@FurryNovels", filepath, caption)
-		
-		filepath = zipFile(filepath, "furry")  #加密压缩，上传Webdav
-		uploadWebdav(filepath, delete=1)
+		else:
+			sendMsgToChannel("-1001286539630", caption, msg="#非兽人小说")
 		print("")
 	
 	
@@ -194,10 +210,15 @@ def botmain(update, context):
 			myprint("欢迎关注我们的频道 @FurryNovels @FurryReading")
 		elif "群" in text:
 			myprint("群组链接： https://t.me/FurryNovels/27")
-		elif "分享" in text or "投稿" in text:
-			myprint("向我发送Pixiv的小说链接就可以了")
+		elif "分享" in text or "投稿" in text or "下载" in text:
+			myprint("向我发送 Pixiv 的小说链接就可以了")
+		elif "你好" in text:
+			myprint("不用向我问好，向我发送 Pixiv 的小说链接就行")
 		else:
-			myprint("输入有误，请重新输入Pixiv小说网址")
+			myprint("""请发送 Pixiv/Linpx 小说链接，如：
+https://pixiv.net/novels/show.php?id=15426800
+https://furrynovel.xyz/pixiv/novel/15426800
+""")
 	
 	
 	def testSeries(novel_id):
@@ -223,7 +244,8 @@ def botmain(update, context):
 			InlineKeyboardButton("下载此作者全部小说", callback_data="{}:{}".format(4, user_id)),
 		], [
 			InlineKeyboardButton("下载系列为txt合集", callback_data="{}:{}".format(2, series_id)),
-			InlineKeyboardButton("下载系列为zip合集", callback_data="{}:{}".format(3, series_id)),		]]))
+			InlineKeyboardButton("下载系列为zip合集", callback_data="{}:{}".format(3, series_id)),
+		]]))
 			
 			
 	def saveSeries(series_id):
@@ -244,35 +266,45 @@ def botmain(update, context):
 	    ]]))
 
 	
-	def savePixiv(text, id):
-		if "user" in text:  #去末尾s，兼容linpx
-			saveAuthor(id)
-		elif "novel/series" in text:
-			saveSeries(id)
-		elif "novel" in text:
+	def savePixiv(text, id):  # 支持Pixiv与linpx
+		if "pixiv" in text:
+			if "user" in text:  #去末尾s，兼容linpx
+				saveAuthor(id)
+			elif "novel/series" in text:
+				saveSeries(id)
+			elif "novel" in text:
+				testSeries(id)
+			elif "artworks" in text:
+				myprint("不支持下载插画，请重新输入")
+		elif "/pn/" in text or text == id:  # 兼容linpx分享链接
 			testSeries(id)
-		elif "artworks" in text:
-			myprint("不支持下载插画，请重新输入")
-	
+		else:
+			wrongType(text)
+		
 	
 	def getId(update, context):
 		text = update.message.text
 		messageid = update.message.message_id
+		
 		pat = "(?:https?|ftp|file)://[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]"
-		if re.findall(pat, text):   # 获取网址链接
+		if re.findall(pat, text) and re.findall("[0-9]{5,}", text):   # 获取网址链接
 			text = re.findall(pat, text)[0]
 			id = re.findall("[0-9]{5,}", text)[0]
-			if "pixiv" in text:  #支持Pixiv与linpx
-				savePixiv(text, id)
-			elif "/pn/" in text:   #兼容linpx分享链接
-				testSeries(id)
-			else:
-				myprint("请发送Pixiv/Linpx链接，暂不支持其他网站")
+			savePixiv(text, id)  #支持Pixiv与linpx
+			
+		elif re.findall("[0-9]{5,}", text):   # 兼容小说id
+			pat = "[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]"
+			text = re.findall(pat, text)[0]
+			id = re.findall("[0-9]{5,}", text)[0]
+			if re.findall(pat, text):
+				savePixiv(text,id)
 		else:
 			wrongType(text)
 	
-	
-	getId(update, context)
+	try:
+		getId(update, context)
+	except AttributeError as e:
+		logging.info(e)
 
 
 def main():
@@ -298,7 +330,7 @@ def main():
 
 	# dispatcher.add_handler(MessageHandler(Filters.document, )
 	updater.dispatcher.add_handler(CallbackQueryHandler(download))
-	# dispatcher.add_error_handler(error)
+	dispatcher.add_error_handler(error)
 	updater.idle()
 
 

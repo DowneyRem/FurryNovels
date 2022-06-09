@@ -3,7 +3,7 @@ pixivpy
 opencc
 numpy
 pyzipper
-# use pyzipper, instead of zipfile
-webdavclient3
-# webdav4
-# webdav4 is ok too
+# use pyzipper to encrypt zip in AESZipFile
+webdav4
+# webdavclient3
+# webdav3 cannot set proxies

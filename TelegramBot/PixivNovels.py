@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import logging
 import os
 import re
 import sys
 import math
+import logging
 from platform import platform
 
 import numpy as np
@@ -17,8 +17,17 @@ from config import REFRESH_TOKEN
 if "小说推荐" in os.getcwd():
 	from FileOperate import saveDocx
 
+
+logging.basicConfig(level=logging.INFO,
+		format='%(levelname)s %(asctime)s [%(filename)s:%(lineno)d] %(message)s',
+		datefmt='%Y.%m.%d. %H:%M:%S',
+		# filename='parser_result.log',
+		# filemode='w'
+)
+
 sys.dont_write_bytecode = True
 _TEST_WRITE = False
+
 
 if "Windows" in platform():
 	REQUESTS_KWARGS = {'proxies': {'https': 'http://127.0.0.1:10808', }}
@@ -30,16 +39,14 @@ try:
 	# aapi.set_additional_headers({'Accept-Language':'en-US'})
 	aapi.set_accept_language("en-us")  # zh-cn
 	aapi.auth(refresh_token=REFRESH_TOKEN)
+	logging.info(f"{__file__}：网络可用")
 except Exception as e:
 	print("请检查网络可用性或更换REFRESH_TOKEN")
-	logging.exception(e)
+	logging.error(e)
 
 
-def set2Text(set):
-	text = str(set)
-	text = text.replace("{'", "")
-	text = text.replace("'}", "")
-	text = text.replace("', '", " ")
+def set2Text(s):
+	text = " ".join(s)
 	return text
 
 
@@ -669,6 +676,7 @@ def main():
 			saveAuthor(id, path)
 		elif "artworks" in string:
 			print("不支持下载插画，请重新输入")
+	
 	
 	print("\n请输入Pixiv小说链接")
 	string = input()

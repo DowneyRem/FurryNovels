@@ -2,6 +2,7 @@
 # -*- coding: UTF-8 -*-
 import os
 import re
+import logging
 from platform import platform
 from functools import cmp_to_key
 
@@ -18,12 +19,15 @@ if "小说推荐" in os.getcwd():
 
 
 def set2Text(set):
-	text = str(set)
-	text = text.replace("{", "")
-	text = text.replace("}", "")
-	text = text.replace("'", "")
-	text = text.replace(",", "")
+	text = " ".join(set)
 	return text
+
+
+def setSpilt(s):
+	s = set2Text(s)
+	s = s.split(" ")  # 允许一关键词对多标签，并拆分成处理
+	s = set(s)        # {"流血": "R18G Blood",}
+	return s
 
 
 def sortTags(set, cmp):  # 按dict内顺序对转换后的标签排序
@@ -85,14 +89,7 @@ def getRaceTags(text):  # 获取可能存在的标签
 			s2.add(list2[i])  # 英文标签
 	return s2, s1  # 英文标签在前
 
-
-def setSpilt(s):
-	s = set2Text(s)
-	s = s.split(" ")  # 允许一关键词对多标签，并拆分成处理
-	s = set(s)
-	return s
-
-
+			
 def getInfo(text, textlist):
 	name = textlist[0]
 	authro = textlist[1].replace("作者：", "")

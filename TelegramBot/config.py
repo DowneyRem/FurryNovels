@@ -28,6 +28,10 @@ webhook_cert = "cert.pem"
 
 
 # Webdav 配置
+encryptlist = ["https://dav.jianguoyun.com/dav/",
+               ]
+
+
 # For Webdav3.py
 webdavdict3 ={
 	"jianguoyun": {
@@ -35,7 +39,7 @@ webdavdict3 ={
 		'webdav_login': "",     # 你的账号，支持多组
 		'webdav_password': "",  # 你的密码
 		'disable_check': True,  # 有的网盘不支持check功能
-		'proxy_hostname': "",
+		'proxy_hostname': "",   # 代理功能暂时无法使用
 		'proxy_login': "",
 		'proxy_password': "",
 		'disable_check': True,

@@ -3,6 +3,7 @@
 import os
 import time
 import shutil
+import logging
 # import zipfile as zf
 import pyzipper as zf
 from functools import wraps
@@ -183,6 +184,7 @@ def saveDocx(path, text):
 	word.Quit()
 
 
+@saveFileCheck
 def saveText(path, text):
 	(dir, name) = os.path.split(path)  # 分离文件名和目录名
 	if not os.path.exists(dir):
@@ -195,8 +197,8 @@ def saveText(path, text):
 		print("保存失败：【{}】".format(name))
 
 
-# for循环内部，使用a+模式，写入测试文件
 def saveTextDesktop(name, text):
+	# for循环内部，使用a+模式，写入测试文件
 	path = desktop()
 	path = os.path.join(path, name)
 	try:
@@ -207,6 +209,7 @@ def saveTextDesktop(name, text):
 		print("保存失败：【{}】".format(name))
 
 
+@saveFileCheck
 def saveCsv(path, text):
 	(dir, name) = os.path.split(path)  # 分离文件名和目录名
 	if not os.path.exists(dir):
@@ -253,10 +256,21 @@ def makeDirs(path):
 
 def removeFile(path):
 	if os.path.isdir(path):
-		shutil.rmtree(path)
+		try:
+			shutil.rmtree(path)
+			logging.info("【{}】已经删除".format(path))
+		except IOError:
+			print("【{}】删除失败".format(path))
 	# os.makedirs(path)
+	
 	if os.path.isfile(path):
-		os.remove(path)
+		name = os.path.split(path)[1]
+		try:
+			os.remove(path)
+			# logging.info("【{}】已经删除".format(name))
+			print("【{}】已经删除".format(name))
+		except IOError:
+			print("【{}】删除失败".format(name))
 
 
 @timethis
@@ -303,58 +317,71 @@ def zipFile(path, password="", delete=0):
 		os._exit(0)
 		
 	if delete != 0:
-		try:
-			removeFile(path)
-			print("【zip的源文件已经删除】")
-		except IOError:
-			print("【zip的源文件删除失败】")
-	
+		removeFile(path)
+
 	zipname = os.path.split(zipfilepath)[1]
 	print("【{}】压缩完成".format(zipname))
 	# print(zipfilepath)
 	return zipfilepath
 
 
-@timethis
-def unzipFile(path, password="", delete=1):
-	# 使用 pyzipper 可解压加密的zip文件（ase256 与 ZipCrypto）
-	# 传入zip后，解压zip
-	# delete 为0或为""时，解压后删除源文件
+# @timethis
+def unzipFile(path, password="", mode=0, delete=0):
+	# 使用 pyzipper 可解压加密的zip文件（ase256 与 ZipCrypto）,前者会快得多
+	# 智能解压：path传入zip路径解压zip，传入文件夹则解压其路径下的zip
+	# 智能解压：zip内无文件夹则会新建以zip文件名为名的文件夹，zip只有单文件不新建文件夹
+	# mode==1 ，解压zip内部的zip文件
+	# delete==1 ，解压后删除zip源文件；同时mode==1，解压后会删除所有zip
 	# 软件压缩设置：勾选zip使用Unicode文件名，避免解压后文件名乱码
 	
-	name = os.path.split(path)[1]
-	dir = os.path.splitext(path)[0]
-	if os.path.exists(dir):
-		removeFile(dir)
-	
-	if not zf.is_zipfile(path):
-		print("【{}】不存在或不是zip文件".format(name))
-		os._exit(0)
-	
-	else:
+	if os.path.isdir(path):
+		ziplist = findFile(path, ".zip")
+		if len(ziplist) == 0:
+			print("{}目录下无zip文件".format(path))
+		for zipfile in ziplist:
+			unzipFile(zipfile, password, mode=mode, delete=delete)
+		
+	elif zf.is_zipfile(path):
+		name = os.path.split(path)[1]
+		dir = os.path.splitext(path)[0]
+		if os.path.exists(dir):
+			removeFile(dir)
+		
 		with zf.AESZipFile(path, "r") as z:
 		# with zf.ZipFile(path, "r") as z:
-			if z.namelist()[0].endswith("/"): 	# 判断解压后的文件夹
+			if z.namelist()[0].endswith("/"): 	# 内有文件夹，直接解压
 				dir = os.path.split(path)[0]
-			else:
+				directory = os.path.join(dir, z.namelist()[0])
+				removeFile(directory)
+			elif len(z.namelist()) == 1:        # 单文件不新建文件夹
+				dir = os.path.split(path)[0]
+			else:                               # 多文件，新建文件夹
 				dir = os.path.splitext(path)[0]
+				
+			comment = z.comment.decode(encoding="utf-8")
+			if comment:
+				print("压缩文件注释:{}".format(comment))
+			
 			try:
-				print("【{}】解压中……".format(name))
-				comment = z.comment.decode(encoding="utf-8")
-				if comment:
-					print("压缩文件注释:{}".format(comment))
-				z.extractall(dir, members=z.namelist(), pwd=password.encode('utf-8'))
+				logging.info("【{}】解压中……".format(name))
+				# z.extractall(dir, members=z.namelist(), pwd=password.encode('utf-8'))
+				for file in z.namelist():
+					z.extract(file, dir, password.encode('utf-8'))
+					if file.endswith(".zip") and mode:  # 解压zip内的zip
+						path = os.path.join(dir, file)
+						unzipFile(path, password, mode=mode, delete=delete)
+						
 				print("【{}】已经完成解压".format(name))
 			except RuntimeError:
 				print("密码【{}】错误，解压失败".format(password))
 		
-		if delete == 0 or delete == "":
-			try:
-				removeFile(path)  # 删除zip文件
-				print("【{}】已经删除".format(name))
-			except IOError:
-				print("【{}】删除失败".format(name))
-	return dir
+		if delete != 0:
+			removeFile(path)  # 删除zip文件
+		return dir
+	
+
+def main():
+	pass
 
 
 if __name__ == '__main__':

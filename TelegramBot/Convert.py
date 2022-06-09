@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
 import os
+
 from FileOperate import openText, saveText
 from PrintTags import printInfo
 from config import cc1, cc2

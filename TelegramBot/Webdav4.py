@@ -5,10 +5,10 @@ import time
 import logging
 
 from webdav4.client import Client, HTTPError
-from httpx import ConnectError
+from httpx import ConnectError, ReadTimeout, WriteTimeout
 
-from FileOperate import removeFile, timethis
-from config import webdavdict4 as webdavdict
+from FileOperate import removeFile, zipFile, timethis
+from config import webdavdict4 as webdavdict, encryptlist
 
 
 # webdavdict = {
@@ -19,7 +19,10 @@ from config import webdavdict4 as webdavdict
 # 	},
 # }
 
-		
+
+logging.basicConfig(format='[line:%(lineno)d]-%(levelname)s: %(message)s', level=logging.INFO)
+
+
 def monthNow():
 	year = str(time.localtime()[0])
 	month = str(time.localtime()[1])
@@ -29,78 +32,83 @@ def monthNow():
 	return string
 
 
-def list2str(list):
-	list = str(list)
-	list = list.replace("[", "")
-	list = list.replace("]", "")
-	list = list.replace("'", "")
-	list = list.replace(", ", "/")
-	return list
-
-
-@timethis
+# @timethis
 def upload(webdav:dict, path):
 	def makedirs(path):
-		if not client.exists(path):
-			a = path.split("/")
-			# print(a)
-			for i in range(1, len(a)):  # 去文件名
-				b = str(a[:i])
-				b = list2str(b)
-				if b:
-					client.mkdir(b)
-	
+		a = path.split("/")
+		for i in range(1, len(a)):  # 去文件名
+			b = "/".join(a[:i])
+			if not client.exists(b):
+				client.mkdir(b)
+			elif b:
+				continue
+				
 	baseurl  = webdav.get("baseurl")
 	username = webdav.get("username")
 	password = webdav.get("password")
-	client = Client(baseurl, auth=(username, password), proxies={})
+	client = Client(baseurl, auth=(username, password) ,proxies={}, timeout=10)
 	
 	url = baseurl.split("/")[2]
 	name = os.path.split(path)[1]
-	webdavPath = "兽人小说/{}/{}".format(monthNow(), name)
+	if "jianguoyun" in baseurl:  # 坚果云根目录无法分享
+		webdavPath = "/兽人小说/兽人小说/{}/{}".format(monthNow(), name)
+	else:
+		webdavPath = "/兽人小说/{}/{}".format(monthNow(), name)
 	# print(webdavPath)
-	dir = os.path.split(webdavPath)[0]
 	
+	dir = os.path.split(webdavPath)[0]
 	try:
 		if not client.exists(dir):
 			makedirs(webdavPath)
-	except:   #httpx.ConnectError
-		print("网络问题，检查代理等")
+	except :   #httpx.ConnectError
+		print(f"无法连接到 {url}")
 	
 	try:
-		client.upload_file(path, webdavPath,True)
+		client.upload_file(path, webdavPath, True)
 		print("【{}】已上传至：{}".format(name, url))
 	except FileNotFoundError as e:
-		print("目录不存在，{}上传失败：{}".format(name, e))
-		# logging.warning(e)
+		print("目录不存在，{}上传失败".format(name))
+		logging.warning(e)
 	except (HTTPError, ConnectError) as e:
-		print("【{}】上传 {} 失败：{}".format(name, url, e))
-		# logging.warning(e)
+		print("【{}】上传 {} 失败".format(name, url))
+		logging.warning(e)
+	except (WriteTimeout) as e: # YandexDisk的错误
+		print("【{}】上传 {} 失败".format(name, url))
+		logging.warning(e)
+	except ReadTimeout as e:    # 屏蔽YandexDisk的Timeout
+		print("【{}】已上传至：{}".format(name, url))
+		logging.info(e)
 	except Exception as e:
 		logging.exception(e)
 	
 	
-# @timethis
-def uploadAll(path, delete=0):
+def uploadAll(path, *, encrypt=0, delete=0):
+	# 默认使用 encryptlist 进行加密；encrypt=1 强制加密
 	# delete 不为0时，上传后删除源文件
+	
+	zippath = "{}.zip".format(os.path.splitext(path)[0])  #压缩后路径
 	webdavs = list(webdavdict.keys())
-	# print(webdavs)
 	for webdav in webdavs:
 		webdav = webdavdict.get(webdav)
-		# print(webdav)
-		upload(webdav, path)
+		baseurl = webdav.get("baseurl")
+		if encrypt == 1 or baseurl in encryptlist:
+			if not os.path.exists(zippath):
+				filepath = zipFile(path, "furry")  # 加密压缩
+			else:
+				filepath = zippath
+		else:
+			filepath = path
+		upload(webdav, filepath)
 		
+	if os.path.exists(zippath):
+		removeFile(zippath)
 	if delete != 0:
-		name = os.path.split(path)[1]
-		try:
-			removeFile(path)  # 删除源文件
-			print("【{}】已经删除".format(name))
-		except IOError:
-			print("【{}】删除失败".format(name))
+		removeFile(path)  # 删除源文件
 
 
 def remove(webdav: dict, path):
 	# path="2022/05"时，只删除05文件夹及其子文件（夹）
+	
 	baseurl = webdav.get("baseurl")
 	username = webdav.get("username")
 	password = webdav.get("password")
@@ -116,16 +124,18 @@ def remove(webdav: dict, path):
 			# logging.warning(e)
 		except Exception as e:
 			logging.exception(e)
+	else:
+		logging.info("{} 不存在 {}".format(path, url))
 	
 	
 def removeAll(path):
 	webdavs = list(webdavdict.keys())
-	# print(webdavs)
 	for webdav in webdavs:
 		webdav = webdavdict.get(webdav)
-		print(webdav)
 		remove(webdav, path)
 
+def main():
+	pass
 
 if __name__ == '__main__':
 	pass

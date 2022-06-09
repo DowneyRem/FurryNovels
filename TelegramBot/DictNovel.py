@@ -1,7 +1,6 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
 import os
-import pickle
 from FileOperate import saveText
 from DictText import textdict  # 正文关键词
 from DictRace import racedict  # 种族关键词
