@@ -81,6 +81,7 @@ def strSerial(num: float, numdict=dict1) -> str:
 		except ValueError:  # 小数点报错
 			i = wei["dian"]
 		text += i
+	
 	# print(text)
 	return text
 
@@ -148,6 +149,7 @@ def openFileCheck(func):
 				print("文件被占用：{}".format(arg))
 		else:
 			print("文件不存在：{}".format(arg))
+	
 	return wrapper
 
 
@@ -178,6 +180,13 @@ def saveText(path, text):
 	# print("已保存：【{}】".format(name))
 	except IOError:
 		print("保存失败：【{}】".format(name))
+
+
+def list2text(list):
+	text = str(list).replace("'", "").replace("[", "").replace("]", "")
+	text = text.replace(", ", "{0}{0}{0}".format("\n"))
+	# print(text)
+	return text
 
 
 # 核心功能
@@ -231,13 +240,16 @@ def mergeText(folder=os.getcwd()):
 	info = "本文采用 {} ver{} 合并，合并时间：{}".format(pyfile, pyfilever, time)
 	print(info)
 	
-	text = "{}\n".format(name, info)
+	textlist = [name, info, ]
 	print("开始合并TXT，顺序如下：{}{}".format("\n","-"*30))
 	for file in l:
-		text += openText(file) + "\n"*3
+		text = openText(file)
+		textlist.append(text)
 		file = file.replace("{}\\".format(folder), "")
 		print(file)
 	print("{}".format("-" * 30))
+	
+	text = list2text(textlist)
 	textpath = "{}.txt".format(folder)
 	
 	try:
@@ -250,7 +262,7 @@ def mergeText(folder=os.getcwd()):
 if __name__ == '__main__':
 	if "FurryNovelsBot" in os.getcwd():
 		folder = os.path.join(os.getcwd(), "ceui")	
-		createText(12, 1)
+		createText(12,1)
 	else:
 		folder = os.path.join(os.getcwd())
 		
