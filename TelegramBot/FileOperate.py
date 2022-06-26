@@ -56,7 +56,7 @@ def saveFileCheck(func):
 
 # 暂未加入保存函数内，如何加入？
 def formatFileName(text):
-	list = '/ \ : * " < > | ?'.split(" ")
+	list = '/ \ : * " < > | ? &lt; &gt; &&amp; &quot; &apos; &nbsp;'.split(" ")
 	for i in range(len(list)):
 		a = list[i]
 		text = text.replace(a, " ")
@@ -112,6 +112,23 @@ def openText4(path):
 		except UnicodeError:
 			with open(path, "r", encoding="BIG5") as f:
 				textlist = f.readlines()[0:4]
+	finally:
+		return textlist
+
+
+@openFileCheck
+def openTextLines(path):
+	textlist = []
+	try:
+		with open(path, "r", encoding="UTF8") as f:
+			textlist = f.readlines()
+	except UnicodeError:
+		try:
+			with open(path, "r", encoding="GBK") as f:
+				textlist = f.readlines()
+		except UnicodeError:
+			with open(path, "r", encoding="BIG5") as f:
+				textlist = f.readlines()
 	finally:
 		return textlist
 
@@ -189,6 +206,8 @@ def saveText(path, text):
 	(dir, name) = os.path.split(path)  # 分离文件名和目录名
 	if not os.path.exists(dir):
 		os.makedirs(dir)
+	if not path.endswith(".txt"):
+		path += ".txt"
 	try:
 		with open(path, "w", encoding="UTF8") as f:
 			f.write(text)

@@ -11,7 +11,8 @@ import numpy as np
 from pixivpy3 import AppPixivAPI
 
 from FileOperate import zipFile, saveText, formatFileName, monthNow, makeDirs
-from Language import getLanguage
+# from Language import getLanguage
+from Translate import getLanguage
 from config import REFRESH_TOKEN
 
 if "小说推荐" in os.getcwd():
@@ -53,7 +54,7 @@ def set2Text(s):
 def getLang(novel_id):
 	text = getNovelText(novel_id)
 	lang = getLanguage(text)
-	return lang
+	return f"#{lang}"
 
 
 def getTags(novel_id, set):
@@ -207,8 +208,13 @@ def formatNovelInfo(novel_id):
 
 def formatNovelText(text):
 	text = text.replace(" ", "")
+	text = text.replace("​", "")
+	text = text.replace("&quot;", ",")
+	text = text.replace("&#39;", "'")
 	text = re.sub("\.{3,}", "……", text)  # 省略号标准化
 	text = re.sub("。。。{3,}", "……", text)
+	text = re.sub("!{3,}", "!{3}", text)  #感叹号标准化
+	text = re.sub("！{3,}", "！{3}", text)
 	
 	text = re.sub("\n{2,}", "\n\n", text)
 	text = re.sub("\n {1,}", "\n　　", text)  # 半角空格换成全角空格

@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
 import os
+
 from FileOperate import saveText
 from DictText import textdict  # 正文关键词
 from DictRace import racedict  # 种族关键词
@@ -8,7 +9,7 @@ from DictRace import racedict  # 种族关键词
 
 # 适用于标签的标签关键词
 
-dict = {
+novel = {
 	"txt": "txt",
 	"docx": "docx",
 	"完结": "Finished",
@@ -431,11 +432,14 @@ dict = {
 	"中国语注意": "",
 	"chinese": "",
 	"Chinese": "",
-	
+	"":""
 	}
 
 noveldict = {}
-noveldict.update(dict)
+for i in novel:
+	l = novel[i].split(" ")
+	noveldict[i] = l
+
 noveldict.update(racedict)
 noveldict.update(textdict)
 
@@ -447,7 +451,7 @@ def cmp(a, b):  # 按dict内部顺序进行排序
 			index = li.index(a)
 		except:
 			li = list(noveldict.keys())
-			li = [i.lower() for i in li]
+			li = [i.lower() for i in li]  #??
 			a = a.replace("#", "").lower()
 			index = li.index(a)
 		return index
@@ -478,4 +482,5 @@ def saveDict2Md(dict, name):
 
 
 if __name__ == '__main__':
+	print(noveldict)
 	pass

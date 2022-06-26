@@ -4,21 +4,19 @@
 # key为关键词，value为对应标签
 # 关键词——标签可以一对多
 
-textdict = {
-	"腐向": "Gay",
+
+text = {
 	"同志": "Gay",
 	"男同性恋": "Gay",
+	"男同": "Gay",
 	"百合": "Lesbian",
 	"女同性恋": "Lesbian",
+	"女同": "Lesbian",
 	"科幻": "ScienceFiction",
 	"奇幻": "Fantasy",
 	"魔幻": "Fantasy",
 	"喜剧": "Comedy",
 	"悲剧": "Tragedy",
-	
-	"龙根": "dragon R18",
-	"龙棒": "dragon R18",
-	# "兽奸": "furry R18",
 	
 	"阴道交": "VaginalSex",
 	"阴交": "VaginalSex",
@@ -145,7 +143,7 @@ textdict = {
 	"拘束衣": "StraitJacket",
 	"泳装": "SwimSuit",
 	"六尺褌": "Fundoshi",
-	"袜子": "socks",
+	"袜子": "Socks",
 	
 	"肌肉": "Muscles",
 	"筋肉": "Muscles",
@@ -175,5 +173,15 @@ textdict = {
 	"Castrated": "R18G Castrated",
 	"性器破坏": "R18G Castrated",
 	
-}
+	}
 # 雄性妊娠与雌性堕落区别？
+
+
+textdict={}
+for i in text:
+	l = text[i].split(" ")
+	textdict[i] = l
+
+
+if __name__ == '__main__':
+	print(textdict)

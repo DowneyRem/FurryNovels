@@ -9,25 +9,12 @@ from functools import cmp_to_key
 from DictNovel import noveldict, cmp  # 小说标签
 from DictText import textdict  # 正文关键词
 from DictRace import racedict  # 种族关键词
-from FileOperate import findFile, openText, openText4, openDocx, openDocx4, unzipFile
+from FileOperate import findFile, openText, openText4, openDocx, openDocx4, unzipFile, monthNow
 from PixivNovels import getSeriesId, formatSeriesInfo
-from Language import getLanguage
 from config import cc1, cc2
 
 if "小说推荐" in os.getcwd():
 	from FileOperate import monthNow, openNowDir
-
-
-def set2Text(set):
-	text = " ".join(set)
-	return text
-
-
-def setSpilt(s):
-	s = set2Text(s)
-	s = s.split(" ")  # 允许一关键词对多标签，并拆分成处理
-	s = set(s)        # {"流血": "R18G Blood",}
-	return s
 
 
 def sortTags(set, cmp):  # 按dict内顺序对转换后的标签排序
@@ -44,17 +31,17 @@ def sortTags(set, cmp):  # 按dict内顺序对转换后的标签排序
 	return text
 
 
-def translateTags(taglist):  # 获取英文标签
+def translateTags(tags):  # 获取英文标签
+	taglist = tags.split()
 	tags2 = ""; s = set()
 	for i in range(0, len(taglist)):
 		tag = taglist[i]
 		tag = tag.replace("#", "")
-		tag = tag.replace(" ", "")
-		tag = tag.replace("　", "")
 		tag = noveldict.get(tag)  # 获取英文标签
 		
 		if tag is not None:
-			s.add(tag)  # 获取到的标签利用set去重
+			for i in tag:  # 处理修改后的数据格式 list
+				s.add(i)   # 获取到的标签利用set去重
 		else:
 			tag = taglist[i]
 			tags2 += tag + " "
@@ -71,12 +58,13 @@ def getTags(text):  # 获取可能存在的标签
 		a = list1[i]
 		num = text.count(a)
 		if num > 5:  # 数据未测试
-			s1.add(list1[i])  # 汉字标签
-			s2.add(list2[i])  # 英文标签
+			s1.add(list1[i])   # 汉字标签
+			for j in list2[i]: # 英文标签，新数据格式list
+				s2.add(j)
 	return s2, s1  # 英文标签在前
 
 
-def getRaceTags(text):  # 获取可能存在的标签
+def getRaceTags(text):  # 获取可能存在的种族职业标签
 	s1 = set(); s2 = set()
 	textnum = len(text)
 	list1 = list(racedict.keys())
@@ -85,25 +73,31 @@ def getRaceTags(text):  # 获取可能存在的标签
 		a = list1[i]
 		num = text.count(a)
 		if 10000 * num / textnum > 15:  # 神奇的数据
-			s1.add(list1[i])  # 汉字标签
-			s2.add(list2[i])  # 英文标签
+			s1.add(list1[i])   # 汉字标签
+			for j in list2[i]: # 英文标签，新数据格式list
+				s2.add(j)
 	return s2, s1  # 英文标签在前
 
 			
 def getInfo(text, textlist):
 	name = textlist[0]
 	authro = textlist[1].replace("作者：", "")
+	authro = authro.replace("Author: ", "")
 	authro = "by #" + authro
 	
 	url = textlist[2].replace("网址：", "")
 	url = url.replace("網址：", "")
 	url = url.replace("链接：", "")
+	url = url.replace("URL: ", "")
 	
 	tags = textlist[3].replace("标签：", "")
 	tags = tags.replace("標簽：", "")
+	tags = tags.replace("標籤：", "")
+	tags = tags.replace("Tags: ", "")
+	tags = tags.replace("#", " #")
 	tags = cc1.convert(tags)  # 转简体，只处理简体标签
-	list = tags.split()
-	(tags1, tags2) = translateTags(list)  # 获取已翻译/未翻译的标签
+	(tags1, tags2) = translateTags(tags)  # 获取已翻译/未翻译的标签
+	# print(tags2)
 	
 	if "#zh_cn" in tags:
 		name = cc2.convert(textlist[0])
@@ -118,8 +112,6 @@ def getInfo(text, textlist):
 	
 	unsuretag = ""
 	if s1 != set():
-		s1 = setSpilt(s1)
-		tags1 = setSpilt(tags1)  # 拆分一关键词对多个标签
 		s1 = s1.difference(tags1)  # 去重，获取作者未标注的标签
 		s1 = sortTags(s1, cmp)
 		s2 = sortTags(s2, cmp)
@@ -132,7 +124,8 @@ def getInfo(text, textlist):
 	tags1 = sortTags(tags1, cmp)
 	if tags2 != "":
 		tags2 = "特殊：{}\n".format(tags2)
-	info = "{}{}{}\n{}{}{}".format(name, authro, tags1, tags2, unsuretag, url)
+	info = f"{name}{authro}{tags1}\n{tags2}{unsuretag}{url}"
+	# info = "{}{}{}\n{}{}{}".format(name, authro, tags1, tags2, unsuretag, url)
 	
 	if "Windows" in platform():
 		print(info)
@@ -193,16 +186,12 @@ def getPath(path):
 			print("本月 " + dirstr + " 无新文档")
 
 
-def main():
-	print("本月文档如下：")
-	print("\n")
-	getPath(path)
-
-
 if __name__ == "__main__":
 	path = os.getcwd()
 	if "小说推荐" in path:
 		path = path.replace("\工具", "")
 	else:
 		path = os.path.join(path, "Novels")
-	main()
+		
+	print("本月文档如下：\n")
+	getPath(path)

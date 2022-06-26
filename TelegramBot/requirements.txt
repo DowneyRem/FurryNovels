@@ -1,5 +1,6 @@
 python-telegram-bot  >= 13.4
 pixivpy
+pygtrans >= 1.4.0
 opencc
 numpy
 pyzipper

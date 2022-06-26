@@ -10,24 +10,25 @@ from telegram.ext import messagequeue as mq
 from telegram import (ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardMarkup, InlineKeyboardButton, MessageEntity)
 from telegram.ext import (Updater, CommandHandler, MessageHandler, Filters, ConversationHandler, CallbackQueryHandler)
 # from telegram.utils.request import Request
+import telegram.error
 
 from PixivNovels import (saveNovel, saveSeriesAsTxt, saveSeriesAsZip, saveAuthor, getNovelInfo,  getSeriesInfo, getAuthorInfo, getSeriesId, getTags, set2Text, novelAnalyse, seriesAnalyse, formatNovelInfo, formatSeriesInfo)
 from PrintTags import printInfo, getInfo
 from FileOperate import removeFile, zipFile, unzipFile, timethis
 from Convert import convert
+from Translate import translateFile
 from Webdav4 import uploadAll as uploadWebdav
 from DictRace import racedict
 from config import *
 
 
-logging.basicConfig(level=logging.INFO,
-		format='%(levelname)s %(asctime)s [%(filename)s:%(lineno)d] %(message)s',
-		datefmt='%Y.%m.%d. %H:%M:%S',
-		# filename='parser_result.log',
-		# filemode='w'
-)
-logger = logging.getLogger(__name__)
-
+# logging.basicConfig(level=logging.INFO,
+# 		format='%(levelname)s %(asctime)s [%(filename)s:%(lineno)d] %(message)s',
+# 		datefmt='%Y.%m.%d. %H:%M:%S',
+# 		# filename='parser_result.log',
+# 		# filemode='w'
+# )
+# logger = logging.getLogger(__name__)
 
 
 def start(update, context):
@@ -45,10 +46,6 @@ def help(update, context):
 """)
 
 
-def error(update, context):
-	logger.warning('Update "%s" caused error "%s"', update, context.error)
-
-
 def ping(update, context):
 	update.message.reply_text(
 		"chat_id: <code>%s</code>\nlanguage_code: <code>%s</code>" % (
@@ -60,6 +57,10 @@ def ping(update, context):
 def cancel(update, context):
 	# update.message.reply_text("已取消")
 	pass
+
+
+# def error(update, context):
+# 	logger.warning('Update "%s" caused error "%s"', update, context.error)
 
 
 def download(update, context):
@@ -122,18 +123,23 @@ def download(update, context):
 	def uploadToUser(path, caption):
 		username = query.message.chat.first_name
 		id = query.message.chat.id
-		print("上传至用户：{} ({})".format(username, id))
-		document = open(path, 'rb')
-		name = os.path.split(path)[1]
-		query.message.chat.send_document(document, name, caption)
-		
 		chatid = query.message.chat.id
 		messageid = query.message.message_id
-		# context.bot.delete_message(chatid, messageid -1)
-		context.bot.delete_message(chatid, messageid + 0)
-		context.bot.delete_message(chatid, messageid + 1)
-		context.bot.delete_message(chatid, messageid + 2)
-	
+		
+		if path:
+			print("上传至用户：{} ({})".format(username, id))
+			document = open(path, 'rb')
+			name = os.path.split(path)[1]
+			query.message.chat.send_document(document, name, caption)
+		
+		try:
+			# context.bot.delete_message(chatid, messageid -1)
+			context.bot.delete_message(chatid, messageid + 0)
+			context.bot.delete_message(chatid, messageid + 1)
+			context.bot.delete_message(chatid, messageid + 2)
+		except telegram.error.BadRequest:
+			pass
+		
 	
 	@timethis
 	def uploadToChannel(channel, path, caption):
@@ -146,10 +152,12 @@ def download(update, context):
 	def sendMsgToChannel(channel, caption, msg=""):
 		name = caption.split("\n")[0]
 		link = caption.split("\n")[-4]
-		username = query.message.chat.first_name.replace(" ","")
+		username = query.message.chat.first_name.replace(" ", "")
 		id = query.message.chat.id
-		message = f"{msg} #{username} #u{id}\n{name}\n{link}"
-		context.bot.send_message(channel, message, disable_web_page_preview=1, disable_notification=0)
+		
+		message  = f"{msg} <a href='tg://user?id={id}'> {username} </a> #u{id}"
+		message += f"\n{name}\n{link}"
+		context.bot.send_message(channel, message, parse_mode="HTML", disable_web_page_preview=1, disable_notification=1, )
 	
 	
 	def furry(caption):
@@ -158,8 +166,9 @@ def download(update, context):
 		# racelist = list(raceset)
 		for i in range(len(racelist)):
 			race = racelist[i]
-			if race in caption:
-				furrynum += 1
+			for i in race:   # 数据格式改为list
+				if i in caption:
+					furrynum += 1
 		
 		if "Furry" in caption or "furry" in caption or "kemono" in caption:
 			furrynum += 5
@@ -167,10 +176,33 @@ def download(update, context):
 		return furrynum
 	
 	
+	def translate(filepath, language):
+		# language Telegram 语言包
+		if language == "zh-hans":
+			language = "zh_cn"
+		elif language == "zh-hant":
+			language = "zh_tw"
+		
+		path, lang = translateFile(filepath, language)
+		if lang != language:  # 语言不同再翻译
+			info = printInfo(path)
+			info = info.replace(f"#{lang} ", f"#{language} #GoogleTranslate ")
+			# print(path, language, lang, info, sep="\n")
+			return path, info
+		else:
+			return None, None
+	
+	
 	@timethis
 	def upload(filepath, caption, recommend):
 		uploadToUser(filepath, caption)
-		
+		if "zh" in caption and "zh" in language:  # 中文小说繁简转换
+			(newfilepath, newcaption) = convert(filepath, language)
+			uploadToUser(newfilepath, newcaption)  # 上传文件
+		elif f"#{language}" not in caption:   # 其他语言机翻
+			newfilepath, newcaption = translate(filepath, language)
+			uploadToUser(newfilepath, newcaption)  # 上传文件
+			
 		furrynum = furry(caption)
 		username = query.message.chat.first_name
 		caption += "\n来自 {} 的分享".format(username)
@@ -193,9 +225,10 @@ def download(update, context):
 	
 	
 	query = update.callback_query
+	language = update.callback_query.from_user.language_code
 	if query.data != "":  # 清除按钮
 		query.edit_message_reply_markup(InlineKeyboardMarkup([[]]))
-	# print(query.message)
+	# print(query)
 	downloadAll(query)
 
 
@@ -232,11 +265,11 @@ https://furrynovel.xyz/pixiv/novel/15426800
 			update.message.reply_text(text, reply_markup=InlineKeyboardMarkup([[
 			InlineKeyboardButton("下载本章为txt文件", callback_data="{}:{}".format(1, novel_id)),
 			InlineKeyboardButton("下载此作者全部小说", callback_data="{}:{}".format(4, user_id)),
-				]]),disable_web_page_preview=1)
+				]]), disable_web_page_preview=1)
 		
 		else:
 			series_id = getSeriesId(novel_id)[0]
-			(title, author, caption, count)  = getSeriesInfo(series_id)[0:4]
+			(title, author, caption, count) = getSeriesInfo(series_id)[0:4]
 			text += "\n\n系列：{}，共{}篇\n".format(title, count)
 			update.message.reply_text(text, reply_markup=InlineKeyboardMarkup(
 		[[
@@ -260,15 +293,15 @@ https://furrynovel.xyz/pixiv/novel/15426800
 	def saveAuthor(user_id):
 		photo = open(getAuthorInfo(user_id)[1], 'rb')
 		caption = getAuthorInfo(user_id)[0]
-		update.message.chat.send_photo(photo, caption,reply_markup=InlineKeyboardMarkup([[
-		    InlineKeyboardButton("下载此作者全部小说", callback_data="{}:{}".format(4, user_id)),
-		    # InlineKeyboardButton("精确下载", callback_data="{}:{}".format(6, user_id)),
-	    ]]))
+		update.message.chat.send_photo(photo, caption, reply_markup=InlineKeyboardMarkup([[
+			InlineKeyboardButton("下载此作者全部小说", callback_data="{}:{}".format(4, user_id)),
+			# InlineKeyboardButton("精确下载", callback_data="{}:{}".format(6, user_id)),
+		]]))
 
 	
 	def savePixiv(text, id):  # 支持Pixiv与linpx
 		if "pixiv" in text:
-			if "user" in text:  #去末尾s，兼容linpx
+			if "user" in text:  # 去末尾s，兼容linpx
 				saveAuthor(id)
 			elif "novel/series" in text:
 				saveSeries(id)
@@ -290,14 +323,14 @@ https://furrynovel.xyz/pixiv/novel/15426800
 		if re.findall(pat, text) and re.findall("[0-9]{5,}", text):   # 获取网址链接
 			text = re.findall(pat, text)[0]
 			id = re.findall("[0-9]{5,}", text)[0]
-			savePixiv(text, id)  #支持Pixiv与linpx
+			savePixiv(text, id)  # 支持Pixiv与linpx
 			
 		elif re.findall("[0-9]{5,}", text):   # 兼容小说id
 			pat = "[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]"
 			text = re.findall(pat, text)[0]
 			id = re.findall("[0-9]{5,}", text)[0]
 			if re.findall(pat, text):
-				savePixiv(text,id)
+				savePixiv(text, id)
 		else:
 			wrongType(text)
 	
@@ -330,7 +363,7 @@ def main():
 
 	# dispatcher.add_handler(MessageHandler(Filters.document, )
 	updater.dispatcher.add_handler(CallbackQueryHandler(download))
-	dispatcher.add_error_handler(error)
+	# dispatcher.add_error_handler(error)
 	updater.idle()
 
 
