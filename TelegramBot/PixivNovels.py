@@ -12,8 +12,10 @@ from pixivpy3 import AppPixivAPI
 
 from FileOperate import zipFile, saveText, formatFileName, monthNow, makeDirs
 # from Language import getLanguage
+from TokenRoundRobin import TokenRoundRobin
 from Translate import getLanguage
 from config import REFRESH_TOKEN
+from config import TOKENS
 
 if "小说推荐" in os.getcwd():
 	from FileOperate import saveDocx
@@ -29,22 +31,7 @@ logging.basicConfig(level=logging.INFO,
 sys.dont_write_bytecode = True
 _TEST_WRITE = False
 
-
-if "Windows" in platform():
-	REQUESTS_KWARGS = {'proxies': {'https': 'http://127.0.0.1:10808', }}
-elif "Linux" in platform():
-	REQUESTS_KWARGS = {}
-	
-try:
-	aapi = AppPixivAPI(**REQUESTS_KWARGS)
-	# aapi.set_additional_headers({'Accept-Language':'en-US'})
-	aapi.set_accept_language("en-us")  # zh-cn
-	aapi.auth(refresh_token=REFRESH_TOKEN)
-	logging.info(f"{__file__}：网络可用")
-except Exception as e:
-	print("请检查网络可用性或更换REFRESH_TOKEN")
-	logging.error(e)
-
+tokenPool = TokenRoundRobin(TOKENS)
 
 def set2Text(s):
 	text = " ".join(s)
@@ -59,7 +46,7 @@ def getLang(novel_id):
 
 def getTags(novel_id, set):
 	# set 去重复标签，支持系列小说
-	json_result = aapi.novel_detail(novel_id)
+	json_result = tokenPool.getAAPI().novel_detail(novel_id)
 	tags = json_result.novel.tags
 	for i in range(len(tags)):
 		tagn = tags[i]
@@ -82,7 +69,7 @@ def getAuthorName(json):
 
 def getSeriesId(novel_id):
 	try:
-		json_result = aapi.novel_detail(novel_id)
+		json_result = tokenPool.getAAPI().novel_detail(novel_id)
 		series = json_result.novel.series
 		title = series.title
 		id = series.id
@@ -93,7 +80,7 @@ def getSeriesId(novel_id):
 
 
 def getNovelInfo(novel_id):
-	json_result = aapi.novel_detail(novel_id)
+	json_result = tokenPool.getAAPI().novel_detail(novel_id)
 	# print(json_result)
 	novel = json_result.novel
 	title = novel.title
@@ -281,7 +268,7 @@ def formatPixivText(text):
 
 def getNovelText(novel_id):
 	text = "\n"
-	json_result = aapi.novel_text(novel_id)
+	json_result = tokenPool.getAAPI().novel_text(novel_id)
 	text += json_result.novel_text
 	series_prev = json_result.series_prev
 	series_next = json_result.series_next
@@ -325,21 +312,21 @@ def getNovelsListFormSeries(series_id):
 		return novellist
 	
 	def nextpage(json_result):
-		next_qs = aapi.parse_qs(json_result.next_url)
+		next_qs = tokenPool.getAAPI().parse_qs(json_result.next_url)
 		if next_qs is not None:
-			json_result = aapi.novel_series(**next_qs)
+			json_result = tokenPool.getAAPI().novel_series(**next_qs)
 			novellist = addlist(json_result)
 			nextpage(json_result)
 	
 	novellist = []
-	json_result = aapi.novel_series(series_id, last_order=None)
+	json_result = tokenPool.getAAPI().novel_series(series_id, last_order=None)
 	addlist(json_result)
 	nextpage(json_result)
 	return novellist
 
 
 def getSeriesInfo(series_id):
-	json_result = aapi.novel_series(series_id, last_order=None)
+	json_result = tokenPool.getAAPI().novel_series(series_id, last_order=None)
 	# print(json_result)
 	detail = json_result.novel_series_detail
 	title = detail.title  # 系列标题
@@ -349,7 +336,7 @@ def getSeriesInfo(series_id):
 	url = json_result.novels[0].image_urls.medium
 	
 	# name = formatFileName(title) + ".jpg"
-	# aapi.download(url, path="Photos", name=name)
+	# tokenPool.getAAPI().download(url, path="Photos", name=name)
 	# iconpath = os.path.join(os.getcwd(), "Photos", name)
 	# print(title, author, count, caption, iconpath)
 	return title, author, caption, count
@@ -504,7 +491,7 @@ def saveSeries(series_id, path):
 # 【【【用户页面】】】
 def getAuthorInfo(user_id):
 	string = ""
-	json_result = aapi.user_detail(user_id)
+	json_result = tokenPool.getAAPI().user_detail(user_id)
 	# print(json_result)
 	user = json_result.user
 	id = user.id
@@ -527,7 +514,7 @@ def getAuthorInfo(user_id):
 	# print(string)
 	
 	name = formatFileName(name) + ".jpg"
-	aapi.download(url, path="Photos", name=name)
+	tokenPool.getAAPI().download(url, path="Photos", name=name)
 	iconpath = os.path.join(os.getcwd(), "Photos", name)
 	
 	# return name, id, novels, nseries, illusts+manga, iseries, iconpath
@@ -544,14 +531,14 @@ def getNovelsListFromAuthor(user_id):
 		return novelslist
 	
 	def nextpage(json_result):
-		next_qs = aapi.parse_qs(json_result.next_url)
+		next_qs = tokenPool.getAAPI().parse_qs(json_result.next_url)
 		if next_qs is not None:
-			json_result = aapi.user_novels(**next_qs)
+			json_result = tokenPool.getAAPI().user_novels(**next_qs)
 			novelslist = addlist(json_result)
 			nextpage(json_result)
 	
 	novelslist = []
-	json_result = aapi.user_novels(user_id)
+	json_result = tokenPool.getAAPI().user_novels(user_id)
 	addlist(json_result)
 	nextpage(json_result)
 	return novelslist
