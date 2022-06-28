@@ -54,6 +54,23 @@ def ping(update, context):
 			), parse_mode="HTML")
 
 
+def delete(update, context):
+	if update.message.chat.id == 1348148286:
+		path = os.getcwd()
+		for dir in os.listdir(path):
+			if os.path.isdir(dir) and not dir.startswith("."):
+				directry = os.path.join(path, dir)
+				removeFile(directry)
+				print(f"已删除：{directry}")
+				update.message.reply_text(f"已删除：{dir}")
+		update.message.reply_text("删除完成")
+		
+		
+def upload(update, context):
+	if update.message.chat.id == 1348148286:
+		path = os.path.join(os.getcwd(), "Novels")
+		
+		
 def cancel(update, context):
 	# update.message.reply_text("已取消")
 	pass
@@ -196,10 +213,10 @@ def download(update, context):
 	@timethis
 	def upload(filepath, caption, recommend):
 		uploadToUser(filepath, caption)
-		if "zh" in caption and "zh" in language:  # 中文小说繁简转换
+		if "zh" in caption and "zh" in language and ".zip" not in filepath:  # 中文小说繁简转换
 			(newfilepath, newcaption) = convert(filepath, language)
 			uploadToUser(newfilepath, newcaption)  # 上传文件
-		elif f"#{language}" not in caption:   # 其他语言机翻
+		elif not (f"#{language}" in caption and ".zip" in filepath):   # 其他语言机翻
 			newfilepath, newcaption = translate(filepath, language)
 			uploadToUser(newfilepath, newcaption)  # 上传文件
 			
@@ -359,6 +376,7 @@ def main():
 	dispatcher.add_handler(CommandHandler("help", help))
 	dispatcher.add_handler(CommandHandler("ping", ping))
 	dispatcher.add_handler(CommandHandler("cancel", cancel))
+	dispatcher.add_handler(CommandHandler("delete", delete))
 	dispatcher.add_handler(MessageHandler(Filters.text, botmain))
 
 	# dispatcher.add_handler(MessageHandler(Filters.document, )
