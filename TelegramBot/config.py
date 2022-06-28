@@ -32,6 +32,7 @@ webhook_cert = "cert.pem"
 
 
 # Webdav 配置
+# 默认加密列表
 encryptlist = ["https://dav.jianguoyun.com/dav/",
                ]
 
