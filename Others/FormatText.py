@@ -94,7 +94,7 @@ def saveText(path, text):
 		print("保存失败：【{}】".format(name))
 
 
-def formatPixivText(text):
+def format2NormalText(text):
 	# 处理Pixiv 标识符，转换成普通文本
 	
 	# [newpage]  [chapter: 本章标题]
@@ -153,7 +153,7 @@ def formatPixivText(text):
 	return text
 
 
-def formatNormalText(text):
+def format2PixivText(text):
 	# 普通文本转换成 Pixiv 标识符
 	
 	# [newpage]  [chapter: 本章标题]
@@ -218,19 +218,17 @@ def formatNormalText(text):
 
 
 def convert(path):
-	list = findFile(path, ".txt")
-	for path in list:
-		(dir, name) = os.path.split(path)
-		text = openText(path)
-		if "[chapter:" in text:
-			name = name.replace(".txt", "-净化版.txt")
-			text = formatPixivText(text)
-		else:
-			name = name.replace(".txt", "-Pixiv版.txt")
-			text = formatNormalText(text)
-			
-		path = os.path.join(dir, "转换版", name)
-		saveText(path, text)
+	(dir, name) = os.path.split(path)
+	text = openText(path)
+	if "[chapter:" in text:
+		name = name.replace(".txt", "-净化版.txt")
+		text = formatPixivText(text)
+	else:
+		name = name.replace(".txt", "-Pixiv版.txt")
+		text = formatNormalText(text)
+		
+	path = os.path.join(dir, "转换版", name)
+	saveText(path, text)
 
 
 def main():
@@ -243,9 +241,15 @@ def main():
 			print("文件被占用")
 			# os.system("chcp 65001")
 			# os.system("Pause")
-	print("智能转换中……")
-	convert(path)
-	
-	
+		
+	pathlist = findFile(path, ".txt")
+	if len(pathlist) == 0:
+		print("当前文件夹下无txt文件")
+	else:
+		print("智能转换中……")
+		for path in pathlist:
+			convert(path)
+
+
 if __name__ == '__main__':
 	main()
