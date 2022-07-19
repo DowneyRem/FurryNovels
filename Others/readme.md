@@ -45,8 +45,8 @@ pip install pywin32
 
 ### MergeText.py
 #### 功能：
-- 按顺序，合并txt文件
-- 按汉字数顺序，合并txt文件
+- 按阿拉伯数字大小顺序，合并txt文件
+- 按汉字数字的大小顺序，合并txt文件
 #### 第三方库：
 ~~~
 无
@@ -55,7 +55,7 @@ pip install pywin32
 
 
 ### ExtractZip.py
-**同 [OfficeAutomation/Extract1](https://github.com/DowneyRem/OfficeAutomation/tree/main/Extract1) **
+同 [DowneyRem/OfficeAutomation/Extract1](https://github.com/DowneyRem/OfficeAutomation/tree/main/Extract1)
 
 #### 功能：
 
