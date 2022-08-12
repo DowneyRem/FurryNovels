@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
 import os
+import re
 import time
 import shutil
 import logging
@@ -12,11 +13,13 @@ from platform import platform
 if "Windows" in platform():
 	import winreg
 	if "小说推荐" in os.getcwd():
+		# from docx import Document
+		# form docx.document import Document
 		from docx.api import Document
 		from win32com.client import Dispatch, DispatchEx
 
 
-def timethis(func):
+def timer(func):
 	@wraps(func)
 	def wrapper(*args, **kwargs):
 		start = time.perf_counter()
@@ -49,23 +52,24 @@ def saveFileCheck(func):
 		(dir, name) = os.path.split(arg)  # 分离文件名和目录名
 		if not os.path.exists(dir):
 			os.makedirs(dir)
+		name = formatFileName(name)
+		path = os.path.join(dir, name)
 		r = func(*args, **kwargs)
 		return r
 	return wrapper
 
 
-# 暂未加入保存函数内，如何加入？
+# 已通过@saveFileCheck加入保存文件的函数内
 def formatFileName(text):
-	list = '/ \ : * " < > | ? &lt; &gt; &&amp; &quot; &apos; &nbsp;'.split(" ")
-	for i in range(len(list)):
-		a = list[i]
-		text = text.replace(a, " ")
-	return text
-
+	if text:
+		text = re.sub('[/\:*?"<>|]', ' ', text)
+		text = text.replace('  ', '')
+		return text
 
 pathlist = []
 def findFile(path, *extnames):
 	# 省略 extnames 参数可以获取全部文件
+	# extname="" 获取无后缀名文件
 	for dir in os.listdir(path):
 		dir = os.path.join(path, dir)
 		if os.path.isdir(dir):
@@ -181,9 +185,7 @@ def getFileTime(path):
 
 @saveFileCheck
 def saveDocx(path, text):
-	(dir, name) = os.path.split(path)  # 分离文件名和目录名
-	if not os.path.exists(dir):
-		os.makedirs(dir)
+	name = os.path.basename(path)
 	
 	word = DispatchEx('Word.Application')  # 独立进程
 	word.Visible = 0  # 0为后台运行
@@ -203,9 +205,7 @@ def saveDocx(path, text):
 
 @saveFileCheck
 def saveText(path, text):
-	(dir, name) = os.path.split(path)  # 分离文件名和目录名
-	if not os.path.exists(dir):
-		os.makedirs(dir)
+	name = os.path.basename(path)
 	if not path.endswith(".txt"):
 		path += ".txt"
 	try:
@@ -216,23 +216,21 @@ def saveText(path, text):
 		print("保存失败：【{}】".format(name))
 
 
+def saveTxt(path, text):
+	return saveText(path, text)
+
+
+@saveFileCheck
 def saveTextDesktop(name, text):
 	# for循环内部，使用a+模式，写入测试文件
 	path = desktop()
 	path = os.path.join(path, name)
-	try:
-		with open(path, "a+", encoding="UTF8") as f:
-			f.write(text)
-		# print("已保存：【{}】".format(name))
-	except IOError:
-		print("保存失败：【{}】".format(name))
-
+	saveText(path, text)
+	
 
 @saveFileCheck
 def saveCsv(path, text):
-	(dir, name) = os.path.split(path)  # 分离文件名和目录名
-	if not os.path.exists(dir):
-		os.makedirs(dir)
+	name = os.path.basename(path)
 	try:
 		with open(path, "w", encoding="UTF-8-sig") as f:
 			f.write(text)
@@ -243,8 +241,7 @@ def saveCsv(path, text):
 
 def desktop():
 	if "Windows" in platform():  # 其他平台我也没用过
-		key = winreg.OpenKey(winreg.HKEY_CURRENT_USER,
-							 r'Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders')
+		key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, r'Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders')
 		return winreg.QueryValueEx(key, "Desktop")[0]
 
 
@@ -259,7 +256,7 @@ def monthNow():
 
 def openNowDir():
 	path = os.getcwd()
-	path = path.replace("\小说推荐\工具", "\兽人小说\小说推荐\频道版")
+	path = path.replace(r"\小说推荐\工具", r"\兽人小说\小说推荐\频道版")
 	text = monthNow()
 	pathNow = os.path.join(path, text)
 	if os.path.exists(pathNow):
@@ -292,7 +289,7 @@ def removeFile(path):
 			print("【{}】删除失败".format(name))
 
 
-@timethis
+@timer
 def zipFile(path, password="", delete=0):
 	# 使用 pyzipper ，可用aes256加密，压缩传入的文件或文件夹
 	# parm delete 不为0时，压缩后删除源文件

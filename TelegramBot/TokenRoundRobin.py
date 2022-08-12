@@ -1,10 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import os
 import logging
+from platform import platform
 
 import pixivpy3
 from pixivpy3 import AppPixivAPI
-from platform import platform
+
+from config import proxy_windows
 
 
 logging.basicConfig(level=logging.INFO,
@@ -15,6 +18,15 @@ logging.basicConfig(level=logging.INFO,
 		)
 
 
+# todo：代理设置循环，区分代理问题与token问题
+# requests_kwargs_windows = [
+# 	{'proxies': {'https': 'http://127.0.0.1:1080', }},
+# 	{'proxies': {'https': 'http://127.0.0.1:7890', }},
+# 	{'proxies': {'https': 'http://127.0.0.1:10808', }},
+# 	]
+# requests_kwargs_linux = []
+
+
 class TokenRoundRobin:
 	aapis = []
 	tokenCount = 0
@@ -22,7 +34,8 @@ class TokenRoundRobin:
 
 	def __init__(self, tokens: list):
 		if "Windows" in platform():
-			REQUESTS_KWARGS = {'proxies': {'https': 'http://127.0.0.1:10808', }}
+			# REQUESTS_KWARGS = {'proxies': {'https': 'http://127.0.0.1:10808', }}
+			REQUESTS_KWARGS = {'proxies': {'https': proxy_windows[0]}, }
 		elif "Linux" in platform():
 			REQUESTS_KWARGS = {}
 			
@@ -37,12 +50,18 @@ class TokenRoundRobin:
 				print("{} is OK!".format(t))
 				self.aapis.append(aapi)
 				self.tokenCount += 1
+				
 			except pixivpy3.utils.PixivError as e:
 				print(f"请检查网络可用性，或更换TOKEN{i+1} ")
-				print("{} is not OK, ignoring!".format(t))
-		print("Finished initialising, {} tokens is available.".format(self.tokenCount))
+				print(f"{t} is not OK, ignoring!")
+		print(f"Finished initialising, {self.tokenCount} tokens is available.")
 
 	def getAAPI(self) -> AppPixivAPI:
 		self.callCount += 1
-		logging.info(f"Requesting token, returning #{self.callCount % self.tokenCount}, total {self.callCount}")
-		return self.aapis[self.callCount % self.tokenCount]
+		if self.tokenCount == 0:
+			logging.critical("请检查网络可用性，或更换TOKENS")
+			os._exit(1)
+		else:
+			logging.info(f"Requesting token #{(self.callCount-1) % self.tokenCount +1}, total {self.callCount}")
+			return self.aapis[self.callCount % self.tokenCount]
+

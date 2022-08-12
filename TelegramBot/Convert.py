@@ -2,10 +2,14 @@
 # -*- coding: UTF-8 -*-
 import os
 
+from opencc import OpenCC
+
 from FileOperate import openText, saveText
 from PrintTags import printInfo
-from config import cc1, cc2
-from Translate import translateFile
+
+
+cc1 = OpenCC('tw2sp.json')  # 繁转简
+cc2 = OpenCC('s2twp.json')  # 簡轉繁
 
 
 def setPath(path):

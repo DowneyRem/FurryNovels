@@ -1,25 +1,28 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
-import os
+import os,time
 import re
 from platform import platform
 
 from pygtrans import Translate
 
 from FileOperate import openTextLines, saveText, formatFileName
+from config import proxy_windows
+
 
 if "Windows" in platform():
-	client = Translate(proxies={'https': 'http://localhost:10808'})
+	# client = Translate(fmt="text", proxies={'https': 'http://127.0.0.1:10808'})
+	client = Translate(fmt="text", proxies={'https': proxy_windows[0]})
 elif "Linux" in platform():
-	client = Translate()
+	client = Translate(fmt="text")
 
 
 def getLang(text):  # 添加语言标签
 	tags = ""
 	list1 = "边 变 并 从 点 东 对 发 该 个 给 关 过 还 后 欢 会 机 几 间 见 将 进 经 觉 开 来 里 两 吗 么 没 们 难 让 时 实 说 虽 为 问 无 现 样 应 于 与 则 这 种".split(" ")
 	list2 = "邊 變 並 從 點 東 對 發 該 個 給 關 過 還 後 歡 會 機 幾 間 見 將 進 經 覺 開 來 裡 兩 嗎 麼 沒 們 難 讓 時 實 說 雖 為 問 無 現 樣 應 於 與 則 這 種".split(" ")
-	list3 = "あ い う え お か き く け こ さ し す せ そ た ち つ て と な に ぬ ね の は ひ ふ へ ほ ま み む め も や ゆ よ ら り る れ ろ わ を ん ぁ ぃ ぅ ぇ ぉ".split(" ")
-	list4 = "a b c d e f g h I j k l m n o p q r s t u v w x y z".split(" ")
+	list3 = "あ い う え お か き く け こ さ し す せ そ た ち つ て と な に ぬ ね の は ひ ふ へ ほ ま み む め も や ゆ よ ら り る れ ろ わ を ん が ぎ ぐ げ ご ざ じ ず ぜ ぞ だ ぢ づ で ど ぱ ぴ ぷ ぺ ぽ ば び ぶ べ ぼ ぁ ぃ ぅ ぇ ぉ ア イ ウ エ オ カ キ ク ケ コ サ シ ス セ ソ タ テ ツ テ ト ナ ニ ヌ ネ ノ ハ ヒ フ ヘ ホ マ ミ ム メ モ ヤ ユ ヨ ラ リ ル レ ロ ワ ヲ ン ガ ギ グ ゲ ゴ ザ ジ ズ ゼ ゾ ダ ヂ ヅ デ ド パ ピ プ ペ ポ バ ビ ブ ベ ボ ァ ィ ゥ ェ ォ".split(" ")
+	list4 = "A B C D E F G H I J K L M N O P Q R S T U V W X Y Z a b c d e f g h I j k l m n o p q r s t u v w x y z".split(" ")
 	
 	def countChar(list):
 		textnum = len(text)
@@ -27,34 +30,42 @@ def getLang(text):  # 添加语言标签
 		for i in range(len(list)):
 			char = list[i]
 			num = text.count(char)
-			if 20000 * num / textnum >= 10:
+			if 20000 * num / textnum >= 10:  # 测试过
 				j += 1
 		# print(j)
 		return j
 	
-	if countChar(list3) >= 0.4 * len(list3):
+	if countChar(list3) >= 0.1 * len(list3):  # 按 0.1 x 152 个假名计算
 		tags += "ja"
-	elif countChar(list2) >= 0.4 * len(list2):
+	if countChar(list2) >= 0.4 * len(list2):  # 按 0.4 x 50 个常用字计算
 		tags += "zh_tw"
-	elif countChar(list1) >= 0.4 * len(list1):
+	if countChar(list1) >= 0.4 * len(list1):  # 按 0.4 x 50 个常用字计算
 		tags += "zh_cn"
-	elif countChar(list4) >= 0.6 * len(list4):
+	if countChar(list4) >= 0.3 * len(list4):  # 按 0.3 x 52 个字母计算
 		tags += "en"
 	# print(tags)
 	return tags
 
-
+num = 0
 def getLanguage(text):  # 添加语言标签
 	language = client.detect(text).language
 	if "zh" in language or "en" in language:
 		language = getLang(text)
-	if not language:
-		language = "en"
-	# print(language)
+	# if not language:  # 谷歌也不知道是什么语言
+	# 	language = "en"
+	global num
+	num += 1
+	print("谷歌翻译：", num, language)
 	return language
 
 
-def translateText(textlist: list, lang) -> list:
+def translateText(text: str, lang: str) -> str:
+	text = client.translate(text, lang)
+	# print(text.translatedText)
+	return text.translatedText
+
+
+def translateTextList(textlist: list, lang) -> list:
 	if type(textlist) == str:
 		textlist = [textlist]
 	texts = client.translate(textlist, lang)
@@ -62,6 +73,38 @@ def translateText(textlist: list, lang) -> list:
 	for text in texts:
 		li.append(text.translatedText)
 	return li
+
+
+def transWords(word: str, lang: str) -> str:
+	l = "zh zh_cn zh_tw ja ko".split(" ")
+	wordsdict = {
+		'en': {'author': 'author', 'url': 'URL', 'hashtags': 'hashtags', 'others': 'others'},
+		'zh': {'author': '作者', 'url': '网址', 'hashtags': '标签', 'others': '其他'},
+		'zh_cn': {'author': '作者', 'url': '网址', 'hashtags': '标签', 'others': '其他'},
+		'zh_tw': {'author': '作者', 'url': '網址', 'hashtags': '標籤', 'others': '其他'},
+		'ja': {'author': '著者', 'url': 'URL', 'hashtags': 'ハッシュタグ', 'others': 'その他'},
+		'ko': {'author': '작가', 'url': 'URL', 'hashtags': '해시태그', 'others': '기타'},
+		'fr': {'author': 'auteur', 'url': 'URL', 'hashtags': 'hashtags', 'others': 'les autres'},
+		'de': {'author': 'Autor', 'url': 'URL', 'hashtags': 'Hashtags', 'others': 'Andere'},
+		'ru': {'author': 'автор', 'url': 'URL', 'hashtags': 'хэштеги', 'others': 'другие'},
+		'es': {'author': 'autor', 'url': 'URL', 'hashtags': 'etiquetas', 'others': 'otros'},
+		'pt': {'author': 'autor', 'url': 'URL', 'hashtags': 'hashtags', 'others': 'outros'},
+		'hi': {'author': 'लेखक', 'url': 'यूआरएल', 'hashtags': 'हैशटैग', 'others': 'अन्य'},
+		}
+	
+	try:
+		words = wordsdict.get(lang)
+		tword = words.get(word, None)
+	except AttributeError:
+		tword = translateText(word, lang)
+	
+	# 多语言处理， readline 再spilt(":")spilt("：")
+	if lang in l:
+		tword = f"{tword}："
+	else:
+		tword = f"{tword}: "
+	# print(tword)
+	return tword
 
 
 def formatTextIndent(text):
@@ -103,7 +146,7 @@ def formatText(textlist, lang):
 			if len(t) == 1:
 				info += textlist[i] + "\n"
 			else:
-				info += translateText(t[0] + "： ", lang)[0] + t[-1] + "\n"
+				info += translateTextList(t[0] + "： ", lang)[0] + t[-1] + "\n"
 	
 	for i in range(5, len(textlist)):
 		nomal += textlist[i] + "\n"
@@ -122,9 +165,9 @@ def translateFile(path, lang):
 	textlist = openTextLines(path)
 	lang1 = getLanguage(str(textlist))     # 原语言
 	
-	name2 = translateText(name1, lang)[0]  # 翻译
+	name2 = translateTextList(name1, lang)[0]  # 翻译
 	name2 = formatFileName(name2).strip()
-	textlist = translateText(textlist, lang)
+	textlist = translateTextList(textlist, lang)
 	text = formatText(textlist, lang)
 	# print(text, lang1, lang, sep="\n")
 
@@ -134,7 +177,29 @@ def translateFile(path, lang):
 	return path, lang1
 
 
+
+
 if __name__=="__main__":
-	path = r"D:\Download\Github\FurryNovelsBot\Novels\《大学教授阿诺雷德》.txt"
-	translateFile(path, lang="en")
-	pass
+	# path = r"D:\Download\Github\FurryNovelsBot\Novels\《大学教授阿诺雷德》.txt"
+	# translateFile(path, lang="en")
+	# pass
+	# a=translateText("你好","en")
+	# print(a)
+	
+	def getWordsDict():
+		a = "author url hashtags others".split(" ")
+		langs = "en zh_cn zh_tw fr ru ar es de pt ja ko hi".split(" ")
+		# langs = "".split(" ")
+		
+		for lang in langs:
+			d1 = {}
+			for t in a:
+				try:
+					text = translateText(t, lang)
+					d1[t] = text
+				except AttributeError:
+					d1[t] = ""
+			print(f"{d1},")
+			
+			
+	getWordsDict()

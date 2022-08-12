@@ -2,6 +2,7 @@
 # -*- coding: UTF-8 -*-
 import os
 import re
+import time
 import signal
 import logging
 from platform import platform
@@ -14,7 +15,7 @@ import telegram.error
 
 from PixivNovels import (saveNovel, saveSeriesAsTxt, saveSeriesAsZip, saveAuthor, getNovelInfo,  getSeriesInfo, getAuthorInfo, getSeriesId, getTags, set2Text, novelAnalyse, seriesAnalyse, formatNovelInfo, formatSeriesInfo)
 from PrintTags import printInfo, getInfo
-from FileOperate import removeFile, zipFile, unzipFile, timethis
+from FileOperate import removeFile, zipFile, unzipFile, timer
 from Convert import convert
 from Translate import translateFile
 from Webdav4 import uploadAll as uploadWebdav
@@ -66,11 +67,6 @@ def delete(update, context):
 		update.message.reply_text("删除完成")
 		
 		
-def upload(update, context):
-	if update.message.chat.id == 1348148286:
-		path = os.path.join(os.getcwd(), "Novels")
-		
-		
 def cancel(update, context):
 	# update.message.reply_text("已取消")
 	pass
@@ -86,7 +82,7 @@ def download(update, context):
 		query.message.chat.send_message(text)
 	
 	
-	@timethis
+	@timer
 	def downloadAll(query):
 		data = query.data
 		method = int(data[0])
@@ -136,7 +132,7 @@ def download(update, context):
 		return filepath, caption, recommend
 	
 	
-	@timethis
+	@timer
 	def uploadToUser(path, caption):
 		username = query.message.chat.first_name
 		id = query.message.chat.id
@@ -158,7 +154,7 @@ def download(update, context):
 			pass
 		
 	
-	@timethis
+	@timer
 	def uploadToChannel(channel, path, caption):
 		print("上传至频道：{}".format(channel))
 		document = open(path, 'rb')
@@ -166,9 +162,10 @@ def download(update, context):
 		context.bot.send_document(channel, document, name, caption)
 	
 	
+	# 记录下载日志
 	def sendMsgToChannel(channel, caption, msg=""):
 		name = caption.split("\n")[0]
-		link = caption.split("\n")[-4]
+		link = caption.split("\n")[-5]
 		username = query.message.chat.first_name.replace(" ", "")
 		id = query.message.chat.id
 		
@@ -210,36 +207,54 @@ def download(update, context):
 			return None, None
 	
 	
-	@timethis
+	@timer
 	def upload(filepath, caption, recommend):
 		uploadToUser(filepath, caption)
 		if "zh" in caption and "zh" in language and ".zip" not in filepath:  # 中文小说繁简转换
 			(newfilepath, newcaption) = convert(filepath, language)
 			uploadToUser(newfilepath, newcaption)  # 上传文件
-		elif not (f"#{language}" in caption and ".zip" in filepath):   # 其他语言机翻
+		elif not (f"#{language}" in caption or ".zip" in filepath):   # 其他语言机翻
 			newfilepath, newcaption = translate(filepath, language)
 			uploadToUser(newfilepath, newcaption)  # 上传文件
 			
+		
 		furrynum = furry(caption)
 		username = query.message.chat.first_name
-		caption += "\n来自 {} 的分享".format(username)
+		caption += f"\n来自 {username} 的分享\n"
 		if recommend > -100:
-			caption += "\n推荐指数： {} @FurryNovels".format(recommend)
+			caption += f"推荐指数： {recommend} (仅供参考)\n" \
+			           f"喜欢还请去Pixiv收藏或评论，以支持作者 @FurryNovels"
 			
 		if "Windows" in platform():  # 测试用频道
 			uploadToChannel("-1001286539630", filepath, caption)
+			if newfilepath:  # 上传翻译文件
+				uploadToChannel("-1001286539630", newfilepath, newcaption)
+				# uploadWebdav(newfilepath)
 			sendMsgToChannel("-1001286539630", caption, msg="#测试")
+			
 		elif furrynum >= 3 and (".zip" not in filepath):  # 兽人小说且不为zip
 			uploadToChannel("@FurryReading", filepath, caption)
+			if newfilepath:  # 上传翻译文件
+				uploadToChannel("@FurryReading", newfilepath, newcaption)
+				# uploadWebdav(newfilepath)
 			sendMsgToChannel("-1001286539630", caption, msg="#兽人小说")
+			
+			if "zh" in caption and recommend >= 6.5:  # 中文，优秀，小说
+				uploadToChannel("@FurryNovels", filepath, caption)
 			uploadWebdav(filepath)
 			
-			if "zh" in caption and recommend >= 7:  # 中文，优秀，小说
-				uploadToChannel("@FurryNovels", filepath, caption)
 		else:
 			sendMsgToChannel("-1001286539630", caption, msg="#非兽人小说")
+		
+		# 发送友情提示
+		query.message.chat.send_message("还请去Pixiv，给作者一个收藏/评论，以表支持")
+		time.sleep(10)
+		if not newfilepath:
+			context.bot.delete_message(query.message.chat.id, query.message.message_id + 4)
+		else:
+			context.bot.delete_message(query.message.chat.id, query.message.message_id + 5)
 		print("")
-	
+		
 	
 	query = update.callback_query
 	language = update.callback_query.from_user.language_code
@@ -276,25 +291,29 @@ https://furrynovel.xyz/pixiv/novel/15426800
 		(title, author, caption) = getNovelInfo(novel_id)[0:3]
 		tags = getTags(novel_id, set())
 		tags = set2Text(tags)
-		text = "{}\n作者：{}\n标签：{}".format(title, author, tags)
+		text = f"{title}\n作者：{author}\n标签：{tags}\n"
 		
 		if getSeriesId(novel_id)[0] is None:
 			update.message.reply_text(text, reply_markup=InlineKeyboardMarkup([[
-			InlineKeyboardButton("下载本章为txt文件", callback_data="{}:{}".format(1, novel_id)),
-			InlineKeyboardButton("下载此作者全部小说", callback_data="{}:{}".format(4, user_id)),
+			InlineKeyboardButton("下载本章为txt文件", callback_data=f"{1}:{novel_id}"),
+			InlineKeyboardButton("下载此作者全部小说", callback_data=f"{4}:{user_id}"),
 				]]), disable_web_page_preview=1)
 		
 		else:
 			series_id = getSeriesId(novel_id)[0]
 			(title, author, caption, count) = getSeriesInfo(series_id)[0:4]
-			text += "\n\n系列：{}，共{}篇\n".format(title, count)
+			text = f"{text}\n系列：{title}，共{count}篇\n"
+			text = f"{text}\n长篇小说，推荐下载txt合集\n"\
+			       f"委托系列，推荐下载zip合集，或下载单篇txt\n"
+			
+			
 			update.message.reply_text(text, reply_markup=InlineKeyboardMarkup(
 		[[
-			InlineKeyboardButton("下载本章为txt文件", callback_data="{}:{}".format(1, novel_id)),
-			InlineKeyboardButton("下载此作者全部小说", callback_data="{}:{}".format(4, user_id)),
+			InlineKeyboardButton("下载本章为txt文件", callback_data=f"{1}:{novel_id}"),
+			InlineKeyboardButton("下载此作者全部小说", callback_data=f"{4}:{user_id}"),
 		], [
-			InlineKeyboardButton("下载系列为txt合集", callback_data="{}:{}".format(2, series_id)),
-			InlineKeyboardButton("下载系列为zip合集", callback_data="{}:{}".format(3, series_id)),
+			InlineKeyboardButton("下载系列为txt合集", callback_data=f"{2}:{series_id}"),
+			InlineKeyboardButton("下载系列为zip合集", callback_data=f"{3}:{series_id}"),
 		]]))
 			
 			
@@ -302,8 +321,8 @@ https://furrynovel.xyz/pixiv/novel/15426800
 		(title, author, caption, count) = getSeriesInfo(series_id)[0:4]
 		text = "系列：{}，共{}篇\nBy {}\n\n{}".format(title, count, author, caption)
 		update.message.reply_text(text, reply_markup=InlineKeyboardMarkup([[
-			InlineKeyboardButton("下载系列为txt合集", callback_data="{}:{}".format(2, series_id)),
-			InlineKeyboardButton("下载系列为zip合集", callback_data="{}:{}".format(3, series_id)),
+			InlineKeyboardButton("下载系列为txt合集", callback_data=f"{2}:{series_id}"),
+			InlineKeyboardButton("下载系列为zip合集", callback_data=f"{3}:{series_id}"),
 		]]))
 		
 		
@@ -311,8 +330,8 @@ https://furrynovel.xyz/pixiv/novel/15426800
 		photo = open(getAuthorInfo(user_id)[1], 'rb')
 		caption = getAuthorInfo(user_id)[0]
 		update.message.chat.send_photo(photo, caption, reply_markup=InlineKeyboardMarkup([[
-			InlineKeyboardButton("下载此作者全部小说", callback_data="{}:{}".format(4, user_id)),
-			# InlineKeyboardButton("精确下载", callback_data="{}:{}".format(6, user_id)),
+			InlineKeyboardButton("下载此作者全部小说", callback_data=f"{4}:{user_id}"),
+			# InlineKeyboardButton("精确下载", callback_data=f"{6}:{user_id}"),
 		]]))
 
 	
@@ -368,7 +387,6 @@ def main():
 			port=int(os.environ.get('PORT', 5000)),
 			url_path=BOT_TOKEN,
 			webhook_url=f"https://{heroku_app_name}.herokuapp.com/{BOT_TOKEN}")
-	# updater.bot.set_webhook(f"https://{heroku_app_name}.herokuapp.com/{BOT_TOKEN}")
 	# signal.signal(signal.SIGTERM, handler_stop_signals)
 	
 	dispatcher = updater.dispatcher
@@ -390,8 +408,9 @@ if __name__ == '__main__':
 	path = os.path.join(path, "Novels")
 	
 	if "Windows" in platform():
-		REQUESTS_KWARGS = {'proxy_url':'HTTPS://127.0.0.1:10808/'}
-		BOT_TOKEN = TEST_TOKEN
+#		REQUESTS_KWARGS = {'proxy_url':'HTTPS://127.0.0.1:10808/'}
+		REQUESTS_KWARGS = {'proxy_url': proxy_windows[0]}
+		BOT_TOKEN = TEST_TOKEN  # 使用测试bot
 	
 	elif "Linux" in platform():
 		REQUESTS_KWARGS = {}

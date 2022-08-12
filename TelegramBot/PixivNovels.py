@@ -5,17 +5,14 @@ import re
 import sys
 import math
 import logging
-from platform import platform
 
 import numpy as np
-from pixivpy3 import AppPixivAPI
 
 from FileOperate import zipFile, saveText, formatFileName, monthNow, makeDirs
-# from Language import getLanguage
+from TextFormat import formatNovelName, formatCaption, formatText
 from TokenRoundRobin import TokenRoundRobin
 from Translate import getLanguage
-from config import REFRESH_TOKEN
-from config import TOKENS
+from config import Pixiv_Tokens
 
 if "小说推荐" in os.getcwd():
 	from FileOperate import saveDocx
@@ -30,8 +27,8 @@ logging.basicConfig(level=logging.INFO,
 
 sys.dont_write_bytecode = True
 _TEST_WRITE = False
+tokenPool = TokenRoundRobin(Pixiv_Tokens)
 
-tokenPool = TokenRoundRobin(TOKENS)
 
 def set2Text(s):
 	text = " ".join(s)
@@ -97,83 +94,6 @@ def getNovelInfo(novel_id):
 	return title, author, caption, view, bookmarks, comments, authorid
 
 
-def formatNovelName(novel_id):
-	name = getNovelInfo(novel_id)[0]
-	
-	if re.findall("[(（].*(委托|赠给).*[)）]", name): #梦川云岚OwO，优化
-		# 赏金猎人2——（果果委托)；克隆实验——（赠给艾兰）
-		pattern = "(.*)((?:—|-|_){2,} ?.*)"
-		if re.findall(pattern, name):
-			text = re.findall(pattern, name)
-			# print(text)
-			name = text[0][0].strip()
-	
-	elif re.findall("([给給]?.+?的?(?:委托|赠文|无偿))", name):
-		# pattern = "((?:给|給)?.+?的?(?:委托|赠文|无偿))(?::|：|;|；|,|，)?(.+?)((?:（| ).*）?)"
-		pattern = "((?:给|給)?.+?的?(?:委托|赠文|无偿))(?::|：|;|；|,|，)?(.+)"
-		text = re.findall(pattern, name)
-		if text != []:
-			# print(text)
-			a = text[0][0].strip()
-			b = text[0][1].strip()
-			b = re.sub("[(（]?[0-9]+([)）])?", "", b)
-			b = b.replace("摸鱼", "")
-			
-			if len(b) >= 1:
-				name = text[0][1].strip()
-				
-	# print(name)
-	return name
-
-
-def formatCaption(caption):
-	caption = caption.replace("<br />", "\n")
-	caption = caption.replace("<strong>", "")
-	caption = caption.replace("</strong>", "")
-	caption = caption.replace("&amp;", "&")
-	
-	# pattern = r'<a href="pixiv://(illusts|novels|users)/[0-9]{5,}">(illust|novel|user)/[0-9]{5,}</a>'
-	# 不清楚为什么用完整的表达式反而会匹配不了，不得已拆成了3份
-	# <a href="pixiv://illusts/12345">illust/12345</a>
-	pattern = '<a href="pixiv://illusts/[0-9]{5,}">illust/[0-9]{5,}</a>'
-	a = re.findall(pattern, caption)
-	for i in range(len(a)):
-		string = a[i]
-		# print(string)
-		id = re.search("[0-9]{5,}", string).group()
-		link = " https://www.pixiv.net/artworks/{} ".format(id)
-		caption = caption.replace(string, link)
-	
-	# <a href="pixiv://novels/12345">novel/12345</a>
-	pattern = '<a href="pixiv://novels/[0-9]{5,}">novel/[0-9]{5,}</a>'
-	a = re.findall(pattern, caption)
-	for i in range(len(a)):
-		string = a[i]
-		id = re.search("[0-9]{5,}", string).group()
-		link = " https://www.pixiv.net/novel/show.php?id={} ".format(id)
-		caption = caption.replace(string, link)
-	
-	# <a href="pixiv://users/12345">user/12345</a>
-	pattern = '<a href="pixiv://users/[0-9]{5,}">user/[0-9]{5,}</a>'
-	a = re.findall(pattern, caption)
-	for i in range(len(a)):
-		string = a[i]
-		id = re.search("[0-9]{5,}", string).group()
-		link = " https://www.pixiv.net/users/{} ".format(id)
-		caption = caption.replace(string, link)
-	
-	# 一般a标签
-	# <a href="https://deadmanshand.fanbox.cc/" target="_blank">https://deadmanshand.fanbox.cc/</a>
-	pattern = '''<a href="(https://.*)" target=(?:'|")_blank(?:'|").*>https://.*</a>'''
-	a = re.findall(pattern, caption)
-	for i in range(len(a)):
-		link = " {} ".format(a[i])
-		caption = re.sub(pattern, link, caption, 1)
-	
-	caption = caption.replace("\n\n", "\n")
-	return caption
-
-
 def formatNovelInfo(novel_id):
 	(title, author, caption) = getNovelInfo(novel_id)[0:3]
 	title = title + "\n"
@@ -193,88 +113,16 @@ def formatNovelInfo(novel_id):
 	return string
 
 
-def formatNovelText(text):
-	text = text.replace(" ", "")
-	text = text.replace("​", "")
-	text = text.replace("&quot;", ",")
-	text = text.replace("&#39;", "'")
-	text = re.sub("\.{3,}", "……", text)  # 省略号标准化
-	text = re.sub("。。。{3,}", "……", text)
-	text = re.sub("!{3,}", "!{3}", text)  #感叹号标准化
-	text = re.sub("！{3,}", "！{3}", text)
-	
-	text = re.sub("\n{2,}", "\n\n", text)
-	text = re.sub("\n {1,}", "\n　　", text)  # 半角空格换成全角空格
-	if "　　" not in text:  # 直接添加全角空格
-		text = text.replace("\n", "\n　　")
-	return text
-
-
-def formatPixivText(text):
-	# 处理Pixiv 标识符
-	
-	# [newpage]  [chapter: 本章标题]
-	text = text.replace("[newpage]", "\n\n")
-	a = re.findall("\[chapter:(.*)]", text)
-	for i in range(len(a)):
-		string = a[i]
-		if "第" in string and "章" in string:
-			string = string.replace("章", "节")
-		elif re.search("[0-9]+", string):
-			string = "第{}节".format(string)
-		elif re.search("[二三四五六七八九]?[十]?[一二三四五六七八九十]", string):
-			string = "第{}节".format(string)
-		else:
-			string = "第{}节 {}".format(i + 1, string)
-		text = re.sub("\[chapter:(.*)]", string, text, 1)
-	
-	
-	# [jump: 链接目标的页面编号]
-	a = re.findall("\[jump:(.*)]", text)
-	for i in range(len(a)):
-		string = a[i]
-		string = "跳转至第{}节".format(string)
-		text = re.sub("\[jump:(.*)]", string, text, 1)
-	
-	
-	# [pixivimage: 作品ID]
-	a = re.findall("\[pixivimage: (.*)]", text)
-	for i in range(len(a)):
-		string = a[i].strip(" ")
-		string = "插图：https://www.pixiv.net/artworks/{}".format(string)
-		text = re.sub("\[pixivimage:(.*)]", string, text, 1)
-	
-	
-	# [uploadedimage: 上传图片自动生成的ID]
-	# 会被 pixivpy 自动转换成一下这一大串
-	pattern = "\[\[jumpuri:If you would like to view illustrations, please use your desktop browser.>https://www.pixiv.net/n/[0-9]{5,}\]\]"
-	string = "【本文内有插图，请在Pixiv查看】"
-	text = re.sub(pattern, string, text)
-	
-	
-	# [[jumpuri: 标题 > 链接目标的URL]]
-	a = re.findall("\[{2}jumpuri: *(.*) *> *(.*)]{2}", text)
-	for i in range(len(a)):
-		name = a[i][0]
-		link = a[i][1]
-		if link in name:
-			text = re.sub("\[{2}jumpuri: *(.*) *> *(.*)]{2}", link, text, 1)
-		else:
-			string = "{}【{}】".format(name, link)
-			text = re.sub("\[{2}jumpuri: *(.*) *> *(.*)]{2}", string, text, 1)
-	
-	return text
-
-
 def getNovelText(novel_id):
 	text = "\n"
 	json_result = tokenPool.getAAPI().novel_text(novel_id)
-	text += json_result.novel_text
-	series_prev = json_result.series_prev
-	series_next = json_result.series_next
+	if json_result.novel_text:
+		text += json_result.novel_text
+	else:
+		text += "因作者设置（或达到请求次数），无法获取小说文本"
+		logging.error(text.strip())
 	
-	text = formatNovelText(text)
-	text = formatPixivText(text)
+	text = formatText(text)
 	# print (text)
 	return text
 
@@ -285,7 +133,7 @@ def saveNovel(novel_id, path):
 	text += getNovelText(novel_id)
 	# print(text)
 	
-	name = formatNovelName(novel_id)
+	name = formatNovelName(getNovelInfo(novel_id)[0])
 	name = formatFileName(name)
 	
 	if "小说推荐" in path:
@@ -302,7 +150,7 @@ def saveNovel(novel_id, path):
 
 
 # 【【【【系列小说】】】】
-def getNovelsListFormSeries(series_id):
+def getNovelsListFromSeries(series_id):
 	def addlist(json_result):
 		novels = json_result.novels
 		for i in range(len(novels)):
@@ -338,7 +186,7 @@ def getSeriesInfo(series_id):
 	# name = formatFileName(title) + ".jpg"
 	# tokenPool.getAAPI().download(url, path="Photos", name=name)
 	# iconpath = os.path.join(os.getcwd(), "Photos", name)
-	# print(title, author, count, caption, iconpath)
+	# print(title, authorname, count, caption, iconpath)
 	return title, author, caption, count
 
 
@@ -350,7 +198,7 @@ def formatSeriesInfo(series_id):
 		caption = "其他：{}\n".format(caption)  # 系列简介
 		caption = formatCaption(caption)
 	
-	list = getNovelsListFormSeries(series_id)
+	list = getNovelsListFromSeries(series_id)
 	novel_id = list[0]
 	url = "网址：https://www.pixiv.net/novel/show.php?id={}\n".format(novel_id)
 	
@@ -372,7 +220,7 @@ def formatSeriesInfo(series_id):
 
 def getSeriesText(series_id):
 	text = "\n"
-	list = getNovelsListFormSeries(series_id)
+	list = getNovelsListFromSeries(series_id)
 	for i in range(len(list)):
 		id = list[i]
 		title = formatNovelName(id) + "\n"
@@ -412,7 +260,7 @@ def saveSeriesAsZip(series_id, path):
 	path = os.path.join(path, dirname)
 	makeDirs(path)
 	
-	list = getNovelsListFormSeries(series_id)
+	list = getNovelsListFromSeries(series_id)
 	for i in range(len(list)):
 		id = list[i]
 		saveNovel(id, path)
@@ -448,7 +296,7 @@ def saveSeries(series_id, path):
 		return num
 	
 	def getnum(series_id):
-		list = getNovelsListFormSeries(series_id)
+		list = getNovelsListFromSeries(series_id)
 		count = len(list)
 		
 		seriesName = getSeriesInfo(series_id)[0]
@@ -513,6 +361,7 @@ def getAuthorInfo(user_id):
 		.format(name, id, novels, nseries, illusts+manga, iseries)
 	# print(string)
 	
+	makeDirs(os.path.join(".", "Photos"))
 	name = formatFileName(name) + ".jpg"
 	tokenPool.getAAPI().download(url, path="Photos", name=name)
 	iconpath = os.path.join(os.getcwd(), "Photos", name)
@@ -552,7 +401,7 @@ def getSeriesList(novellist):
 		if series_id is not None:
 			s.add(series_id)
 	serieslist = list(s)
-	# print(serieslist)
+	# print(len(serieslist), serieslist, sep="\n")
 	return serieslist
 
 
@@ -617,7 +466,7 @@ def novelAnalyse(novel_id):
 
 
 def seriesAnalyse(series_id):
-	novel_id = getNovelsListFormSeries(series_id)[0]
+	novel_id = getNovelsListFromSeries(series_id)[0]
 	recommend = novelAnalyse(novel_id)  # 系列取第一篇进行统计
 	return recommend
 
@@ -632,7 +481,7 @@ def analyse(id):
 		return recommend
 	
 	try:
-		novellist = getNovelsListFormSeries(id)
+		novellist = getNovelsListFromSeries(id)
 		id = novellist[0]
 		recommend = seriesAnalyse(id)
 	except TypeError:  # 非系列id报错
@@ -694,5 +543,5 @@ if __name__ == '__main__':
 		makeDirs(path)
 		path = os.path.join(os.getcwd(), "Novels")
 		makeDirs(path)
-		
 	main()
+	

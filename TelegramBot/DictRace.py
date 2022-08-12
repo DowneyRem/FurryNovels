@@ -76,9 +76,17 @@ def makeRaceDict():
 			racedict[i+j] = [race[i].capitalize(), "R18"]
 	for i in others:
 		racedict[i] = [others[i].capitalize()]
-		
-		
+	
+	racelist.extend(list(race.values()))
+	racelist.extend(list(others.values()))
+	
+	
 racedict = {}
+racelist = []
 makeRaceDict()
+
+
 if __name__ == '__main__':
 	print(racedict)
+	print(racelist)
+	pass

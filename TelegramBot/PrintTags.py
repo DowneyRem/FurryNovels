@@ -6,15 +6,20 @@ import logging
 from platform import platform
 from functools import cmp_to_key
 
+from opencc import OpenCC
+
 from DictNovel import noveldict, cmp  # 小说标签
 from DictText import textdict  # 正文关键词
 from DictRace import racedict  # 种族关键词
 from FileOperate import findFile, openText, openText4, openDocx, openDocx4, unzipFile, monthNow
 from PixivNovels import getSeriesId, formatSeriesInfo
-from config import cc1, cc2
 
 if "小说推荐" in os.getcwd():
 	from FileOperate import monthNow, openNowDir
+
+
+cc1 = OpenCC('tw2sp.json')  # 繁转简
+cc2 = OpenCC('s2twp.json')  # 簡轉繁
 
 
 def sortTags(set, cmp):  # 按dict内顺序对转换后的标签排序
@@ -187,11 +192,13 @@ def getPath(path):
 
 
 if __name__ == "__main__":
-	path = os.getcwd()
-	if "小说推荐" in path:
-		path = path.replace("\工具", "")
-	else:
-		path = os.path.join(path, "Novels")
-		
-	print("本月文档如下：\n")
-	getPath(path)
+	# path = os.getcwd()
+	# if "小说推荐" in path:
+	# 	path = path.replace("\工具", "")
+	# else:
+	# 	path = os.path.join(path, "Novels")
+	#
+	# print("本月文档如下：\n")
+	# getPath(path)
+	pass
+	print(list(racedict.values()))

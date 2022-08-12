@@ -448,8 +448,11 @@ def cmp(a, b):  # 按dict内部顺序进行排序
 	def getindex(a):
 		try:
 			li = list(noveldict.values())
-			index = li.index(a)
-		except:
+			try:
+				index = li.index(a)
+			except ValueError:
+				index = len(li)
+		except ValueError:
 			li = list(noveldict.keys())
 			li = [i.lower() for i in li]  #??
 			a = a.replace("#", "").lower()
