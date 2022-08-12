@@ -5,6 +5,15 @@ cc1 = OpenCC('tw2sp.json')  # 繁转简
 cc2 = OpenCC('s2twp.json')  # 簡轉繁
 
 
+# 代理设置
+# list 中应只保留一项，否则以第一项为准
+proxy_windows = [
+	'http://127.0.0.1:1080',
+	'http://127.0.0.1:7890',
+	'http://127.0.0.1:10808',
+	]
+	
+
 # Pixv配置
 # 你的 Pixiv REFRESH_TOKEN
 # 获取方式如下，请替换后再使用
