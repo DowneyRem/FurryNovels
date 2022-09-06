@@ -3,24 +3,22 @@
 import os
 import re
 import time
-import signal
 import logging
 from platform import platform
 
-from telegram.ext import messagequeue as mq
-from telegram import (ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardMarkup, InlineKeyboardButton, MessageEntity)
-from telegram.ext import (Updater, CommandHandler, MessageHandler, Filters, ConversationHandler, CallbackQueryHandler)
+from telegram import (InlineKeyboardMarkup, InlineKeyboardButton)
+from telegram.ext import (Updater, CommandHandler, MessageHandler, Filters, CallbackQueryHandler)
 # from telegram.utils.request import Request
 import telegram.error
 
 from PixivNovels import (saveNovel, saveSeriesAsTxt, saveSeriesAsZip, saveAuthor, getNovelInfo,  getSeriesInfo, getAuthorInfo, getSeriesId, getTags, set2Text, novelAnalyse, seriesAnalyse, formatNovelInfo, formatSeriesInfo)
 from PrintTags import printInfo, getInfo
-from FileOperate import removeFile, zipFile, unzipFile, timer
-from Convert import convert
+from FileOperate import removeFile, timer
+from ver2.Convert import convert
 from Recommend import do_recommend, url_init_recommend
 from Translate import translateFile
 from Webdav4 import uploadAll as uploadWebdav
-from DictRace import racedict
+from ver2.DictRace import racedict
 from config import *
 
 

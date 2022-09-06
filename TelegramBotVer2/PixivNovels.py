@@ -8,7 +8,7 @@ import logging
 
 import numpy as np
 
-from FileOperate import zipFile, saveText, formatFileName, monthNow, makeDirs
+from FileOperate import zipFile, saveText, formatFileName, makeDirs
 from TextFormat import formatNovelName, formatCaption, formatText
 from TokenRoundRobin import TokenRoundRobin
 from Translate import getLanguage

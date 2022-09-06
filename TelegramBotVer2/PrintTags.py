@@ -2,16 +2,15 @@
 # -*- coding: UTF-8 -*-
 import os
 import re
-import logging
 from platform import platform
 from functools import cmp_to_key
 
 from opencc import OpenCC
 
-from DictNovel import noveldict, cmp  # 小说标签
-from DictText import textdict  # 正文关键词
-from DictRace import racedict  # 种族关键词
-from FileOperate import findFile, openText, openText4, openDocx, openDocx4, unzipFile, monthNow
+from ver2.DictNovel import noveldict, cmp  # 小说标签
+from ver2.DictText import textdict  # 正文关键词
+from ver2.DictRace import racedict  # 种族关键词
+from FileOperate import findFile, openText, openText4, openDocx, openDocx4, unzipFile
 from PixivNovels import getSeriesId, formatSeriesInfo
 
 if "小说推荐" in os.getcwd():
