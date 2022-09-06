@@ -5,6 +5,9 @@
 # 关键词——标签可以一对多
 
 
+from FileOperate import timer
+
+
 text = {
 	"同志": "Gay",
 	"男同性恋": "Gay",
@@ -13,10 +16,6 @@ text = {
 	"女同性恋": "Lesbian",
 	"女同": "Lesbian",
 	"科幻": "ScienceFiction",
-	"奇幻": "Fantasy",
-	"魔幻": "Fantasy",
-	"喜剧": "Comedy",
-	"悲剧": "Tragedy",
 	
 	"阴道交": "VaginalSex",
 	"阴交": "VaginalSex",
@@ -99,9 +98,9 @@ text = {
 	"身体改造": "BodyModification",
 	"肉体改造": "BodyModification",
 	"变身": "Transformation",
-	"兽化": "Transfur",
+	"兽化": "Transfur furry",
 	"同化": "Transfur",
-	"龙化": "Transfur",
+	"龙化": "Transfur dragon",
 	"TF": "Transfur",
 	"附身": "Possession",
 	"寄生": "Parasite",
@@ -177,11 +176,16 @@ text = {
 # 雄性妊娠与雌性堕落区别？
 
 
-textdict={}
-for i in text:
-	l = text[i].split(" ")
-	textdict[i] = l
+@timer
+def makeTextDict():
+	global textdict
+	textdict={}
+	for i in text:
+		l = text[i].split(" ")
+		textdict[i] = l
 
 
+makeTextDict()
 if __name__ == '__main__':
-	print(textdict)
+	print(textdict, len(textdict), sep="\n")
+	

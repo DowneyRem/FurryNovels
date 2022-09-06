@@ -6,5 +6,5 @@ numpy
 pyzipper
 # use pyzipper to encrypt zip in AESZipFile
 webdav4
-pixivpy_async
+# pixivpy_async
 # aiohttp_socks

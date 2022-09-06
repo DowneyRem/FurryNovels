@@ -59,7 +59,7 @@ def getAuthorName(json):
 	#账户名，id，头像图片；支持小说，小说系列，插画，漫画
 	user = json.user
 	id = user.id
-	name = user.name
+	name = formatFileName(user.name)
 	account = user.account
 	return name, id
 
@@ -81,10 +81,8 @@ def getNovelInfo(novel_id):
 	# print(json_result)
 	novel = json_result.novel
 	title = novel.title
-	author = getAuthorName(novel)[0]
-	authorid = getAuthorName(novel)[1]
-	caption = novel.caption
-	caption = formatCaption(caption)
+	author, authorid = getAuthorName(novel)
+	caption = formatCaption(novel.caption)
 	view = novel.total_view
 	bookmarks = novel.total_bookmarks
 	comments = novel.total_comments
@@ -94,21 +92,22 @@ def getNovelInfo(novel_id):
 	return title, author, caption, view, bookmarks, comments, authorid
 
 
-def formatNovelInfo(novel_id):
+def formatNovelInfo(novel_id, mode=0):
 	(title, author, caption) = getNovelInfo(novel_id)[0:3]
-	title = title + "\n"
-	author = "作者：{}\n".format(author)
-	URL = "网址：https://www.pixiv.net/novel/show.php?id={}\n".format(novel_id)
-	
-	if caption != "":
-		caption = "其他：{}\n".format(caption)
+	URL = f"网址：https://www.pixiv.net/novel/show.php?id={novel_id}"
 	
 	s = set()
 	s = getTags(novel_id, s)
 	s.add(getLang(novel_id))
-	tags = "标签：{}\n".format(set2Text(s))
+	tags = f"标签：{set2Text(s)}"
 	
-	string = title + author + URL + tags + caption
+	if caption != "":
+		caption = f"其他：{caption}\n"
+	
+	if mode == 0:
+		string = f"{title}\n作者：{author}\n{URL}\n{tags}\n{caption}"
+	else:
+		string = f"{title}\n作者：{author}\n{tags}\n{caption}{URL}"
 	# print(string)
 	return string
 
@@ -177,9 +176,9 @@ def getSeriesInfo(series_id):
 	json_result = tokenPool.getAAPI().novel_series(series_id, last_order=None)
 	# print(json_result)
 	detail = json_result.novel_series_detail
-	title = detail.title  # 系列标题
+	title = formatFileName(detail.title)  # 系列标题
 	author = getAuthorName(detail)[0]
-	caption = detail.caption  # 系列简介
+	caption = formatCaption(detail.caption)  # 系列简介
 	count = detail.content_count  # 系列内小说数
 	url = json_result.novels[0].image_urls.medium
 	
@@ -196,7 +195,6 @@ def formatSeriesInfo(series_id):
 	
 	if caption != "":
 		caption = "其他：{}\n".format(caption)  # 系列简介
-		caption = formatCaption(caption)
 	
 	list = getNovelsListFromSeries(series_id)
 	novel_id = list[0]
@@ -343,10 +341,10 @@ def getAuthorInfo(user_id):
 	# print(json_result)
 	user = json_result.user
 	id = user.id
-	name = user.name
+	name = formatFileName(user.name)
 	account = user.account
 	url = user.profile_image_urls.medium
-	comment = user.comment
+	comment = formatCaption(user.comment)
 	
 	profile = json_result.profile
 	webpage = profile.webpage
@@ -534,14 +532,17 @@ def main():
 
 
 if __name__ == '__main__':
-	path = os.getcwd()
-	if "小说推荐" in path:
-		path = path.replace("\\工具", "")
-		path = os.path.join(path, "备用")
-	else:
-		path = os.path.join(os.getcwd(), "Photos")
-		makeDirs(path)
-		path = os.path.join(os.getcwd(), "Novels")
-		makeDirs(path)
-	main()
+	# path = os.getcwd()
+	# if "小说推荐" in path:
+	# 	path = path.replace("\\工具", "")
+	# 	path = os.path.join(path, "备用")
+	# else:
+	# 	path = os.path.join(os.getcwd(), "Photos")
+	# 	makeDirs(path)
+	# 	path = os.path.join(os.getcwd(), "Novels")
+	# 	makeDirs(path)
+	# main()
 	
+	
+	a = getNovelInfo(11775832)[2]
+	print(a)

@@ -4,17 +4,6 @@ import re
 from functools import wraps
 
 
-def checkNone0(fun):
-	@wraps(fun)
-	def wrapper(*args, **kwargs):
-		if args[0]:
-			r = fun(*args, **kwargs)
-		else:
-			r = ""
-		return r
-	return wrapper
-
-
 def checkNone(fun):
 	@wraps(fun)
 	def wrapper(*args, **kwargs):
@@ -68,6 +57,12 @@ def formatNovelName(name: str) -> str:
 
 @checkNone
 def formatCaption(caption: str) -> str:
+	caption = caption.replace("<br />", "\n").replace("<br>", "\n")
+	caption = caption.replace("<strong>", "").replace("</strong>", "")
+	caption = caption.replace("&amp;", "&")
+	caption = caption.replace("\n\n", "\n")
+	
+	
 	# pattern = r'<a href="pixiv://(illusts|novels|users)/[0-9]{5,}">(illust|novel|user)/[0-9]{5,}</a>'
 	# 不清楚为什么用完整的表达式反而会匹配不了，不得已拆成了3份
 	if "illust" in caption:
@@ -107,13 +102,8 @@ def formatCaption(caption: str) -> str:
 		pattern = '''<a href="(https://.*)" target=(?:'|")_blank(?:'|").*>https://.*</a>'''
 		a = re.findall(pattern, caption)
 		for i in range(len(a)):
-			link = " {} ".format(a[i])
+			link = " {}".format(a[i])
 			caption = re.sub(pattern, link, caption, 1)
-	
-	caption = caption.replace("<br />", "\n").replace("<br>", "\n")
-	caption = caption.replace("<strong>", "").replace("</strong>", "")
-	caption = caption.replace("&amp;", "&")
-	caption = caption.replace("\n\n", "\n")
 	return caption
 
 

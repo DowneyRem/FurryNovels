@@ -5,6 +5,7 @@ import os
 from FileOperate import saveText
 from DictText import textdict  # 正文关键词
 from DictRace import racedict  # 种族关键词
+from FileOperate import timer
 
 
 # 适用于标签的标签关键词
@@ -21,33 +22,51 @@ novel = {
 	"停笔": "Died",
 	"太监": "Died",
 	"died": "Died",
+	"翻译": "translated",
+	"translated": "translated",
 	"English": "en",
 	"en": "en",
 	"日本語": "ja",
 	"ja": "ja",
-	
 	"ko": "ko",
+	"中文": "zh",
+	"chinese": "zh",
+	"Chinese": "zh",
 	"简体中文": "zh_cn",
 	"简中": "zh_cn",
 	"zh_cn": "zh_cn",
+	# "中国语": "zh_cn",
+	# "中国语注意": "zh_cn",
 	"繁体中文": "zh_tw",
 	"正体中文": "zh_tw",
 	"繁中": "zh_tw",
+	# "中國語": "zh_tw",
+	# "中國語注意": "zh_tw",
 	"zh_tw": "zh_tw",
+	"zh": "zh",
 	"原创": "Original",
 	"original": "Original",
 	"同人": "Doujin",
 	"二次创作": "Doujin",
 	"二创": "Doujin",
 	"doujin": "Doujin",
-	"翻译": "translated",
-	"translated": "translated",
 	
 	"sfw": "SFW",
 	"R-18": "R18",
 	"R18": "R18",
 	"R-18G": "R18G",
 	"R18G": "R18G",
+	
+	"兽人": "Furry",
+	"獸人": "Furry",
+	"kemono": "Furry",
+	"獣人": "Furry",
+	"furry": "Furry",
+	"Furry": "Furry",
+	"ケモノ": "Furry",
+	"ケモ": "Furry",
+	"オスケモ": "Furry",
+	
 	"BL": "Gay",
 	"bl": "Gay",
 	"腐向け": "Gay",
@@ -146,14 +165,6 @@ novel = {
 	"turtle": "turtle",
 	"鲨狗": "sergal",
 	"sergal": "sergal",
-	
-	"兽人": "Furry",
-	"獸人": "Furry",
-	"kemono": "Furry",
-	"獣人": "Furry",
-	"furry": "Furry",
-	"Furry": "Furry",
-	"ケモノ": "Furry",
 	
 	"纯兽": "non-anthro",
 	"non-anthro": "non-anthro",
@@ -427,27 +438,32 @@ novel = {
 	"雄化": "DickGirl",
 	
 	"小说": "",
-	"中文": "",
-	"中国语": "",
-	"中国语注意": "",
-	"chinese": "",
-	"Chinese": "",
 	"":""
 	}
 
-noveldict = {}
-for i in novel:
-	l = novel[i].split(" ")
-	noveldict[i] = l
 
-noveldict.update(racedict)
-noveldict.update(textdict)
+
+@timer
+def makeNovelDict():
+	global noveldict
+	noveldict = {}
+	for i in novel:
+		l = novel[i].split(" ")
+		noveldict[i] = l
+	
+	noveldict.update(racedict)
+	noveldict.update(textdict)
 
 
 def cmp(a, b):  # 按dict内部顺序进行排序
 	def getindex(a):
 		try:
-			li = list(noveldict.values())
+			li = []
+			li0 = list(noveldict.values())
+			for item in li0:   # 从嵌套列表重获取排序
+				if item not in li:
+					li.extend(item)
+				
 			try:
 				index = li.index(a)
 			except ValueError:
@@ -484,6 +500,7 @@ def saveDict2Md(dict, name):
 	saveText(path, text)
 
 
+makeNovelDict()
 if __name__ == '__main__':
 	print(noveldict)
 	pass
