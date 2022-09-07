@@ -1,0 +1,10 @@
+.idea
+__pycache__
+.pytest_cache
+/Novels
+/Photos
+/test
+/ceui
+/ceshi
+*.zip
+

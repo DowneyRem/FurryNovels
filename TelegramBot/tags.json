@@ -13,7 +13,7 @@
     "en": "en",
     "en2": "English"
   },
-	"zh": {
+  "zh": {
     "en": "zh",
     "en2": "Chinese",
     "zh": "中文"
@@ -51,46 +51,45 @@
   "SFW": {
     "en": "SFW"
   },
-	"R18": {
-		"en": "R18",
-		"en2": "R-18",
-		"en3": "NSFW"
-		},
-	"R18G":{
-		"en": "R18G",
-		"en2": "R18-G",
-		"en3": "R-18G"
-		},
-	"Furry": {
-		"en": "furry",
-		"zh_cn": "兽人",
-		"zh_tw": "獸人",
-		"ja_han": "獣人",
-		"ja_hira": "じゅうじん",
-		"ja_roma": "kemono",
-		"ja_hiragana": "けもの",
-		"ja_katakana": "ケモノ",
-		"ja1": "オスケモ",
-		"ja2": "メスケモ"
-		},
-
-	"Chibi Furry": {
-		"ja1": "ケモロリ",
-		"ja2": "ケモショタ",
-		"ja3": "チビケモ",
-		"zh": "兽人正太",
-		"zh2": "兽太"
-		},
+  "R18": {
+    "en": "R18",
+    "en2": "R-18",
+    "en3": "NSFW"
+  },
+  "R18G": {
+    "en": "R18G",
+    "en2": "R18-G",
+    "en3": "R-18G"
+  },
+  "Furry": {
+    "en": "furry",
+    "zh_cn": "兽人",
+    "zh_tw": "獸人",
+    "ja_han": "獣人",
+    "ja_hira": "じゅうじん",
+    "ja_roma": "kemono",
+    "ja_hiragana": "けもの",
+    "ja_katakana": "ケモノ",
+    "ja1": "オスケモ",
+    "ja2": "メスケモ"
+  },
+  "Chibi Furry": {
+    "ja1": "ケモロリ",
+    "ja2": "ケモショタ",
+    "ja3": "チビケモ",
+    "zh": "兽人正太",
+    "zh2": "兽太"
+  },
   "Gay": {
     "en": "Gay",
     "zh": "BL"
   },
-	"Gay furry": {
-		"en": "Gay Furry",
-		"ja1": "ケモホモ",
-		"ja2": "ホモケモ",
-		"zh": "兽人同性"
-		},
+  "Gay furry": {
+    "en": "Gay Furry",
+    "ja1": "ケモホモ",
+    "ja2": "ホモケモ",
+    "zh": "兽人同性"
+  },
   "Lesbian": {
     "en": "Lesbian",
     "zh": "GL"
@@ -339,7 +338,7 @@
   },
   "Group": {
     "en": "Group",
-		"en1": "3p",
+    "en1": "3p",
     "en2": "np",
     "zh": "群交",
     "zh2": "群p",
@@ -426,7 +425,7 @@
     "en2": "GainingWeight",
     "zh": "育肥",
     "zh1": "肥满化",
-	"ja-kanji": "肥満化"
+    "ja-kanji": "肥満化"
   },
   "BattleDamage": {
     "en": "BattleDamage",
@@ -546,11 +545,11 @@
     "zh": "雄妊娠",
     "zh2": "雄性妊娠"
   },
-	"GutTorture": {
+  "GutTorture": {
     "en": "GutTorture",
     "zh": "虐腹"
   },
-	"R18G CBT": {
+  "R18G CBT": {
     "en": "CBT",
     "zh": "虐屌"
   },

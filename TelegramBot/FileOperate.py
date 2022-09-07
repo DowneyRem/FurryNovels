@@ -169,48 +169,66 @@ def openText(path) -> str:
 @openFileCheck
 def openDocx(path) -> str:
 	text = ""
-	for para in Document(path).paragraphs:
-		# print(para.paragraph_format.first_line_indent.pt)
-		if para.style.name == "Normal Indent":  # 正文缩进
-			text += f"　　{para.text}\n"
-		elif para.paragraph_format.first_line_indent.pt >= 15:
-			text += f"　　{para.text}\n"
-		else:
-			text += f"{para.text}\n"
+	try:
+		docx = Document(path)
+	except IOError as e:
+		logging.error(e)
+	else:
+		for para in docx.paragraphs:
+			# print(para.paragraph_format.first_line_indent.pt)
+			if para.style.name == "Normal Indent":  # 正文缩进
+				text += f"　　{para.text}\n"
+			elif para.paragraph_format.first_line_indent.pt >= 15:
+				text += f"　　{para.text}\n"
+			else:
+				text += f"{para.text}\n"
 	return text
 
 
 @openFileCheck
 def openDoc(path) -> str:
+	text = ""
 	word = DispatchEx('Word.Application')  # 独立进程
 	word.Visible = 0  # 0为后台运行
 	word.DisplayAlerts = 0  # 不显示，不警告
-	docx = word.Documents.Open(path)
-	text = docx.Content.Text.replace("\r\r", "\n")
 	
-	if docx.Paragraphs.CharacterUnitFirstLineIndent == 2:  # 首行缩进转空格
-		texts = ["", ] + text.split()
-		text = "\n　　".join(texts).strip("\n")
-	
-	# print(len(text), text, sep="\n")
-	docx.Close(True)
-	word.Quit()
-	return text
+	try:
+		docx = word.Documents.Open(path)
+	except IOError as e:
+		logging.error(e)
+	else:
+		text = docx.Content.Text.replace("\r\r", "\n")
+		if docx.Paragraphs.CharacterUnitFirstLineIndent == 2:  # 首行缩进转空格
+			texts = ["", ] + text.split()
+			text = "\n　　".join(texts).strip("\n")
+		# print(len(text), text, sep="\n")
+		docx.Close(True)
+	finally:
+		word.Quit()
+		return text
 
 
 @openFileCheck
 def openJson(path) -> any:
-	with open(path, "rb") as f:
-		return json.load(f)
-
+	try:
+		with open(path, "rb") as f:
+			data = json.load(f)
+	except IOError as e:
+		logging.error(e)
+	else:
+		return data
+	
 
 @openFileCheck
 def openExcel(path):  # 打开软件手动操作
 	excel = DispatchEx('Excel.Application')  # 独立进程
 	excel.Visible = 1  # 0为后台运行
 	excel.DisplayAlerts = 0  # 不显示，不警告
-	excel.Workbooks.Open(path)  # 打开文档
-	print("打开Excel……")
+	try:
+		excel.Workbooks.Open(path)  # 打开文档
+		print("打开Excel……")
+	except IOError as e:
+		logging.error(e)
 
 
 @saveFileCheck
@@ -219,30 +237,32 @@ def saveDocx(path, text):
 	word.Visible = 0  # 0为后台运行
 	word.DisplayAlerts = 0  # 不显示，不警告
 	template = "D:\\Users\\Administrator\\Documents\\自定义 Office 模板\\小说.dotm"
-	docx = word.Documents.Add(template)  # 创建新的word文档
-	
-	s = word.Selection
-	s.FormatText = text  # 写入文本
-	docx.Application.Run("小说排版")  # 运行宏
-	
-	docx.SaveAs2(path, 16)  # 保存文档并退出word
-	name = os.path.basename(path)
-	print(f"已保存：【{name}】")
-	docx.Close(True)
-	word.Quit()
+	try:
+		docx = word.Documents.Add(template)  # 创建新的word文档
+	except IOError as e:
+		logging.error(e)
+	else:
+		s = word.Selection
+		s.FormatText = text  # 写入文本
+		docx.Application.Run("小说排版")  # 运行宏
+		docx.SaveAs2(path, 16)  # 保存文档，退出word
+		logging.info(f"已保存为：{path}")
+		docx.Close(True)
+	finally:
+		word.Quit()
 
 
 @saveFileCheck
 def saveText(path, text):
-	name = os.path.basename(path)
 	if not path.endswith(".txt"):
 		path += ".txt"
 	try:
 		with open(path, "w", encoding="UTF8") as f:
 			f.write(text)
-		# print(f"已保存：【{name}】")
 	except IOError:
-		print(f"保存失败：【{name}】")
+		logging.error(f"保存失败：{path}")
+	else:
+		logging.debug(f"已保存为：{path}")
 
 
 def saveTxt(path, text):
@@ -257,28 +277,39 @@ def saveTextDesktop(name, text):
 
 @saveFileCheck
 def saveCsv(path, text):
-	name = os.path.basename(path)
+	if not path.endswith(".csv"):
+		path += ".csv"
 	try:
 		with open(path, "w", encoding="UTF-8-sig") as f:
 			f.write(text)
-		# print(f"已保存为：【{name}】")
 	except IOError:
-		print(f"保存失败：【{name}】")
-
+		logging.error(f"保存失败：{path}")
+	else:
+		logging.info(f"已保存为：{path}")
+		
 
 @saveFileCheck
 def saveJson(path, data):
 	if not path.endswith(".json"):
 		path = f"{path}.json"
-	with open(path, 'w', encoding="UTF8") as f:
-		json.dump(data, f)
-		
+	try:
+		with open(path, 'w', encoding="UTF8") as f:
+			json.dump(data, f)
+	except IOError:
+		logging.error(f"保存失败：{path}")
+	else:
+		logging.info(f"已保存为：{path}")
+	
 	
 @timer
 def zipFile(path, password="", delete=0, dir="") -> str:
-	# 使用 pyzipper ，可用aes256加密，压缩传入的文件或文件夹
-	# parm delete 不为0时，压缩后删除源文件
-	# dir 检测 dir 是否在 path 内；修复 PixivSeries 的 TranslateAsZip 压入未翻译文件
+	"""使用 pyzipper ，可用aes256加密，压缩传入的文件或文件夹
+	Args:
+		path: path 待压缩的文件/文件夹路径
+		password: password 密码
+		delete: 不为0时，压缩后删除源文件
+		dir: 检测 dir 是否在 path 内，以修复 PixivSeries 的 TranslateAsZip 压入未翻译文件的bug
+	"""
 	
 	def zipSingleFile(path, zippath, password):
 		if password:
@@ -336,12 +367,16 @@ def zipFile(path, password="", delete=0, dir="") -> str:
 
 # @timethis
 def unzipFile(path, password="", mode=0, delete=0) -> str:
-	# 使用 pyzipper 可解压加密的zip文件（ase256 与 ZipCrypto）,前者会快得多
-	# 智能解压：path传入zip路径解压zip，传入文件夹则解压其路径下的zip
-	# 智能解压：zip内无文件夹则会新建以zip文件名为名的文件夹，zip只有单文件不新建文件夹
-	# mode=1 ，解压zip内部的zip文件
-	# delete=1 ，解压后删除zip源文件；同时mode=1，解压后会删除所有zip
-	# 软件压缩设置：勾选zip使用Unicode文件名，避免解压后文件名乱码
+	"""使用 pyzipper 可解压加密的zip文件（ase256 与 ZipCrypto）,前者会快得多
+	智能解压：path传入zip路径解压zip，传入文件夹则解压其路径下的zip
+	智能解压：zip内无文件夹，则会新建以zip文件名为名的文件夹，zip只有单文件不新建文件夹
+	常规软件压缩设置：勾选zip使用Unicode文件名，避免解压后文件名乱码
+	Args:
+		path: path 待解压的zip文件/含有zip文件的文件夹路径
+		password: password 密码
+		mode: mode=1 解压zip内部的zip文件
+		delete: delete=1 解压后删除zip源文件；同时 mode=1 解压后会删除所有zip
+	"""
 	
 	if os.path.isdir(path):
 		ziplist = findFile(path, ".zip")

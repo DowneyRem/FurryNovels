@@ -223,6 +223,7 @@ def main():
 	
 	
 if True:  # 初始化
+	# remakeJsons()
 	makeRaceDict()
 	main()
 
