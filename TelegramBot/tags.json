@@ -1,0 +1,570 @@
+{
+  "txt": {
+    "en": "txt"
+  },
+  "docx": {
+    "en": "docx"
+  },
+  "translated": {
+    "en": "translated",
+    "zh": "翻译"
+  },
+  "en": {
+    "en": "en",
+    "en2": "English"
+  },
+	"zh": {
+    "en": "zh",
+    "en2": "Chinese",
+    "zh": "中文"
+  },
+  "zh_cn": {
+    "en": "zh_cn",
+    "zh": "简体中文",
+    "zh1": "简中"
+  },
+  "zh_tw": {
+    "en": "zh_tw",
+    "zh": "正體中文",
+    "zh2": "繁中"
+  },
+  "ja": {
+    "en": "ja",
+    "en2": "Japanese",
+    "ja": "日本語",
+    "zh1": "日语",
+    "zh2": "日語"
+  },
+  "ko": {
+    "en": "ko",
+    "en2": "Korean"
+  },
+  "Original": {
+    "en": "Original",
+    "zh": "原创"
+  },
+  "Doujin": {
+    "en": "Doujin",
+    "zh": "同人",
+    "zh1": "二次创作"
+  },
+  "SFW": {
+    "en": "SFW"
+  },
+	"R18": {
+		"en": "R18",
+		"en2": "R-18",
+		"en3": "NSFW"
+		},
+	"R18G":{
+		"en": "R18G",
+		"en2": "R18-G",
+		"en3": "R-18G"
+		},
+	"Furry": {
+		"en": "furry",
+		"zh_cn": "兽人",
+		"zh_tw": "獸人",
+		"ja_han": "獣人",
+		"ja_hira": "じゅうじん",
+		"ja_roma": "kemono",
+		"ja_hiragana": "けもの",
+		"ja_katakana": "ケモノ",
+		"ja1": "オスケモ",
+		"ja2": "メスケモ"
+		},
+
+	"Chibi Furry": {
+		"ja1": "ケモロリ",
+		"ja2": "ケモショタ",
+		"ja3": "チビケモ",
+		"zh": "兽人正太",
+		"zh2": "兽太"
+		},
+  "Gay": {
+    "en": "Gay",
+    "zh": "BL"
+  },
+	"Gay furry": {
+		"en": "Gay Furry",
+		"ja1": "ケモホモ",
+		"ja2": "ホモケモ",
+		"zh": "兽人同性"
+		},
+  "Lesbian": {
+    "en": "Lesbian",
+    "zh": "GL"
+  },
+  "General": {
+    "en": "General",
+    "zh": "BG"
+  },
+  "Romance": {
+    "en": "Romance"
+  },
+  "bear": {
+    "en": "bear",
+    "zh": "熊"
+  },
+  "panda": {
+    "en": "panda",
+    "zh": "熊猫"
+  },
+  "horse": {
+    "en": "horse",
+    "zh": "马"
+  },
+  "bull": {
+    "en": "bull",
+    "zh": "牛"
+  },
+  "sheep": {
+    "en": "sheep",
+    "zh": "羊"
+  },
+  "cat": {
+    "en": "cat",
+    "zh": "猫"
+  },
+  "lion": {
+    "en": "lion",
+    "zh": "狮",
+    "zh1": "狮子"
+  },
+  "tiger": {
+    "en": "tiger",
+    "zh": "虎",
+    "zh1": "老虎"
+  },
+  "dragon": {
+    "en": "dragon",
+    "zh1": "龙",
+    "zh2": "竜"
+  },
+  "long": {
+    "en": "long"
+  },
+  "Lizard": {
+    "en": "Lizard",
+    "zh": "蜥蜴"
+  },
+  "dog": {
+    "en": "dog",
+    "zh": "狗"
+  },
+  "wolf": {
+    "en": "wolf",
+    "zh": "狼"
+  },
+  "fox": {
+    "en": "fox",
+    "zh": "狐狸",
+    "zh2": "狐"
+  },
+  "shark": {
+    "en": "shark",
+    "zh": "鲨鱼"
+  },
+  "dolphin": {
+    "en": "dolphin",
+    "zh": "海豚"
+  },
+  "elephant": {
+    "en": "elephant",
+    "zh": "大象",
+    "zh1": "elephant"
+  },
+  "kangaroo": {
+    "en": "kangaroo",
+    "zh": "袋鼠"
+  },
+  "monkey": {
+    "en": "monkey",
+    "zh": "猴子"
+  },
+  "mouse": {
+    "en": "mouse",
+    "zh": "鼠",
+    "zh1": "老鼠"
+  },
+  "panther": {
+    "en": "panther",
+    "zh": "豹"
+  },
+  "pig": {
+    "en": "pig",
+    "zh": "猪"
+  },
+  "rabbit": {
+    "en": "rabbit",
+    "zh": "兔",
+    "zh1": "兔子"
+  },
+  "rhinoceros": {
+    "en": "rhinoceros",
+    "zh": "犀牛"
+  },
+  "snake": {
+    "en": "snake",
+    "zh": "蛇"
+  },
+  "turtle": {
+    "en": "turtle",
+    "zh": "龟"
+  },
+  "sergal": {
+    "en": "sergal",
+    "zh": "鲨狗",
+    "zh2": "鯊格魯"
+  },
+  "non-anthro": {
+    "en": "non-anthro",
+    "zh": "纯兽"
+  },
+  "Human": {
+    "en": "Human",
+    "zh": "人类"
+  },
+  "Harpy": {
+    "en": "Harpy",
+    "zh": "鸟人"
+  },
+  "Robot": {
+    "en": "Robot",
+    "zh": "机器人"
+  },
+  "Slime": {
+    "en": "Slime",
+    "zh": "史莱姆"
+  },
+  "Tentacles": {
+    "en": "Tentacles",
+    "zh": "触手"
+  },
+  "Vampire": {
+    "en": "Vampire",
+    "zh": "吸血鬼"
+  },
+  "Hero": {
+    "en": "Hero",
+    "zh": "英雄"
+  },
+  "Police": {
+    "en": "Police",
+    "zh": "警察",
+    "zh1": "特警"
+  },
+  "DevilKing": {
+    "en": "DevilKing",
+    "zh": "魔王"
+  },
+  "Brave": {
+    "en": "Brave",
+    "zh": "勇者"
+  },
+  "Succubus": {
+    "en": "Succubus",
+    "zh": "魅魔"
+  },
+  "VaginalSex": {
+    "en": "VaginalSex",
+    "zh": "阴交",
+    "zh2": "阴道"
+  },
+  "Anal": {
+    "en": "Anal",
+    "zh": "肛交",
+    "zh1": "后入"
+  },
+  "69BlowJob": {
+    "en": "69",
+    "en2": "69 BlowJob",
+    "zh": "六九",
+    "zh2": "互口"
+  },
+  "BlowJob": {
+    "en": "BlowJob",
+    "zh": "口交"
+  },
+  "Cloaca": {
+    "en": "Cloaca",
+    "zh1": "生殖缝",
+    "zh2": "生殖腔",
+    "zh3": "生殖裂"
+  },
+  "TailJob": {
+    "en": "TailJob",
+    "zh": "尾交"
+  },
+  "Masturbation": {
+    "en": "Masturbation",
+    "zh": "自慰"
+  },
+  "Fisting": {
+    "en": "Fisting",
+    "zh": "拳交"
+  },
+  "FootJob": {
+    "en": "FootJob",
+    "zh": "足交"
+  },
+  "Paw": {
+    "en": "Paw",
+    "zh": "爪子",
+    "zh2": "手爪",
+    "zh3": "脚爪"
+  },
+  "SockJob": {
+    "en": "SockJob",
+    "zh": "袜交",
+    "zh2": "白袜"
+  },
+  "UrethraInsertion": {
+    "en": "UrethraInsertion",
+    "zh": "尿道插入"
+  },
+  "tickling": {
+    "en": "tickling",
+    "zh": "搔痒",
+    "zh1": "挠痒"
+  },
+  "Rape": {
+    "en": "Rape",
+    "zh": "强奸",
+    "zh2": "强上"
+  },
+  "Incest": {
+    "en": "Incest",
+    "zh": "乱伦"
+  },
+  "Group": {
+    "en": "Group",
+		"en1": "3p",
+    "en2": "np",
+    "zh": "群交",
+    "zh2": "群p",
+    "zh3": "轮奸"
+  },
+  "Cuckold": {
+    "en": "Cuckold",
+    "zh": "绿帽",
+    "ja": "netorare",
+    "ja2": "ntr"
+  },
+  "Oyakodon": {
+    "en": "Oyakodon",
+    "ja": "父子丼"
+  },
+  "brother": {
+    "en": "brother",
+    "ja": "兄弟丼"
+  },
+  "BDSM": {
+    "en": "BDSM",
+    "en2": "SM",
+    "zh": "调教"
+  },
+  "Bondage": {
+    "en": "Bondage",
+    "zh": "捆绑",
+    "zh1": "束缚",
+    "zh2": "绑缚"
+  },
+  "ElectricShocks": {
+    "en": "ElectricShocks",
+    "zh": "电击"
+  },
+  "MindControl": {
+    "en": "MindControl",
+    "en2": "BrainWash",
+    "en3": "BrainWashing",
+    "zh": "精神控制",
+    "zh1": "精控",
+    "zh2": "洗脑"
+  },
+  "Asphyxiation": {
+    "en": "Asphyxiation",
+    "zh": "窒息",
+    "zh2": "呼吸控制",
+    "zh3": "控制呼吸"
+  },
+  "OrgasmDenial": {
+    "en": "OrgasmDenial",
+    "zh": "控制射精",
+    "zh2": "射精控制"
+  },
+  "Slave": {
+    "en": "Slave",
+    "zh": "主奴",
+    "zh1": "性奴",
+    "zh3": "奴隶"
+  },
+  "CrotchTattoo": {
+    "en": "CrotchTattoo",
+    "zh": "淫纹"
+  },
+  "PublicUse": {
+    "en": "PublicUse",
+    "en2": "Public",
+    "zh": "RBQ",
+    "zh2": "肉便器"
+  },
+  "PissDrinking": {
+    "en": "PissDrinking",
+    "zh1": "圣水"
+  },
+  "Coprophagia": {
+    "en": "Coprophagia",
+    "zh1": "黄金"
+  },
+  "Forniphilia": {
+    "en": "Forniphilia",
+    "zh": "物化"
+  },
+  "WeightGain": {
+    "en": "WeightGain",
+    "en2": "GainingWeight",
+    "zh": "育肥",
+    "zh1": "肥满化",
+	"ja-kanji": "肥満化"
+  },
+  "BattleDamage": {
+    "en": "BattleDamage",
+    "zh": "战损",
+    "zh2": "战败",
+    "ja": "欠損"
+  },
+  "BodyModification": {
+    "en": "BodyModification",
+    "zh": "身体改造"
+  },
+  "Transfur Furry": {
+    "en": "Transfur",
+    "zh": "兽化"
+  },
+  "Transfur Dragon": {
+    "zh": "龙化"
+  },
+  "Petrification": {
+    "en": "Petrification",
+    "zh": "石化"
+  },
+  "corruption": {
+    "en": "corruption",
+    "zh": "堕落",
+    "zh1": "恶堕"
+  },
+  "Hypnosis": {
+    "en": "Hypnosis",
+    "zh": "催眠"
+  },
+  "Smell": {
+    "en": "Smell"
+  },
+  "Drugs": {
+    "en": "Drugs"
+  },
+  "BodySwap": {
+    "en": "BodySwap",
+    "zh": "灵魂交换",
+    "zh1": "身体交换"
+  },
+  "Machine": {
+    "en": "Machine",
+    "zh": "机械奸"
+  },
+  "Drone": {
+    "en": "Drone"
+  },
+  "Diaper": {
+    "en": "Diaper",
+    "zh": "尿布"
+  },
+  "Latex": {
+    "en": "Latex",
+    "zh": "乳胶衣",
+    "zh1": "胶衣"
+  },
+  "Rubber": {
+    "en": "Rubber",
+    "zh": "胶液",
+    "zh1": "胶"
+  },
+  "Armor": {
+    "en": "Armor",
+    "zh": "盔甲",
+    "zh2": "铠甲"
+  },
+  "PowerArmor": {
+    "en": "PowerArmor",
+    "zh": "动力装甲"
+  },
+  "Socks": {
+    "en": "Socks",
+    "zh": "袜子",
+    "zh2": "白袜"
+  },
+  "Muscles": {
+    "en": "Muscles",
+    "zh": "肌肉",
+    "zh1": "筋肉"
+  },
+  "Hyper": {
+    "en": "Hyper",
+    "zh": "巨根"
+  },
+  "Macro": {
+    "en": "Macro",
+    "zh": "巨大化"
+  },
+  "SizeDifferent": {
+    "en": "SizeDifferent",
+    "zh": "体型差",
+    "zh1": "体格差"
+  },
+  "Vore": {
+    "en": "Vore",
+    "zh1": "吞食",
+    "zh3": "丸吞"
+  },
+  "CockVore": {
+    "en": "CockVore"
+  },
+  "AnalVore": {
+    "en": "AnalVore"
+  },
+  "TailVore": {
+    "en": "TailVore"
+  },
+  "Eggs": {
+    "en": "Eggs",
+    "zh": "产卵",
+    "zh2": "下蛋"
+  },
+  "MaleBirth": {
+    "en": "MaleBirth",
+    "zh": "雄妊娠",
+    "zh2": "雄性妊娠"
+  },
+	"GutTorture": {
+    "en": "GutTorture",
+    "zh": "虐腹"
+  },
+	"R18G CBT": {
+    "en": "CBT",
+    "zh": "虐屌"
+  },
+  "R18G Blood": {
+    "en": "Blood",
+    "en2": "Bloody",
+    "zh1": "流血"
+  },
+  "R18G Mutilation": {
+    "en": "Mutilation",
+    "zh": "断肢"
+  },
+  "R18G Castrated": {
+    "en": "Castrated",
+    "zh": "阉割"
+  }
+}

@@ -1,0 +1,14 @@
+python-telegram-bot  >= 13.4
+pixivpy
+pygtrans >= 1.4.0
+opencc
+numpy
+pyzipper  # use pyzipper to encrypt zip in AESZipFile
+webdav4
+# pixivpy_async
+# aiohttp_socks
+
+# dispensable packages
+# python-docx
+# docx-hitalent  # use docx-hitalent instead of python-docx on python 310
+# pywin32
