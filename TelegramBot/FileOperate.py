@@ -7,15 +7,21 @@ import time
 import shutil
 import logging
 import webbrowser
-# import zipfile as zf
-import pyzipper as zf
 from functools import wraps
 from platform import platform
 
+# import zipfile as zf
+import pyzipper as zf
+from docx import Document  # 使用 docx-hitalent
+# from docx.shared import Pt
+
 if "Windows" in platform():
 	import winreg
-	from docx import Document  # 使用 docx-hitalent
 	from win32com.client import Dispatch, DispatchEx
+	
+	
+template_dotm = r"D:\Users\Administrator\Documents\自定义 Office 模板\小说.dotm"
+template_dotx = r"D:\Users\Administrator\Documents\自定义 Office 模板\模板.docx"
 
 
 def timer(function):
@@ -86,11 +92,6 @@ def findFile(path, *extnames) -> list:
 	return pathlist
 	
 	
-def newFilePathInCurrentDir(name) -> str:
-	name = formatFileName(name)
-	return os.path.join(os.getcwd(), name)
-	
-	
 def desktop() -> str:
 	if "Windows" in platform():  # 其他平台没用过
 		key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, r'Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders')
@@ -153,7 +154,7 @@ def openText(path) -> str:
 			text = f.read()
 	except UnicodeError:
 		try:
-			with open(path, "r", encoding="GBK") as f:
+			with open(path, "r", encoding="GB18030") as f:
 				text = f.read()
 		except UnicodeError:  # Big5 似乎有奇怪的bug，不过目前似乎遇不到
 			try:
@@ -175,10 +176,11 @@ def openDocx(path) -> str:
 		logging.error(e)
 	else:
 		for para in docx.paragraphs:
+			# print(para.paragraph_format)
 			# print(para.paragraph_format.first_line_indent.pt)
 			if para.style.name == "Normal Indent":  # 正文缩进
 				text += f"　　{para.text}\n"
-			elif para.paragraph_format.first_line_indent.pt >= 15:
+			elif para.paragraph_format.first_line_indent and para.paragraph_format.first_line_indent.pt >= 15:
 				text += f"　　{para.text}\n"
 			else:
 				text += f"{para.text}\n"
@@ -232,24 +234,14 @@ def openExcel(path):  # 打开软件手动操作
 
 
 @saveFileCheck
-def saveDocx(path, text):
-	word = DispatchEx('Word.Application')  # 独立进程
-	word.Visible = 0  # 0为后台运行
-	word.DisplayAlerts = 0  # 不显示，不警告
-	template = "D:\\Users\\Administrator\\Documents\\自定义 Office 模板\\小说.dotm"
+def saveFile(path):
 	try:
-		docx = word.Documents.Add(template)  # 创建新的word文档
-	except IOError as e:
-		logging.error(e)
+		with open(path, "w", encoding="UTF8") as f:
+			f.write("")
+	except IOError:
+		logging.error(f"保存失败：{path}")
 	else:
-		s = word.Selection
-		s.FormatText = text  # 写入文本
-		docx.Application.Run("小说排版")  # 运行宏
-		docx.SaveAs2(path, 16)  # 保存文档，退出word
-		logging.info(f"已保存为：{path}")
-		docx.Close(True)
-	finally:
-		word.Quit()
+		logging.debug(f"已保存为：{path}")
 
 
 @saveFileCheck
@@ -294,13 +286,72 @@ def saveJson(path, data):
 		path = f"{path}.json"
 	try:
 		with open(path, 'w', encoding="UTF8") as f:
-			json.dump(data, f)
+			json.dump(data, f, ensure_ascii=False, indent=4)
 	except IOError:
 		logging.error(f"保存失败：{path}")
+	# else:
+	# 	logging.info(f"已保存为：{path}")
+
+
+@saveFileCheck
+def saveDocx(path, text, *, original=""):
+	if original:
+		docx = Document(original)
+		for para in docx.paragraphs:
+			para.clear()
+			para._element.getparent().remove(para._element)
 	else:
+		docx = Document(template_dotx)
+	
+	text = text.split("\n")
+	for para in text:
+		docx.add_paragraph(para)
+		
+	try:
+		docx.save(path)
+	except IOError as e:
+		logging.error(e)
+	# else:
+	# 	logging.debug(f"已保存为：{path}")
+
+
+@saveFileCheck
+def saveDoc(path, text):
+	extdict = {
+		".docx": 16,
+		# ".docm": "",  # 启用宏的文档
+		".dotx": 1,  # Word 模板
+		# ".dotm": "",  # 启用宏的模板
+		".doc": 0,  # 97-03 .doc
+		".pdf": 17,
+		".xps": 18,
+		".txt": 7,  # Unicode text
+		".odt": 23, # OpenDocument Text format
+	}
+	
+	word = DispatchEx('Word.Application')  # 独立进程
+	word.Visible = 0  # 0为后台运行
+	word.DisplayAlerts = 0  # 不显示，不警告
+	try:
+		docx = word.Documents.Add(template_dotm)  # 创建新的word文档
+	except IOError as e:
+		logging.error(e)
+	else:
+		s = word.Selection
+		s.FormatText = text  # 写入文本
+		docx.Application.Run("小说排版")  # 运行宏
+		extname = os.path.splitext(path)[1]
+		if extname == ".txt":
+			docx.SaveAs2(path, 7, Encoding=65001, AddToRecentFiles=False, AllowSubstitutions=False,
+			             LineEnding=0)  # txt UTF8 CRLF
+		else:
+			docx.SaveAs2(path, extdict.get(extname, 16))
 		logging.info(f"已保存为：{path}")
-	
-	
+		docx.Close(True)
+	finally:
+		word.Quit()
+
+
 @timer
 def zipFile(path, password="", delete=0, dir="") -> str:
 	"""使用 pyzipper ，可用aes256加密，压缩传入的文件或文件夹
@@ -426,6 +477,8 @@ def unzipFile(path, password="", mode=0, delete=0) -> str:
 	
 def test():
 	print("测试")
+	path = r"D:\Download\Github\FurryNovelsBot\Translated\龙龙.docx"
+	openDocx(path)
 	pass
 
 

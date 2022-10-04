@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
 import os
+import shutil
 import logging
 from platform import platform
 from locale import getdefaultlocale
@@ -9,10 +10,10 @@ from requests.exceptions import SSLError
 from opencc import OpenCC
 from pygtrans import Translate
 
-from FileOperate import openText, saveText, findFile, timer, monthNow
+from FileOperate import openText, openDocx, openJson, saveText, saveDocx, saveJson, findFile, timer, monthNow
 from TextFormat import formatText
+from data.translation import dict1, dict2, dict3
 from config import proxy_list, default_path, cjklist, testMode
-from translated import langs, words, wordsdict
 
 
 local_times, google_times = 0, 0
@@ -22,6 +23,12 @@ if "Windows" in platform():
 	client = Translate(fmt="text", proxies={'https': proxy_list[0]})
 elif "Linux" in platform():
 	client = Translate(fmt="text")
+
+
+json0 = os.path.join(os.getcwd(), "backup", "translation.json")
+json1 = os.path.join(os.getcwd(), "data", "translation.json")
+json2 = os.path.join(os.getcwd(), "data", "newtranslation.json")
+wordsdict, langs, words = {}, [], []
 
 
 # 判断语言
@@ -140,12 +147,12 @@ def convertText(text: str, *, lang2: str, lang1="") -> str:  # 原来是 languag
 	return text
 	
 	
-def translateText(text: str, *, lang2: str, lang1="", mode=0) -> str:
+def translateText(text: (str, list), *, lang2: str, lang1="", mode=0) -> str:
 	# lang1 原始语言，lang2 目标语言
-	# mode==0 不处理，mode==1 添加空行与首行空格
+	# mode==0 不处理；mode==1 添加空行与首行空格；mode==2 前4行不添加空格，后面正常排版
 	translated = []
 	textlist = text.split("\n")
-	
+		
 	try:
 		if lang1:
 			texts = client.translate(textlist, target=lang2, source=lang1)
@@ -169,12 +176,25 @@ def translateText(text: str, *, lang2: str, lang1="", mode=0) -> str:
 		
 		if mode == 0:
 			text = "\n".join(translated)
-		else:   # 优化翻译：前4行不添加空格，后面正常排版
+		elif mode == 1:  # 优化排版：前2行不添加空格，后面正常排版
+			text = "\n".join(translated[2:])
+			text = formatText(text, lang2)
+			text = "\n".join(translated[:2]) + text
+		else:   # 优化排版：前4行不添加空格，后面正常排版
 			text = "\n".join(translated[5:])
 			text = formatText(text, lang2)
 			text = "\n".join(translated[:5]) + text
 		# print(text)
 		return text
+
+
+def translatePath(dir1: str, *, lang2: str, lang1=""):
+	dir2 = []
+	dir1 = dir1.split("\\")
+	for text0 in client.translate(dir1, target=lang2, source=lang1):
+		dir2.append(text0.translatedText)
+	dir2 = "\\".join(dir2)
+	return dir2
 
 
 def translate(text: str, *, lang2: str, lang1="", mode=0) -> str:
@@ -184,6 +204,10 @@ def translate(text: str, *, lang2: str, lang1="", mode=0) -> str:
 		lang1 = getLang(text)
 	if not lang2:
 		lang2 = getLangSystem()
+	if "zh-hans" in lang2:
+		lang2 = "zh_cn"
+	elif "zh-hant" in lang2:
+		lang2 = "zh_tw"
 	
 	if lang1 != lang2:
 		if "zh" in lang1 and "zh" in lang2:
@@ -195,13 +219,10 @@ def translate(text: str, *, lang2: str, lang1="", mode=0) -> str:
 	
 # 获取固定词的翻译
 def getTranslatedWordsDict():
-	# words = "author url hashtags others single translated".split(" ")
 	words = "单篇小说 译文".split(" ")
-	# words = ['Workspace', 'Computer', 'Monitor', 'Software', 'Scanner', 'Graphic tablet', 'Mouse', 'Printer','Things on your desk', 'Background music', 'Table', 'Chair', 'Others']
-	# langs = "en".split(" ")
+	langs = "en zh zh_cn zh_tw fr ru ar es de pt ja ko hi".split(" ")
 	
 	wordsdict = {}
-	print("", "wordsdict = {")
 	for lang in langs:
 		d1 = {}
 		for word in words:
@@ -210,13 +231,49 @@ def getTranslatedWordsDict():
 			except AttributeError:
 				d1[word] = ""
 		wordsdict[lang] = d1
-		print(f'"{lang}": {d1},')
-	print("}")
-	# print(f"{wordsdict}=")
+	# string = json.dumps(wordsdict, ensure_ascii=False, indent=2)
+	# print(string)
+	saveJson(json2)
+
+
+# 整合多个存放翻译的dict
+@timer
+def makeWordsDict():
+	wordsdict = {}
+	dicts = [dict1, dict2, dict3]
+	langs = "en zh zh_cn zh_tw fr ru ar es de pt ja ko hi".split(" ")
+	for lang1 in langs:
+		d0 = {}
+		for d1 in dicts:
+			# print(d1)
+			for lang2, d2 in d1.items():
+				if lang1 == lang2:
+					# print(lang1, d2)
+					d0.update(d2)
+					for key in d2:
+						if key not in words:
+							words.append(key)
+		wordsdict[lang1] = d0
+	saveJson(json1, wordsdict)
+	shutil.copy2(json1, json0)
+	return wordsdict
+
+
+def readWordsDict():
+	if not os.path.exists(json1):
+		if not os.path.exists(json0):
+			return makeWordsDict()
+		else:
+			shutil.copy2(json0, json1)
+	wordsdict = openJson(json1)
+	return wordsdict
 	
-	
+
 # 本地方法翻译固定词组
 def transWords(word: str, lang: str) -> str:
+	wordsdict = readWordsDict()
+	langs = list(wordsdict.keys())
+	words = list(wordsdict[langs[0]].keys())
 	if word in words and lang in langs:  # 确认所用词汇一定存在翻译
 		translated_word = wordsdict.get(lang).get(word)
 		
@@ -244,30 +301,46 @@ def transDir(lang2="en") -> str:
 	return trans_dir
 
 
-def translateFile(path: str, lang2=getLangSystem()) -> [str, None]:
-	text = openText(path)
+def translateFile(path: str, lang2=getLangSystem(), mode=2) -> [str, None]:
+	if "zh-hans" in lang2:
+		lang2 = "zh_cn"
+	elif "zh-hant" in lang2:
+		lang2 = "zh_tw"
+		
+	if path.endswith(".txt"):
+		text = openText(path)
+	elif path.endswith(".docx"):
+		text = openDocx(path)
+	else:
+		text = ""
+		raise AttributeError("无法打开非 txt 或 docx 文件")
+		
 	lang1 = getLang(text)
 	trans_dir = transDir(lang2)
-	
-	if lang1 != lang2 and (trans_dir not in path):
-		dir2 = []   # 构造翻译文件路径
-		dir1 = path.replace(f"{default_path}\\", "")
-		dir1 = dir1.replace(f"{os.getcwd()}\\Novels\\", "")
-		dir1 = dir1.split("\\")
-		for text0 in client.translate(dir1, target=lang2):
-			dir2.append(text0.translatedText)
-		dir2 = "\\".join(dir2)
-		trans_path = os.path.join(default_path, trans_dir, dir2)
-		# print(dir1, dir2, sep="\n")
-		# print(path)
+	if lang1 != lang2 and (trans_dir not in path) and lang1:
+		if mode == 1:  # 单独文件翻译
+			name = os.path.basename(path)
+			name = translate(name, lang1=lang1, lang2=lang2)
+			trans_path = os.path.join(os.getcwd(), "Translation", monthNow(), name)
+			
+		else:  # Pixiv 小说翻译,构造翻译文件路径
+			dir1 = path.replace(f"{default_path}\\", "")
+			dir1 = dir1.replace(f"{os.getcwd()}\\Novels\\", "")
+			dir2 = translatePath(dir1, lang2=lang2, lang1=lang1)
+			trans_path = os.path.join(default_path, trans_dir, dir2)
+			# print(dir1, dir2, sep="\n")
+		# print(path, trans_path)
 		
-		text = translate(text, lang1=lang1, lang2=lang2, mode=1)
-		saveText(trans_path, text)
+		text = translate(text, lang1=lang1, lang2=lang2, mode=mode)
+		if path.endswith(".txt"):
+			saveText(trans_path, text)
+		elif path.endswith(".docx"):
+			saveDocx(trans_path, text, original=path)
 		return trans_path
 	
 	
 # @timer
-def main(lang2=getLangSystem()):
+def translateFiles(lang2=getLangSystem()):
 	trans_number = 0
 	if default_path.endswith(monthNow()):   # 翻译 Novels 目录下所有小说
 		path = default_path.replace(monthNow(), "")
@@ -281,7 +354,7 @@ def main(lang2=getLangSystem()):
 		path = translateFile(path, lang2)
 		if path:
 			trans_number += 1
-			logging.info(path)
+			# logging.info(path)
 			print(f"已翻译第{trans_number}篇：{name}")
 	print(f"已翻译【Novels】内{len(texts)}篇中的{trans_number}篇小说")
 	
@@ -297,6 +370,6 @@ if __name__ == "__main__":
 	if testMode:
 		test()
 	else:
-		main()
+		translateFiles()
 		
 		

@@ -439,7 +439,9 @@
   },
   "Transfur Furry": {
     "en": "Transfur",
-    "zh": "兽化"
+    "en2": "TF",
+    "zh": "兽化",
+    "zh2": "同化"
   },
   "Transfur Dragon": {
     "zh": "龙化"

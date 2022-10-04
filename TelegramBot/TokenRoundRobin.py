@@ -7,7 +7,7 @@ from platform import platform
 import pixivpy3
 from pixivpy3 import AppPixivAPI, ByPassSniApi
 
-from config import proxy_list
+from config import Pixiv_Tokens, proxy_list
 
 
 class TokenRoundRobin:
@@ -15,7 +15,8 @@ class TokenRoundRobin:
 	tokenCount = 0
 	callCount = 0
 
-	def __init__(self, tokens: list):
+
+	def __init__(self, tokens: list = Pixiv_Tokens):
 		if "Windows" in platform():
 			# REQUESTS_KWARGS = {'proxies': {'https': 'http://127.0.0.1:10808', }}
 			REQUESTS_KWARGS = {'proxies': {'https': proxy_list[0]}, }

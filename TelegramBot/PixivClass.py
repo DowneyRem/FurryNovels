@@ -8,21 +8,22 @@ import logging
 from abc import ABC, abstractmethod
 from functools import wraps
 from ssl import SSLError
+from urllib.parse import unquote
 
 import numpy as np
 
 from FileOperate import saveText, zipFile, openFile, timer
-from PrintInfo import getFormattedTags, getInfoFromText, getFurryScore
+from PrintInfo import getFormattedTags, getInfoFromText
 from TextFormat import formatNovelName, formatCaption, formatText
 from TokenRoundRobin import TokenRoundRobin
 from Translate import getLanguage, getLangSystem, translate, transWords, transDir
-from config import Pixiv_Tokens, default_path, testMode
+from config import default_path, testMode
 
 
 sys.dont_write_bytecode = True
 _TEST_WRITE = False
 addTranslatedTags = 0   # 加入翻译过后的标签
-tokenPool = TokenRoundRobin(Pixiv_Tokens)
+tokenPool = TokenRoundRobin()
 
 
 def checkNone(fun):
@@ -57,6 +58,15 @@ def checkNone(fun):
 			os._exit(1)
 	return wrapper
 
+
+def getUrl(string: str) -> str:
+	pattern = "(?:https?|ftp|file)://[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]"
+	if re.findall(pattern, string):
+		url = re.findall(pattern, string)[0]
+		url_unquote = unquote(url, 'UTF8')
+		# print(url_unquote)
+		return url
+	
 
 def getId(string: [int, str]) -> int:
 	if re.search("\\d{5,}", str(string)):
@@ -140,7 +150,7 @@ class PixivBase(PixivABC):  # 共用方法
 	original_text = ""
 	text = ""         # 小说文本
 	lang = ""         # 小说语言
-	furry_score = 0   # 兽人指数
+	furry = 0   # 兽人指数
 	
 	info = ""           # __str__()
 	file_info = ""      # 写入文件的格式化信息
@@ -216,12 +226,6 @@ class PixivBase(PixivABC):  # 共用方法
 		return self.score
 	
 	
-	def getFurryScore(self) -> int:
-		self.furry_score = getFurryScore(self.file_text, self.tags)
-		logging.info(f"【{self.title}】福瑞指数：{self.furry_score:.1f}")
-		return self.furry_score
-	
-	
 	def __str__(self) -> str:
 		return f"未实现：{self.__class__.__name__}.__str__()"
 	
@@ -255,15 +259,19 @@ class PixivBase(PixivABC):  # 共用方法
 	
 	
 	@timer
-	def setUploadInfo(self, lang2="") -> tuple[str, str]:  # 上传文件至 Telegram 的信息
-		info2 = ""
-		info1 = getInfoFromText(self.file_text, self.tags, self.lang)
+	def setUploadInfo(self, lang2="") -> tuple:  # 上传文件至 Telegram 的信息
+		info2 = ""; furry2 = 0
+		info1, self.furry = getInfoFromText(self.file_text, self.tags, self.lang)
+		logging.info(f"【{self.title}】福瑞指数：{self.furry:.1f}")
 		
 		if lang2 and self.trans_text:
-			info2 = getInfoFromText(self.trans_text, self.trans_tags, lang2)
+			info2, furry2 = getInfoFromText(self.trans_text, self.trans_tags, lang2)
 		if __name__ == "__main__":
-			print(info1, info2, sep="\n\n")
-		return info1, info2
+			if info2:
+				print(info1, info2, sep="\n\n")
+			else:
+				print(info1)
+		return (info1, self.furry), (info2, furry2)
 	
 	
 class PixivNovels(PixivBase):
@@ -315,8 +323,10 @@ class PixivNovels(PixivBase):
 		self.score = self.getScore()
 		
 		self.author_id = novel.user.id
+		self.author_url = f"https://www.pixiv.net/users/{self.author_id}"
 		self.author_name = novel.user.name
 		self.series_id = novel.series.id
+		self.series_url = f"https://www.pixiv.net/novel/series/{self.series_id}"
 		self.series_name = novel.series.title
 	
 	
@@ -349,7 +359,7 @@ class PixivNovels(PixivBase):
 		tags = self.formatTags(self.tags)
 		self.info = f"{self.title} By {self.author_name}\n" \
 			f"阅读：{self.views}；收藏：{self.bookmarks}；评论：{self.comments}；" \
-			f"推荐指数：{self.score}；福瑞指数：{self.furry_score}\n标签：{tags}\n" \
+			f"推荐指数：{self.score}；福瑞指数：{self.furry}\n标签：{tags}\n" \
 			f"{self.novel_url}\n"
 		return self.info
 	
@@ -370,7 +380,7 @@ class PixivNovels(PixivBase):
 	
 	
 	@timer
-	def saveNovels(self, author="", series="", i=0, lang="", lang2="") -> tuple[str, str]:
+	def saveNovel(self, author="", series="", i=0, lang="", lang2="") -> tuple:
 		if not self.original_text:
 			self.getText()
 		if lang:
@@ -405,19 +415,19 @@ class PixivNovels(PixivBase):
 			print(self.trans_path)
 		
 		if not author and not series:  # 直接运行时
-			info1, info2 = self.setUploadInfo(lang2)
-			return (self.file_path, info1), (self.trans_path, info2)
+			(info1, furry1), (info2, furry2) = self.setUploadInfo(lang2)
+			return (self.file_path, info1, furry1), (self.trans_path, info2, furry2)
 		else:
 			return self.file_path, self.trans_path
 	
 	
 	def save(self, lang2="") -> tuple[str, str]:
+		# if self.series_id and __name__ != "__main__":
 		if self.series_id and __name__ == "__main__":
 			print("当前小说存在系列，开始下载该系列")
 			paths = PixivSeries(self.series_id).saveSeries(lang2=lang2)
 		else:
-			paths = self.saveNovels(lang2=lang2)
-			self.getFurryScore()
+			paths = self.saveNovel(lang2=lang2)
 		return paths
 	
 	
@@ -460,7 +470,7 @@ class PixivSeries(PixivBase):
 	
 	def __init__(self, series_id: [int, str]):
 		self.series_id = getId(series_id)
-		self.series_uri = f"https://www.pixiv.net/novel/series/{self.series_id}"
+		self.series_url = f"https://www.pixiv.net/novel/series/{self.series_id}"
 		self.json = self.getJson()  # 原始数据
 		if self.json is not None:
 			self.getInfo()
@@ -484,6 +494,7 @@ class PixivSeries(PixivBase):
 		self.count = series.content_count  # 系列内小说数
 		self.characters = series.total_character_count # 系列总字数
 		self.author_id = series.user.id
+		self.author_url = f"https://www.pixiv.net/users/{self.author_id}"
 		self.author_name = series.user.name
 		
 		novel = self.json.novel_series_first_novel   # 系列第1篇小说
@@ -507,7 +518,7 @@ class PixivSeries(PixivBase):
 			self.tags = self.tags30
 			
 		tags = self.formatTags(self.tags)
-		self.info = f"{self.title}  By {self.author_name}\n{tags}\n{self.series_uri}\n{self.novel_url}"
+		self.info = f"{self.title}  By {self.author_name}\n{tags}\n{self.series_url}\n{self.novel_url}"
 		return self.info
 	
 	
@@ -533,7 +544,7 @@ class PixivSeries(PixivBase):
 					self.novels_captions.append(novel.caption)
 					self.tags.update(self.getTags(novel.tags))
 		
-		self.tags = set() ; self.novels_list_part = []
+		self.tags = set(); self.novels_list_part = []
 		self.novels_list, self.novels_names, self.novels_captions = [], [], []
 		addList(self.getJson())
 		if len(self.novels_list) >= 30:  # 1次最多可请求到30个id
@@ -585,7 +596,7 @@ class PixivSeries(PixivBase):
 	
 	
 	@timer
-	def saveAsZip(self, author="", lang="", lang2="") -> tuple[str, str]:
+	def saveAsZip(self, author="", lang="", lang2="") -> tuple:
 		if not self.novels_list:
 			self.getNovelsList()
 		if lang:
@@ -597,7 +608,7 @@ class PixivSeries(PixivBase):
 		print(f"SaveAsZip: {self.title}")
 		for i in range(len(self.novels_list)):
 			novel = PixivNovels(self.novels_list[i])
-			(path1, path2) = novel.saveNovels(author, self.title, i+1, self.lang, lang2)
+			(path1, path2) = novel.saveNovel(author, self.title, i + 1, self.lang, lang2)
 		self.file_path = os.path.dirname(path1)
 		print(self.file_path)
 		
@@ -613,13 +624,14 @@ class PixivSeries(PixivBase):
 			if self.trans_path:  # 压缩翻译目录
 				self.trans_path = zipFile(self.trans_path, dir=transDir(lang2))
 			info1, info2 = self.setUploadInfoForZip(lang2)
-			return (self.file_path, info1), (self.trans_path, info2)
+			furry = 0  # 保持返回值结构一致
+			return (self.file_path, info1, furry), (self.trans_path, info2, furry)
 		else:
 			return self.file_path, self.trans_path
 	
 	
 	@timer
-	def saveAsTxt(self, author="", lang="", lang2="") -> tuple[str, str]:
+	def saveAsTxt(self, author="", lang="", lang2="") -> tuple:
 		if not self.novels_list:
 			self.getNovelsList()
 		
@@ -671,8 +683,8 @@ class PixivSeries(PixivBase):
 			print(self.trans_path)
 		
 		if not author:  # 直接运行时
-			info1, info2 = self.setUploadInfo(lang2)
-			return (self.file_path, info1), (self.trans_path, info2)
+			(info1, furry1), (info2, furry2) = self.setUploadInfo(lang2)
+			return (self.file_path, info1, furry1), (self.trans_path, info2, furry2)
 		else:
 			return self.file_path, self.trans_path
 	
@@ -696,11 +708,9 @@ class PixivSeries(PixivBase):
 		if self.checkCommission():
 			print("委托系列将下载成zip文件")
 			paths = self.saveAsZip(author, lang, lang2)
-			# self.getFurryScore()  # 无意义
 		else:
 			print("长篇小说将下载成txt文件")
 			paths = self.saveAsTxt(author, lang, lang2)
-			self.getFurryScore()
 		self.getTokenTimes()
 		return paths
 	
@@ -921,7 +931,7 @@ class PixivAuthor(PixivBase):
 	
 		
 	@timer
-	def saveAuthorNovels(self, lang2="") -> tuple[tuple[str, str], tuple[str, str]]:
+	def saveAuthorNovels(self, lang2="") -> tuple:
 		if not os.path.exists(self.author_dir):
 			self.setAuthorDir()
 		if not self.novels_list:
@@ -933,11 +943,11 @@ class PixivAuthor(PixivBase):
 		single = transWords("single", self.lang)
 		for i in range(len(self.novels_list)):
 			novels = PixivNovels(self.novels_list[i])
-			path1, path2 = novels.saveNovels(self.author_name, single, i+1, self.lang, lang2)
+			path1, path2 = novels.saveNovel(self.author_name, single, i + 1, self.lang, lang2)
 		for j in range(len(self.series_list)):
 			series = PixivSeries(self.series_list[j])
 			path1, path2 = series.saveSeries(self.author_name, self.lang, lang2)
-		print(222, self.author_dir)
+		# print(self.author_dir)
 		self.file_path = zipFile(self.author_dir)
 		
 		if lang2 and self.lang != lang2:
@@ -945,11 +955,12 @@ class PixivAuthor(PixivBase):
 			path2 = path2.split("\\")[:2]
 			path2 = "\\".join(path2)
 			path2 = os.path.join(default_path, path2)
-			print(222, path2)
+			print(path2)
 			self.trans_path = zipFile(path2, dir=transDir(lang2))
-			
+		
+		furry = 0  # 保证返回值结构一致
 		info1, info2 = self.setUploadInfo(lang2)
-		return (self.file_path, info1), (self.trans_path, info2)
+		return (self.file_path, info1, furry), (self.trans_path, info2, furry)
 	
 	
 	@timer
@@ -1021,29 +1032,93 @@ class PixivAuthor(PixivBase):
 		return num
 		
 
+class PixivObject(PixivNovels, PixivSeries, PixivAuthor):
+# class PixivObject():
+	def __init__(self, string):
+		self.url = getUrl(string)
+		# if "user" in self.url:  # 去末尾s，兼容linpx
+		# 	self.obj = PixivAuthor(self.url)
+		# if "user" in self.url and "series" in self.url:
+		# 	pass
+		# elif "novel/series" in self.url:
+		# 	self.obj = PixivSeries(self.url)
+		# elif "novel" in self.url or "pn" in self.url:  # 去末尾s，兼容linpx
+		# 	self.obj = PixivNovels(self.url)
+		# elif "artworks" in self.url:
+		# 	self.obj = PixivAuthor(self.url)
+		
+	def setLinkInfo(self) -> str:
+		if "user" in self.url:  # 去末尾s，兼容linpx
+			return PixivAuthor(self.url).setLinkInfo()
+		elif "novel/series" in self.url:
+			return PixivSeries(self.url).setLinkInfo()
+		elif "novel" in self.url or "pn" in self.url:  # 去末尾s，兼容linpx
+			return PixivNovels(self.url).setLinkInfo()
+		
+	
+	def saveNovel(self, lang2=""):
+		return PixivNovels(self.url).saveNovel(lang2=lang2)
+
+
+	def saveAsZip(self, lang2=""):   # series
+		return PixivSeries(self.url).saveAsZip(lang2=lang2)
+
+
+	def saveAsTxt(self, lang2=""):   # series
+		return PixivSeries(self.url).saveAsZip(lang2=lang2)
+
+
+	def saveAuthor(self, lang2=""):  # author
+		return PixivAuthor(self.url).saveAuthor(lang2=lang2)
+	
+	
+	def save(self, lang2="", mode=""):
+		if __name__ == "__main__":
+			lang2 = getLangSystem()
+			
+		if "user" in self.url:  # 去末尾s，兼容linpx
+			print("开始下载此作者的全部小说……")
+			obj = PixivAuthor(self.url)
+			score = obj.score
+			result = obj.save(lang2)
+			
+		elif "novel/series" in self.url:
+			print("开始下载系列小说……")
+			obj = PixivSeries(self.url)
+			score = obj.score
+			if mode == 1:
+				result = obj.saveAsZip(lang2=lang2)
+			elif mode == 2:
+				result = obj.saveAsTxt(lang2=lang2)
+			else:
+				result = obj.save(lang2=lang2)
+				
+		elif "novel" in self.url or "/pn/" in self.url:  # 去末尾s，兼容linpx
+			print("开始下载单章小说……")
+			obj = PixivNovels(self.url)
+			score = obj.score
+			if mode == 1:
+				result = obj.saveNovel(lang2=lang2)
+			else:
+				result = obj.save(lang2=lang2)
+				
+		elif "artworks" in self.url:
+			print("不支持下载插画，请重新输入")
+			score = 0
+			result = (("", "" ,0), ("", "", 0))
+			# PixivIllust(id).save()   # todo
+		
+		return result, score
+	
+	
 # @checkNone
 def main():
 	path = ""
-	language = getLangSystem()
 	string = input("\n请输入Pixiv或Linpx小说链接或作者链接，按 Enter 键确认：\n")
 	
 	while string != "":
 		if ("pixiv" in string or "/pn/" in string) and re.search("[0-9]{5,}", string):
-			id = getId(string)
-			if "novel/series" in string:
-				print("开始下载系列小说……")
-				path = PixivSeries(id).save(language)[0][0]
-			elif "novel" in string:    # 去末尾s，兼容linpx
-				print("开始下载单章小说……")
-				path = PixivNovels(id).save(language)[0][0]
-			elif "user" in string:     # 去末尾s，兼容linpx
-				print("开始下载此作者的全部小说……")
-				path = PixivAuthor(id).save(language)[0][0]
-			elif "artworks" in string:
-				print("不支持下载插画，请重新输入")
-				# PixivIllust(id).save()   # todo
-			else:
-				print("输入有误，请重新输入")
+			path = PixivObject(string).save()[0][0][0]
 		else:
 			print("输入有误，请重新输入，退出下载请直接按 Enter 键")
 		string = input("\n请输入Pixiv或Linpx小说链接或作者链接，按 Enter 键确认：\n")
@@ -1065,10 +1140,6 @@ def test():
 	# b0 = PixivSeries(2399683).save("zh_tw")  # 维卡斯委托系列
 	# b0 = PixivSeries(2399683).setTelegramUploadInfo() # 维卡斯委托系列
 	# b1 = PixivSeries(30656).save("zh_cn")    # 從今天起叫我主人 系列
-	# b1 = PixivSeries(30656)    # 從今天起叫我主人 系列
-	# b1.save("zh_cn")
-	# b1.setUploadInfo()
-	# b1.setUploadInfoForTrans()  # 從今天起叫我主人 系列
 	# b2 = PixivSeries(969137)  # 龙仆 委托系列
 	# b2.getTokenTimes()
 	# b2.save()
@@ -1083,10 +1154,21 @@ def test():
 	# c3 = PixivAuthor(12261974)   # 龙仆，小说过多可能无法下载全部
 	# c3.getTokenTimes()
 	# c3.save()
-
+	"""
+	https://www.pixiv.net/user/16721009/series/95354
+	"""
+	# d0 = PixivObject("https://www.pixiv.net/novel/show.php?id=15789643").saveNovel()
+	# d0 = PixivObject("https://www.pixiv.net/novel/series/8590168").saveAsTxt()
+	# d0 = PixivObject("https://www.pixiv.net/novel/series/8590168").saveAsZip()
+	# d0 = PixivObject("https://www.pixiv.net/users/10894035").saveAuthor()
+	#
+	# d1 = PixivObject("https://furrynovel.xyz/pixiv/novel/15912846").saveNovel()
+	# d1 = PixivObject("http://furrynovel.xyz/pn/15912846").saveNovel()
+	# d1 = PixivObject("https://furrynovel.xyz/pixiv/user/25960088").saveAuthor()
+	
 
 if __name__ == "__main__":
-	testMode = 0
+	# testMode = 1
 	if testMode:
 		test()
 	else:

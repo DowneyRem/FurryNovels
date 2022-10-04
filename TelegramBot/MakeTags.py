@@ -1,36 +1,68 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
 import os
+import shutil
+import logging
 
 from opencc import OpenCC
 
-from FileOperate import openJson, saveJson, newFilePathInCurrentDir, removeFile, timer
+from FileOperate import openJson, saveJson, removeFile, timer
+from TextFormat import isAlpha
 from config import testMode
 
 
-hashtags, entags, cntags, racedict, racelist = {}, {}, {}, {}, []
-json1 = newFilePathInCurrentDir("tags.json")
-json2 = newFilePathInCurrentDir("tagsused.json")
-json3 = newFilePathInCurrentDir("tagsen.json")
-json4 = newFilePathInCurrentDir("tagscn.json")
-
-
-def is_all_chinese(string: str) -> bool:  # 检验是否全是中文字符
-	for char in string:
-		if not "\u4e00" <= char <= "\u9fa5":
-			return False
-	return True
-
-
-def is_contains_chinese(string: str) -> bool: # 检验是否含有中文字符
-	for char in string:
-		if "\u4e00" <= char <= "\u9fa5":
-			return True
-	return False
+hashtags, entags, cntags, racedict, racelist, racetags = {}, {}, {}, {}, [], {}
+json0 = os.path.join(os.getcwd(), "backup", "tags.json")
+json1 = os.path.join(os.getcwd(), "data", "tags.json")  # 主要数据文件
+json2 = os.path.join(os.getcwd(), "data", "tagsused.json")
+json3 = os.path.join(os.getcwd(), "data", "tagsen.json")
+json4 = os.path.join(os.getcwd(), "data", "tagscn.json")
+races = {
+	"熊": "bear",
+	"熊猫": "panda",
+	"马": "horse",
+	"牛": "bull",
+	"犀牛": "rhinoceros",
+	"羊": "sheep",
+	"猫": "cat",
+	"狮": "lion",
+	"狮子": "lion",
+	"虎": "tiger",
+	"龙": "dragon",
+	"蜥蜴": "lizard",
+	"狗": "dog",
+	"狼": "wolf",
+	"狐": "fox",
+	"狐狸": "fox",
+	"鲨狗": "sergal",
+	"鯊格魯": "sergal",
+	"鱼": "fish",
+	"鲨": "shark",
+	"鲨鱼": "shark",
+	"鳄鱼": "crocodile",
+	"海豚": "dolphin",
+	"象": "elephant",
+	"鼠": "mouse",
+	"袋鼠": "kangaroo",
+	"猴": "monkey",
+	"豹": "panther",
+	"猪": "pig",
+	"兔": "rabbit",
+	"蛇": "snake",
+	"龟": "turtle",
+	"鸟": "harpy",
+	"胶": "rubber",
+}
+others = {
+	"兽族": "furry",
+	"兽人": "furry",
+	"兽兽": "furry",
+	# "纯兽": "non-anthro",
+}
 
 
 @timer
-def makeTagsData(dic: dict) -> dict:  # DictNovel 原始tags生成 tags.json
+def makeTags(dic: dict) -> dict:  # DictNovel 原始tags生成 tags.json
 	n = 0
 	d0, d1 = {}, {}
 	keys = list(dic.keys())
@@ -60,11 +92,13 @@ def makeTagsData(dic: dict) -> dict:  # DictNovel 原始tags生成 tags.json
 	if __name__ == "__main__" and testMode:  # 输出dict
 		string = str(d0).replace("'", '"')
 		print(string)
+	saveJson(json1, d0)
 	return d0
 
 
 @timer
-def makeTagsDict(dic: dict) -> dict:  # tags.json 生成 tagsused.json
+def makeTagsUsed() -> dict:  # tags.json 生成 tagsused.json
+	dic = openJson(json1)
 	tagsused = {}
 	for keys, values in dic.items():
 		for value in values.values():
@@ -75,13 +109,9 @@ def makeTagsDict(dic: dict) -> dict:  # tags.json 生成 tagsused.json
 				key = [keys]
 				
 			tagsused[value] = key
-			# if value.isalpha():   # 中文也是True
-			if not is_contains_chinese(value):
+			if isAlpha(value):  # 非中文转小写
 				tagsused[value.lower()] = key
-				# tagsused[value.upper()] = key
-				tagsused[value.capitalize()] = key
 			if "中" not in value:  # 不转换语言标签“中文”
-				tagsused[OpenCC('tw2sp.json').convert(value)] = key
 				tagsused[OpenCC('s2twp.json').convert(value)] = key
 	
 	# if __name__ == "__main__" and testMode:  # 输出dict
@@ -90,53 +120,17 @@ def makeTagsDict(dic: dict) -> dict:  # tags.json 生成 tagsused.json
 	return tagsused
 
 
-def makeRaceDict() -> tuple[dict, list]:
-	prefix = "赤 红 橙 黄 绿 青 蓝 紫 黑 白 灰 棕 粉 大 小 胶".split(" ")
-	suffix = "兽人 兽 人 族 角 头 吻 身 爪 脚 尾".split(" ")
-	r18suffix = "棒 根 穴".split(" ")
-	races = {
-		"熊": "bear",
-		"熊猫": "panda",
-		"马": "horse",
-		"牛": "bull",
-		"犀牛": "rhinoceros",
-		"羊": "sheep",
-		"猫": "cat",
-		"狮": "lion",
-		"狮子": "lion",
-		"虎": "tiger",
-		"龙": "dragon",
-		"蜥蜴": "lizard",
-		"狗": "dog",
-		"狼": "wolf",
-		"狐": "fox",
-		"狐狸": "fox",
-		"鲨狗": "sergal",
-		"鯊格魯": "sergal",
-		"鱼": "fish",
-		"鲨": "shark",
-		"鲨鱼": "shark",
-		"鳄鱼": "crocodile",
-		"海豚": "dolphin",
-		"象": "elephant",
-		"鼠": "mouse",
-		"袋鼠": "kangaroo",
-		"猴": "monkey",
-		"豹": "panther",
-		"猪": "pig",
-		"兔": "rabbit",
-		"蛇": "snake",
-		"龟": "turtle",
-		"鸟": "harpy",
-		"胶": "rubber",
-	}
+def makeRaceTags():
+	for key, val in races.items():
+		# print(key, val)
+		racetags[key] = [val]  # 数据结构 dict={str:list}
+		racetags[val] = [val]
+		
 	
-	others = {
-		"兽族": "furry",
-		"兽人": "furry",
-		"兽兽": "furry",
-		# "纯兽": "non-anthro",
-	}
+def makeRaceDict():
+	prefix = "赤 红 橙 黄 绿 青 蓝 紫 黑 白 灰 棕 粉 小 胶".split(" ")
+	suffix = "兽人 兽 人 族 头 吻 身 爪 脚 尾".split(" ")
+	r18suffix = "棒 根 鞭 穴".split(" ")
 	
 	for i in races:
 		for j in prefix:  # 添加前缀
@@ -148,14 +142,16 @@ def makeRaceDict() -> tuple[dict, list]:
 	for i in others:
 		racedict[i] = [others[i].capitalize()]
 	
+	racedict.pop("龟头", None)
+	racedict.pop("马眼", None)
 	racelist.extend(list(races.values()))
 	racelist.extend(list(others.values()))
-	return racedict, racelist
 
 
 def cmp(a, b) -> int:  # 按dict内部顺序进行排序
 	def getindex(obj: any):
 		li = []
+		hashtags.update(racetags)
 		li0 = list(hashtags.values())
 		for item in li0:  # 从嵌套列表重获取排序
 			if item not in li:
@@ -176,32 +172,34 @@ def cmp(a, b) -> int:  # 按dict内部顺序进行排序
 	
 	
 def makeJson1():
-	dict0 = {}
 	if not os.path.exists(json1):
-		data = makeTagsData(dict0)
-		saveJson(json1, data)
+		logging.info(f"Making Json1")
+		shutil.copy2(json0, json1)
 	
 	
+@timer
 def makeJson2():
+	makeJson1()
 	if not os.path.exists(json2):
-		makeJson1()
-		data = makeTagsDict(openJson(json1))
-		saveJson(json2, data)
+		# logging.info(f"Backing up {os.path.basename(json1)}")
+		# shutil.copy2(json1, json0)
+		
+		logging.info(f"Making {os.path.basename(json2)}")
+		saveJson(json2, makeTagsUsed())
 	
 	
 def makeJson3():
 	makeJson2()
-	global hashtags
+	logging.info(f"Making {os.path.basename(json3)}, {os.path.basename(json4)}")
 	hashtags = openJson(json2)
 	for key, value in hashtags.items():
 		# if __name__ == "__main__" and testMode:
 		# 	print(f"{key}: {value}")
 		
-		# if key.isalpha():  # 中文也是True
-		if is_all_chinese(key):
-			cntags[key] = value
-		else:
+		if isAlpha(key):
 			entags[key] = value
+		else:
+			cntags[key] = value
 	
 	# print(entags, cntags ,sep="\n\n")
 	saveJson(json3, entags)
@@ -220,16 +218,26 @@ def main():
 	hashtags = openJson(json2)
 	entags = openJson(json3)
 	cntags = openJson(json4)
+	makeRaceDict()
+	makeRaceTags()
 	
 	
 if True:  # 初始化
-	# remakeJsons()
-	makeRaceDict()
+	# testMode = 1
+	if testMode:
+		remakeJsons()
 	main()
-
+	
 
 if __name__ == "__main__":
 	print(len(hashtags), len(entags), len(cntags))
-	print(len(racedict), len(racelist))
+	print(len(racetags), len(racedict), len(racelist))
+	# for key, val in hashtags.items():
+	# 	print(f"{key}: {val}")
+	# for key, val in racetags.items():
+	# 	print(f"{key}: {val}")
+	# for key, val in racedict.items():
+	# 	print(f"{key}: {val}")
+	# print(racelist)
 	pass
 	

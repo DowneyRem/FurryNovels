@@ -1,0 +1,623 @@
+{
+    "翻译": [
+        "translated"
+    ],
+    "翻譯": [
+        "translated"
+    ],
+    "中文": [
+        "zh"
+    ],
+    "中国語": [
+        "zh"
+    ],
+    "中國語": [
+        "zh"
+    ],
+    "简体中文": [
+        "zh_cn"
+    ],
+    "简中": [
+        "zh_cn"
+    ],
+    "正體中文": [
+        "zh_tw"
+    ],
+    "繁中": [
+        "zh_tw"
+    ],
+    "日本語": [
+        "ja"
+    ],
+    "日语": [
+        "ja"
+    ],
+    "日語": [
+        "ja"
+    ],
+    "原创": [
+        "Original"
+    ],
+    "原創": [
+        "Original"
+    ],
+    "同人": [
+        "Doujin"
+    ],
+    "二次创作": [
+        "Doujin"
+    ],
+    "二次創作": [
+        "Doujin"
+    ],
+    "腐向け": [
+        "Gay"
+    ],
+    "ゲイ": [
+        "Gay"
+    ],
+    "兽人": [
+        "Furry"
+    ],
+    "獸人": [
+        "Furry"
+    ],
+    "獣人": [
+        "Furry"
+    ],
+    "じゅうじん": [
+        "Furry"
+    ],
+    "けもの": [
+        "Furry"
+    ],
+    "ケモノ": [
+        "Furry"
+    ],
+    "オスケモ": [
+        "Furry"
+    ],
+    "メスケモ": [
+        "Furry"
+    ],
+    "ケモホモ": [
+        "Gay",
+        "furry"
+    ],
+    "ホモケモ": [
+        "Gay",
+        "furry"
+    ],
+    "兽人同性": [
+        "Gay",
+        "furry"
+    ],
+    "獸人同性": [
+        "Gay",
+        "furry"
+    ],
+    "ケモロリ": [
+        "Chibi",
+        "Furry"
+    ],
+    "ケモショタ": [
+        "Chibi",
+        "Furry"
+    ],
+    "チビケモ": [
+        "Chibi",
+        "Furry"
+    ],
+    "兽人正太": [
+        "Chibi",
+        "Furry"
+    ],
+    "獸人正太": [
+        "Chibi",
+        "Furry"
+    ],
+    "兽太": [
+        "Chibi",
+        "Furry"
+    ],
+    "獸太": [
+        "Chibi",
+        "Furry"
+    ],
+    "人类": [
+        "Human"
+    ],
+    "人類": [
+        "Human"
+    ],
+    "机器人": [
+        "Robot"
+    ],
+    "機器人": [
+        "Robot"
+    ],
+    "史莱姆": [
+        "Slime"
+    ],
+    "史萊姆": [
+        "Slime"
+    ],
+    "触手": [
+        "Tentacles"
+    ],
+    "觸手": [
+        "Tentacles"
+    ],
+    "吸血鬼": [
+        "Vampire"
+    ],
+    "英雄": [
+        "Hero"
+    ],
+    "警察": [
+        "Police"
+    ],
+    "特警": [
+        "Police"
+    ],
+    "魔王": [
+        "DevilKing"
+    ],
+    "勇者": [
+        "Brave"
+    ],
+    "魅魔": [
+        "Succubus"
+    ],
+    "阴交": [
+        "VaginalSex"
+    ],
+    "陰交": [
+        "VaginalSex"
+    ],
+    "阴道": [
+        "VaginalSex"
+    ],
+    "陰道": [
+        "VaginalSex"
+    ],
+    "肛交": [
+        "Anal"
+    ],
+    "后入": [
+        "Anal"
+    ],
+    "後入": [
+        "Anal"
+    ],
+    "六九": [
+        "69BlowJob"
+    ],
+    "互口": [
+        "69BlowJob"
+    ],
+    "口交": [
+        "BlowJob"
+    ],
+    "生殖缝": [
+        "Cloaca"
+    ],
+    "生殖縫": [
+        "Cloaca"
+    ],
+    "生殖腔": [
+        "Cloaca"
+    ],
+    "生殖裂": [
+        "Cloaca"
+    ],
+    "尾交": [
+        "TailJob"
+    ],
+    "自慰": [
+        "Masturbation"
+    ],
+    "拳交": [
+        "Fisting"
+    ],
+    "足交": [
+        "FootJob"
+    ],
+    "爪子": [
+        "Paw"
+    ],
+    "手爪": [
+        "Paw"
+    ],
+    "脚爪": [
+        "Paw"
+    ],
+    "腳爪": [
+        "Paw"
+    ],
+    "袜交": [
+        "SockJob"
+    ],
+    "襪交": [
+        "SockJob"
+    ],
+    "白袜": [
+        "Socks"
+    ],
+    "白襪": [
+        "Socks"
+    ],
+    "尿道插入": [
+        "UrethraInsertion"
+    ],
+    "搔痒": [
+        "tickling"
+    ],
+    "搔癢": [
+        "tickling"
+    ],
+    "挠痒": [
+        "tickling"
+    ],
+    "撓癢": [
+        "tickling"
+    ],
+    "强奸": [
+        "Rape"
+    ],
+    "強姦": [
+        "Rape"
+    ],
+    "强上": [
+        "Rape"
+    ],
+    "強上": [
+        "Rape"
+    ],
+    "乱伦": [
+        "Incest"
+    ],
+    "亂倫": [
+        "Incest"
+    ],
+    "群交": [
+        "Group"
+    ],
+    "群p": [
+        "Group"
+    ],
+    "轮奸": [
+        "Group"
+    ],
+    "輪姦": [
+        "Group"
+    ],
+    "绿帽": [
+        "Cuckold"
+    ],
+    "綠帽": [
+        "Cuckold"
+    ],
+    "父子丼": [
+        "Oyakodon"
+    ],
+    "兄弟丼": [
+        "brother"
+    ],
+    "调教": [
+        "BDSM"
+    ],
+    "調教": [
+        "BDSM"
+    ],
+    "捆绑": [
+        "Bondage"
+    ],
+    "捆綁": [
+        "Bondage"
+    ],
+    "束缚": [
+        "Bondage"
+    ],
+    "束縛": [
+        "Bondage"
+    ],
+    "绑缚": [
+        "Bondage"
+    ],
+    "綁縛": [
+        "Bondage"
+    ],
+    "电击": [
+        "ElectricShocks"
+    ],
+    "電擊": [
+        "ElectricShocks"
+    ],
+    "精神控制": [
+        "MindControl"
+    ],
+    "精控": [
+        "MindControl"
+    ],
+    "洗脑": [
+        "MindControl"
+    ],
+    "洗腦": [
+        "MindControl"
+    ],
+    "窒息": [
+        "Asphyxiation"
+    ],
+    "呼吸控制": [
+        "Asphyxiation"
+    ],
+    "控制呼吸": [
+        "Asphyxiation"
+    ],
+    "控制射精": [
+        "OrgasmDenial"
+    ],
+    "射精控制": [
+        "OrgasmDenial"
+    ],
+    "主奴": [
+        "Slave"
+    ],
+    "性奴": [
+        "Slave"
+    ],
+    "奴隶": [
+        "Slave"
+    ],
+    "奴隸": [
+        "Slave"
+    ],
+    "淫纹": [
+        "CrotchTattoo"
+    ],
+    "淫紋": [
+        "CrotchTattoo"
+    ],
+    "肉便器": [
+        "PublicUse"
+    ],
+    "圣水": [
+        "PissDrinking"
+    ],
+    "聖水": [
+        "PissDrinking"
+    ],
+    "黄金": [
+        "Coprophagia"
+    ],
+    "黃金": [
+        "Coprophagia"
+    ],
+    "物化": [
+        "Forniphilia"
+    ],
+    "育肥": [
+        "WeightGain"
+    ],
+    "肥满化": [
+        "WeightGain"
+    ],
+    "肥滿化": [
+        "WeightGain"
+    ],
+    "肥満化": [
+        "WeightGain"
+    ],
+    "战损": [
+        "BattleDamage"
+    ],
+    "戰損": [
+        "BattleDamage"
+    ],
+    "战败": [
+        "BattleDamage"
+    ],
+    "戰敗": [
+        "BattleDamage"
+    ],
+    "欠損": [
+        "BattleDamage"
+    ],
+    "身体改造": [
+        "BodyModification"
+    ],
+    "身體改造": [
+        "BodyModification"
+    ],
+    "兽化": [
+        "Transfur",
+        "Furry"
+    ],
+    "獸化": [
+        "Transfur",
+        "Furry"
+    ],
+    "同化": [
+        "Transfur",
+        "Furry"
+    ],
+    "龙化": [
+        "Transfur",
+        "Dragon"
+    ],
+    "龍化": [
+        "Transfur",
+        "Dragon"
+    ],
+    "石化": [
+        "Petrification"
+    ],
+    "堕落": [
+        "corruption"
+    ],
+    "墮落": [
+        "corruption"
+    ],
+    "恶堕": [
+        "corruption"
+    ],
+    "惡墮": [
+        "corruption"
+    ],
+    "英雄恶堕": [
+        "corruption",
+        "hero"
+    ],
+    "英雄惡墮": [
+        "corruption",
+        "hero"
+    ],
+    "催眠": [
+        "Hypnosis"
+    ],
+    "灵魂交换": [
+        "BodySwap"
+    ],
+    "靈魂交換": [
+        "BodySwap"
+    ],
+    "身体交换": [
+        "BodySwap"
+    ],
+    "身體交換": [
+        "BodySwap"
+    ],
+    "机械奸": [
+        "Machine"
+    ],
+    "機械奸": [
+        "Machine"
+    ],
+    "尿布": [
+        "Diaper"
+    ],
+    "乳胶衣": [
+        "Latex"
+    ],
+    "乳膠衣": [
+        "Latex"
+    ],
+    "胶衣": [
+        "Latex"
+    ],
+    "膠衣": [
+        "Latex"
+    ],
+    "胶液": [
+        "Rubber"
+    ],
+    "膠液": [
+        "Rubber"
+    ],
+    "胶": [
+        "Rubber"
+    ],
+    "膠": [
+        "Rubber"
+    ],
+    "盔甲": [
+        "Armor"
+    ],
+    "铠甲": [
+        "Armor"
+    ],
+    "鎧甲": [
+        "Armor"
+    ],
+    "动力装甲": [
+        "PowerArmor"
+    ],
+    "動力裝甲": [
+        "PowerArmor"
+    ],
+    "袜子": [
+        "Socks"
+    ],
+    "襪子": [
+        "Socks"
+    ],
+    "肌肉": [
+        "Muscles"
+    ],
+    "筋肉": [
+        "Muscles"
+    ],
+    "巨根": [
+        "Hyper"
+    ],
+    "巨大化": [
+        "Macro"
+    ],
+    "体型差": [
+        "SizeDifferent"
+    ],
+    "體型差": [
+        "SizeDifferent"
+    ],
+    "体格差": [
+        "SizeDifferent"
+    ],
+    "體格差": [
+        "SizeDifferent"
+    ],
+    "吞食": [
+        "Vore"
+    ],
+    "丸吞": [
+        "Vore"
+    ],
+    "产卵": [
+        "Eggs"
+    ],
+    "產卵": [
+        "Eggs"
+    ],
+    "下蛋": [
+        "Eggs"
+    ],
+    "雄妊娠": [
+        "MaleBirth"
+    ],
+    "雄性妊娠": [
+        "MaleBirth"
+    ],
+    "膨胀": [
+        "Inflation"
+    ],
+    "膨脹": [
+        "Inflation"
+    ],
+    "虐腹": [
+        "GutTorture"
+    ],
+    "虐屌": [
+        "R18G",
+        "CBT"
+    ],
+    "流血": [
+        "R18G",
+        "Blood"
+    ],
+    "断肢": [
+        "R18G",
+        "Mutilation"
+    ],
+    "斷肢": [
+        "R18G",
+        "Mutilation"
+    ],
+    "阉割": [
+        "R18G",
+        "Castrated"
+    ],
+    "閹割": [
+        "R18G",
+        "Castrated"
+    ]
+}

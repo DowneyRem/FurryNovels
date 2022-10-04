@@ -20,6 +20,34 @@ def checkNone(function):
 	return wrapper
 	
 	
+def isAlpha(string: str) -> bool:
+	for char in string:
+		if not "\u0000" <= char <= "\u007f":
+			return False
+	return True
+
+
+def isContainAlpha(string: str) -> bool:
+	for char in string:
+		if "\u4e00" <= char <= "\u9fa5":
+			return True
+	return False
+
+
+def isChinese(string: str) -> bool:  # 检验是否全是中文字符
+	for char in string:
+		if not "\u4e00" <= char <= "\u9fa5":
+			return False
+	return True
+
+
+def isContainsChinese(string: str) -> bool: # 检验是否含有中文字符
+	for char in string:
+		if "\u4e00" <= char <= "\u9fa5":
+			return True
+	return False
+	
+	
 @checkNone
 def formatNovelName(name: str) -> str:
 	if re.findall("[(（].*(委托|赠给).*[)）]", name):  # 梦川云岚OwO，优化
