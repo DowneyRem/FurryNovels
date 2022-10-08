@@ -13,13 +13,15 @@ from platform import platform
 # import zipfile as zf
 import pyzipper as zf
 from docx import Document  # 使用 docx-hitalent
-# from docx.shared import Pt
 
 if "Windows" in platform():
 	import winreg
 	from win32com.client import Dispatch, DispatchEx
-	
-	
+# 	template_dotm = r"D:\Users\Administrator\Documents\自定义 Office 模板\小说.dotm"
+# 	template_dotx = r"D:\Users\Administrator\Documents\自定义 Office 模板\模板.docx"
+# else:
+# 	template_dotm = os.path.join(os.getcwd(), "data", "小说.dotm")
+# 	template_dotx = os.path.join(os.getcwd(), "data", "模板.docx")
 template_dotm = r"D:\Users\Administrator\Documents\自定义 Office 模板\小说.dotm"
 template_dotx = r"D:\Users\Administrator\Documents\自定义 Office 模板\模板.docx"
 
@@ -99,8 +101,12 @@ def desktop() -> str:
 	else:  # 未测试
 		path = os.path.expanduser("~/Desktop")
 	return path
-	
-	
+
+
+def setFilePath(dir, file):
+	return os.path.join(os.getcwd(), dir, file)
+
+
 def monthNow() -> str:
 	year = str(time.localtime()[0])
 	month = str(time.localtime()[1])
@@ -257,10 +263,6 @@ def saveText(path, text):
 		logging.debug(f"已保存为：{path}")
 
 
-def saveTxt(path, text):
-	return saveText(path, text)
-
-
 @saveFileCheck
 def saveTextDesktop(name, text):
 	path = os.path.join(desktop(), name)
@@ -297,7 +299,7 @@ def saveJson(path, data):
 def saveDocx(path, text, *, original=""):
 	if original:
 		docx = Document(original)
-		for para in docx.paragraphs:
+		for para in docx.paragraphs:  # 清空源文件
 			para.clear()
 			para._element.getparent().remove(para._element)
 	else:
@@ -475,6 +477,11 @@ def unzipFile(path, password="", mode=0, delete=0) -> str:
 		return dir
 	
 	
+# 函數別名
+openTxt = openText
+saveTxt = saveText
+
+
 def test():
 	print("测试")
 	path = r"D:\Download\Github\FurryNovelsBot\Translated\龙龙.docx"

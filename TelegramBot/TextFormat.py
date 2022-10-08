@@ -60,7 +60,8 @@ def formatNovelName(name: str) -> str:
 	
 	elif re.findall("([给給]?.+?的?(?:委托|合委|赠文|无偿))", name):
 		# pattern = "((?:给|給)?.+?的?(?:委托|赠文|无偿))(?::|：|;|；|,|，)?(.+?)((?:（| ).*）?)"
-		# pattern = "((?:给|給)?.+?的?(?:委托|赠文|无偿))(?::|：|;|；|,|，)?(.+)"
+		# pattern = "(?:委托|赠文|无偿)(?::|：|;|；|,|，|。|-|-\s)?(.+)"
+		
 		pattern = "((?:给|給)?.+?的?(?:委托|赠文|无偿|合委))[:;, ：；，]?(.+)"
 		# todo：XXX 委托 标记符 名称，只考虑从后半部分提取名称
 		text = re.findall(pattern, name)
@@ -94,10 +95,10 @@ def formatTextIndent(text: str) -> str:
 		文字连接符    通用标点	⁠
 		零宽不换行空格（Zero Width No-Break Space） ﻿
 		"""
-	pattern = " ​﻿     "
+	pattern = "[ ​﻿     ]"
 	text = re.sub(pattern, "", text)
-	text = re.sub("\n +", "\n", text)        # 删除段首半角空格
-	text = re.sub("\n　+", "\n", text)       # 删除段首全角空格
+	text = re.sub("\n +", "\n", text)         # 删除段首半角空格
+	text = re.sub("\n　+", "\n", text)        # 删除段首全角空格
 	text = re.sub("\n{3,}", "\n\n\n", text)  # 删除多余空行
 	return text
 	
@@ -164,7 +165,7 @@ def formatPixivText(text: str) -> str:
 		pattern = "If you would like to view illustrations, please use your desktop browser."
 		string = "【本文内有插图，请在 Pixiv 查看】\n"
 		text = re.sub(pattern, string, text)
-		
+	# print(text)
 	return text
 	
 	
@@ -202,8 +203,8 @@ def formatCaption(text: str) -> str:
 			text = re.sub(pattern, link, text, 1)
 	# print(text)
 	return text
-	
-	
+
+
 # def formatText(text: str, lang:str) -> str:
 def formatText(text: str, lang="zh") -> str:
 	text = f"\n{text}"
@@ -211,7 +212,7 @@ def formatText(text: str, lang="zh") -> str:
 	text = formatPixivText(text)
 	text = formatTextPunctuation(text)
 	if lang in cjklist:                       # 中文格式
-		text = re.sub("\n", "\n　　", text)   # 添加2个全角空格
+		text = re.sub("\n", "\n　　", text)    # 添加2个全角空格
 	elif lang in eulist:                      # 英文格式
 		text = re.sub("\n", "\n    ", text)   # 添加4个半角空格
 	return text
@@ -222,6 +223,7 @@ def test():
 	
 	
 if __name__ == '__main__':
+	# testMode = 1
 	if testMode:
 		test()
 	

@@ -12,7 +12,7 @@ from telegram.ext import Updater, ContextTypes, Defaults, Filters, CommandHandle
 from telegram.utils.request import Request
 import telegram.error
 
-from FileOperate import removeFile, timer
+from FileOperate import removeFile, saveFile, timer
 from Recommend import do_recommend, url_init_recommend
 from PixivClass import getUrl, PixivNovels, PixivSeries, PixivAuthor, PixivObject
 from Translate import translateFile
@@ -46,7 +46,7 @@ def ping(update: Update, context: ContextTypes):
 def delete(update: Update, context: ContextTypes):
 	if update.message.chat.id == 1348148286:
 		path = os.getcwd()
-		li = "backup ".split(" ")
+		li = "backup data".split(" ")
 		for dir in os.listdir(path):
 			if os.path.isdir(dir) and not dir.startswith(".") and dir not in li:
 				directory = os.path.join(path, dir)
@@ -277,7 +277,13 @@ def transFile(update: Update, context: ContextTypes):
 	extname = os.path.splitext(name)[1].replace(".", "")
 	path = os.path.join(os.getcwd(), "Translation", name)
 	print(f"正在翻译：{path}")
-	file.download(custom_path=path)
+	try:
+		saveFile(path)  # 保存空文件后再覆盖
+		file.download(custom_path=path)
+	except Exception as e:
+		update.message.reply_text(f"出现未知错误1，已向管理发送错误信息")
+		context.bot.send_message("1348148286", e)
+		logging.error(e)
 	
 	try:
 		path = translateFile(path, lang, mode=1)
@@ -288,8 +294,8 @@ def transFile(update: Update, context: ContextTypes):
 		update.message.reply_text(f"该文件已与你当前所用语言一致，故未翻译，如需翻译请更换 Telegram 语言包")
 		message = f"#无需翻译 #{extname} {name}\n{message}"
 	except Exception as e:
-		update.message.reply_text(f"出现未知错误，已向管理发送错误信息")
-		context.bot.send_message(1348148286, e)
+		update.message.reply_text(f"出现未知错误2，已向管理发送错误信息")
+		context.bot.send_message("1348148286", e)
 		logging.error(e)
 	else:
 		context.bot.send_document(chatid, open(path, 'rb'), os.path.basename(path))
@@ -297,6 +303,8 @@ def transFile(update: Update, context: ContextTypes):
 		message = f"#已经翻译 #{extname} {name}\n{message}"
 		print(f"翻译完成：{path}")
 	finally:
+		if "Windows" in platform():
+			message = f"#測試 {message}"
 		context.bot.send_message("-1001286539630", message, parse_mode="HTML")
 		print(f"结束翻译")
 	
@@ -324,6 +332,7 @@ def main():
 	updater.dispatcher.add_handler(CommandHandler("cancel", cancel))
 	updater.dispatcher.add_handler(CommandHandler("delete", delete))
 	updater.dispatcher.add_handler(MessageHandler(Filters.document, transFile))
+	
 	updater.dispatcher.add_handler(ConversationHandler(
 		entry_points=[
 			CommandHandler("download", pixivFilters),

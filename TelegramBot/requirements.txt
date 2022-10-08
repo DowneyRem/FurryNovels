@@ -11,6 +11,6 @@ docx-hitalent >= 0.8.30
 # pixivpy_async
 # aiohttp_socks
 
-# dispensable packages, only used on Windows
+# dispensable packages
+# pywin32 # only used on Windows
 # python-docx # use docx-hitalent instead of python-docx on python 310
-# pywin32
