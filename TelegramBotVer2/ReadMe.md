@@ -1,8 +1,9 @@
-## Telegram Bot 公开版
+## Telegram Bot Ver2 公开版（现已停止维护）
 
 请根据不同平台调整并部署
 
 依赖详见 Requirement.txt
+
 
 ### 与非公开版的区别
 
