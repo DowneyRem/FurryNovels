@@ -6,11 +6,15 @@ numpy >= 1.22.1
 pyzipper >= 0.3.6
 webdav4 >= 0.9.5
 docx-hitalent >= 0.8.30
+# instead of python-docx on python 310
+
+
+# dispensable packages
+# pywin32 # only used on Windows
+
 
 # dispensable packages, todo in the future
 # pixivpy_async
 # aiohttp_socks
 
-# dispensable packages
-# pywin32 # only used on Windows
-# python-docx # use docx-hitalent instead of python-docx on python 310
+

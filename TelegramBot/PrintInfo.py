@@ -8,7 +8,7 @@ from functools import cmp_to_key
 from opencc import OpenCC
 
 from MakeTags import hashtags, cntags, entags, racetags, racedict, racelist, cmp
-from FileOperate import openText, openDocx, openDoc, findFile, timer
+from FileOperate import readText, readDocx, readDoc, findFile, timer
 from Translate import getLanguage, transWords
 from config import default_path, testMode
 
@@ -147,19 +147,19 @@ def printInfo(path: str, *, num=0):
 	ext = os.path.splitext(path)[1]
 	
 	if ext.lower() == ".txt":
-		text = openText(path)
+		text = readText(path)
 	elif ext.lower() == ".docx":
 		try:
-			text = openDocx(path)
+			text = readDocx(path)
 		except Exception as e:
 			logging.warning(e)
 			try:
-				text = openDoc(path)
+				text = readDoc(path)
 			except Exception as e:
 				logging.warning(e)
 	elif ext.lower() == ".doc" and "Windows" in platform():
 		try:
-			text = openDoc(path)
+			text = readDoc(path)
 		except Exception as e:
 			logging.warning(e)
 	else:

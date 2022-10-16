@@ -6,7 +6,7 @@ import logging
 
 from opencc import OpenCC
 
-from FileOperate import openJson, saveJson, removeFile, timer
+from FileOperate import readJson, saveJson, removeFile, timer
 from TextFormat import isAlpha
 from config import testMode
 
@@ -54,7 +54,7 @@ def makeHashTags(dic: dict) -> dict:  # DictNovel 原始tags生成 hashtags.json
 
 
 def makeUsedTags() -> tuple[dict, dict]:  # tags.json 生成 usedtags.json
-	dic = openJson(json1)
+	dic = readJson(json1)
 	usedtags = {}
 	for keys, values in dic.items():
 		for value in values.values():
@@ -167,7 +167,7 @@ def updateUsedTagsJson():
 def updateRaceJson():
 	def convert(dict0: dict):
 		dict1 = {}
-		dict2 = {"熊貓": "貓熊", "鯊狗": "鯊格魯", }
+		dict2 = {"熊貓": "貓熊", "鯊狗": "鯊格魯", }  # 特殊词语替换
 		for key1 in dict0:
 			key2 = OpenCC('s2twp.json').convert(key1)
 			value = dict0[key1]
@@ -178,9 +178,10 @@ def updateRaceJson():
 		return dict1
 	
 	global races, others, races_tw, others_tw
-	races, others, _, _ = openJson(json3)
-	races_tw, others_tw = convert(races), convert(others)
-	saveJson(json3, [races, others, races_tw, others_tw])
+	races, others, _, _ = readJson(json3)  # 读取简体标签
+	races_tw, others_tw = convert(races), convert(others)  # 转换繁体标签
+	logging.info(f"Updating {os.path.basename(json2)}")
+	saveJson(json3, [races, others, races_tw, others_tw])  # 写回文件
 
 
 def updateJsons():
@@ -193,9 +194,9 @@ def main():
 	if not os.path.exists(json2):
 		updateUsedTagsJson()
 	global hashtags, entags, cntags, races, others, races_tw, others_tw
-	entags, cntags = openJson(json2)
+	entags, cntags = readJson(json2)
 	hashtags = {**entags, **cntags}  # 合并dict
-	races, others, races_tw, others_tw = openJson(json3)
+	races, others, races_tw, others_tw = readJson(json3)
 	racelist.extend(list(races.values()))
 	racelist.extend(list(others.values()))
 	makeRaceTags()

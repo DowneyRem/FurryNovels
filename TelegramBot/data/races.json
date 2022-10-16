@@ -37,7 +37,12 @@
     {
         "兽族": "furry",
         "兽人": "furry",
-        "兽兽": "furry"
+        "兽兽": "furry",
+        "狮子": "lion",
+        "老虎": "tiger",
+        "兔子": "rabbit",
+        "大象": "elephant",
+        "老鼠": "mouse"
     },
     {
         "貓熊": "panda",
@@ -58,6 +63,7 @@
     {
         "獸族": "furry",
         "獸人": "furry",
-        "獸獸": "furry"
+        "獸獸": "furry",
+        "獅子": "lion"
     }
 ]

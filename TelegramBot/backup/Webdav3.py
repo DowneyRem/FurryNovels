@@ -61,7 +61,7 @@ def uploadAll(path, folder, *, encrypt=0, delete=0):
 		url = options.get("webdav_hostname")
 		if encrypt == 1 or url in encryptlist:
 			if not os.path.exists(zippath):
-				filepath = zipFile(path, "furry")
+				filepath = zipFile(path, password="furry")
 			else:
 				filepath = zippath
 		else:

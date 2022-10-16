@@ -9,6 +9,10 @@ from abc import ABC, abstractmethod
 from functools import wraps
 from ssl import SSLError
 from urllib.parse import unquote
+import urllib3.exceptions
+import requests.exceptions
+import pixivpy3.utils
+
 
 import numpy as np
 
@@ -39,23 +43,23 @@ def checkNone(fun):
 		except SSLError as e:
 			logging.critical(f"SSLError{e}")
 			logging.critical("请检测网络/代理/RefreshTokens 是否可用")
-			os._exit(1)
+			return
 		except ValueError:
 			logging.warning('None Value')
-			# os._exit(1)
+			return
 		except AttributeError as e:  # 'NoneType' object has no attribute 'title'
 			logging.critical(f"AttributeError:{e}")
 			logging.critical("网络/代理/Refresh Tokens 不可用；或请求频率过高")
-			os._exit(1)
+			return
 		except TypeError as e:  # 'NoneType' object is not callable
 			logging.critical(f"TypeError: {e}")
 			logging.critical("网络/代理/Refresh Tokens 不可用；或请求频率过高2")
-			os._exit(1)
+			return
 		except KeyboardInterrupt as e:
 			logging.debug(e)
 		except Exception as e:
 			logging.error(e)
-			os._exit(1)
+			return
 	return wrapper
 
 
@@ -63,8 +67,8 @@ def getUrl(string: str) -> str:
 	pattern = "(?:https?|ftp|file)://[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]"
 	if re.findall(pattern, string):
 		url = re.findall(pattern, string)[0]
-		url_unquote = unquote(url, 'UTF8')
-		# print(url_unquote)
+		if __name__ == "__main__" and testMode:
+			print(unquote(url, 'UTF8'))
 		return url
 	
 
@@ -260,17 +264,14 @@ class PixivBase(PixivABC):  # 共用方法
 	
 	@timer
 	def setUploadInfo(self, lang2="") -> tuple:  # 上传文件至 Telegram 的信息
-		info2 = ""; furry2 = 0
+		info2, furry2 = "", 0
 		info1, self.furry = getInfoFromText(self.file_text, self.tags, self.lang)
 		logging.info(f"【{self.title}】福瑞指数：{self.furry:.1f}")
 		
 		if lang2 and self.trans_text:
 			info2, furry2 = getInfoFromText(self.trans_text, self.trans_tags, lang2)
-		if __name__ == "__main__":
-			if info2:
-				print(info1, info2, sep="\n\n")
-			else:
-				print(info1)
+		if __name__ == "__main__":  # 直接运行时输出上传 Telegram 的信息
+			print(info1, info2, sep="\n\n")
 		return (info1, self.furry), (info2, furry2)
 	
 	
@@ -379,7 +380,6 @@ class PixivNovels(PixivBase):
 		return self.link_info
 	
 	
-	@timer
 	def saveNovel(self, author="", series="", i=0, lang="", lang2="") -> tuple:
 		if not self.original_text:
 			self.getText()
@@ -392,7 +392,7 @@ class PixivNovels(PixivBase):
 			self.file_path = os.path.join(default_path, author, series, f"{i:0>2d} {self.title}.txt")
 		elif series and i:  # 优化 SaveAsZip
 			self.file_path = os.path.join(default_path, series, f"{i:0>2d} {self.title}.txt")
-		else:   # 优化 SaveNovels
+		else:   # 优化 SaveNovel
 			self.file_path = os.path.join(default_path, f"{self.title}.txt")
 		print(self.file_path)
 		
@@ -407,10 +407,10 @@ class PixivNovels(PixivBase):
 			self.trans_tags.update([lang2, "translated"])
 			# print(self.tags, self.trans_tags, sep="\n")
 			
-			part_path = self.file_path.replace(f"{default_path}\\", "")
+			part_path = os.path.relpath(self.file_path, default_path)  # 多平台运行
 			part_path = translate(part_path, lang1=self.lang, lang2=lang2)
 			self.trans_path = os.path.join(default_path, transDir(lang2), part_path)
-			self.trans_text = translate(self.file_text, lang1=self.lang, lang2=lang2, mode=1)
+			self.trans_text = translate(self.file_text, lang1=self.lang, lang2=lang2)
 			saveText(self.trans_path, self.trans_text)
 			print(self.trans_path)
 		
@@ -573,7 +573,6 @@ class PixivSeries(PixivBase):
 			if self.lang:
 				# print(self.lang)
 				break
-				
 		self.tags.add(self.lang)
 		return self.lang
 	
@@ -608,12 +607,11 @@ class PixivSeries(PixivBase):
 		print(f"SaveAsZip: {self.title}")
 		for i in range(len(self.novels_list)):
 			novel = PixivNovels(self.novels_list[i])
-			(path1, path2) = novel.saveNovel(author, self.title, i + 1, self.lang, lang2)
-		self.file_path = os.path.dirname(path1)
-		print(self.file_path)
+			(path1, path2) = novel.saveNovel(author, self.title, i+1, self.lang, lang2)
+		self.file_path = os.path.dirname(path1)  # 路径可能有作者文件夹
 		
 		if lang2 and self.lang != lang2:
-			self.trans_path = os.path.dirname(path2)
+			self.trans_path = os.path.dirname(path2)  # 直接运行时，父文件夹即是翻译文件夹
 			self.trans_tags = self.tags.copy()
 			self.trans_tags.discard(self.lang)
 			self.trans_tags.update([lang2, "translated"])
@@ -622,7 +620,7 @@ class PixivSeries(PixivBase):
 		if not author:  # 直接运行时
 			self.file_path = zipFile(self.file_path)
 			if self.trans_path:  # 压缩翻译目录
-				self.trans_path = zipFile(self.trans_path, dir=transDir(lang2))
+				self.trans_path = zipFile(self.trans_path)
 			info1, info2 = self.setUploadInfoForZip(lang2)
 			furry = 0  # 保持返回值结构一致
 			return (self.file_path, info1, furry), (self.trans_path, info2, furry)
@@ -661,8 +659,8 @@ class PixivSeries(PixivBase):
 			self.lang = lang
 		else:
 			self.lang = getLanguage(text)
-			self.tags.add(self.lang)
-		
+			
+		self.tags.add(self.lang)
 		self.text = formatText(text, self.lang)
 		self.file_info = self.setFileInfo()
 		self.file_text = f"{self.file_info}\n\n{self.text}"
@@ -675,10 +673,10 @@ class PixivSeries(PixivBase):
 			self.trans_tags.update([lang2, "translated"])
 			# print(self.tags, self.trans_tags, sep="\n")
 			
-			part_path = self.file_path.replace(f"{default_path}\\", "")
+			part_path = os.path.relpath(self.file_path, default_path)  # 构造翻译路径
 			part_path = translate(part_path, lang1=self.lang, lang2=lang2)
 			self.trans_path = os.path.join(default_path, transDir(lang2), part_path)
-			self.trans_text = translate(self.file_text, lang1=self.lang, lang2=lang2, mode=1)
+			self.trans_text = translate(self.file_text, lang1=self.lang, lang2=lang2)
 			saveText(self.trans_path, self.trans_text)
 			print(self.trans_path)
 		
@@ -699,7 +697,9 @@ class PixivSeries(PixivBase):
 			title = os.path.splitext(os.path.basename(self.trans_path))[0]
 			tags = getFormattedTags(self.trans_tags)
 			info2 = f"{title}\nBy #{self.author_name}\n{tags}\n{self.novel_url}"
-		# print(info1, info2, sep="\n\n")
+			
+		if __name__ == "__main__":  # 直接运行时输出上传 Telegram 的信息
+			print(info1, info2, sep="\n\n")
 		return info1, info2
 	
 	
@@ -819,9 +819,9 @@ class PixivAuthor(PixivBase):
 	def setLinkInfo(self) -> str:
 		self.link_info = f"{self.author_name}\n"
 		if self.novels >= 1:
-			self.link_info += f"小说：{self.novels}篇，系列：{self.novels_series}个"
+			self.link_info += f"小说：{self.novels}篇，系列：{self.novels_series}个\n"
 		if self.illusts >= 1:
-			self.link_info += f"插画：{self.illusts}幅，系列：{self.illusts_series}个"
+			self.link_info += f"插画：{self.illusts}幅，系列：{self.illusts_series}个\n"
 		# print(self.link_info)
 		return self.link_info.strip()
 		
@@ -869,38 +869,36 @@ class PixivAuthor(PixivBase):
 		return self.lang
 	
 	
-	def setAuthorDir(self) -> None:
-		self.author_dir = os.path.join(default_path, self.author_name)
+	def makeAuthorDir(self) -> None:
 		if not os.path.exists(self.author_dir):
 			os.makedirs(self.author_dir)
 	
 	
 	def saveAuthorIcon(self, force_update=False) -> str:
-		if not os.path.exists(self.author_dir):
-			self.setAuthorDir()
-			
+		self.makeAuthorDir()
 		name = f"{self.author_name}.jpg"
 		path = os.path.join(self.author_dir, name)
 		if os.path.exists(path) and force_update:
 			os.remove(path)
 		elif os.path.exists(path):
-			print(path)
-			return path
+			pass
 		else:
 			try:
 				tokenPool.getAPI().download(self.profile_url, path=self.author_dir, name=name)
+			except (ConnectionResetError, urllib3.exceptions.MaxRetryError, requests.exceptions.ProxyError, pixivpy3.utils.PixivError) as e:
+				print("网络问题，无法下载作者头像")
+				logging.error(e)  # 代理需支持UDP
 			except Exception as e:
 				logging.error(e)  # 代理需支持UDP
-			else:
-				print(path)
-				return path
-	
+		
+		if os.path.exists(path):
+			print(f"作者头像：{path}")
+		return path
+
 	
 	def saveAuthorInfo(self) -> str:
-		if not os.path.exists(self.author_dir):
-			self.setAuthorDir()
-		if not self.lang:
-			self.getLang()
+		self.makeAuthorDir()
+		self.getLang()
 		
 		# 写入 info 当中的 li 指定的社交网站
 		text = [self.author_name, f"{self.author_url}"]
@@ -926,38 +924,32 @@ class PixivAuthor(PixivBase):
 		path = os.path.join(self.author_dir, f"{self.author_name}.txt")
 		text = "\n".join(text)
 		saveText(path, text)
-		print(path)
+		print(f"作者信息：{path}")
 		return path
 	
 		
 	@timer
 	def saveAuthorNovels(self, lang2="") -> tuple:
-		if not os.path.exists(self.author_dir):
-			self.setAuthorDir()
-		if not self.novels_list:
-			self.getNovelsList()
-		if not self.lang:
-			self.getLang()
+		self.makeAuthorDir()
+		self.getNovelsList()
+		self.getLang()
 		
-		path1, path2 = "", ""
+		path1, path2, paths = "", "", []
 		single = transWords("single", self.lang)
 		for i in range(len(self.novels_list)):
 			novels = PixivNovels(self.novels_list[i])
-			path1, path2 = novels.saveNovel(self.author_name, single, i + 1, self.lang, lang2)
+			path1, path2 = novels.saveNovel(self.author_name, single, i+1, self.lang, lang2)
 		for j in range(len(self.series_list)):
 			series = PixivSeries(self.series_list[j])
 			path1, path2 = series.saveSeries(self.author_name, self.lang, lang2)
-		# print(self.author_dir)
 		self.file_path = zipFile(self.author_dir)
 		
 		if lang2 and self.lang != lang2:
-			path2 = path2.replace(f"{default_path}\\", "")
-			path2 = path2.split("\\")[:2]
-			path2 = "\\".join(path2)
-			path2 = os.path.join(default_path, path2)
-			print(path2)
-			self.trans_path = zipFile(path2, dir=transDir(lang2))
-		
+			length = len(self.author_dir.split(os.sep))  # 构造翻译路径，../翻译/作者名/小说名，需
+			trans_dir = os.sep.join(path2.split(os.sep)[:length + 1])  # 代替 os.path.commonpath
+			self.trans_path = zipFile(trans_dir)
+			# print(self.author_dir, self.trans_path, sep="\n")
+			
 		furry = 0  # 保证返回值结构一致
 		info1, info2 = self.setUploadInfo(lang2)
 		return (self.file_path, info1, furry), (self.trans_path, info2, furry)
@@ -977,14 +969,14 @@ class PixivAuthor(PixivBase):
 		if lang2:
 			info2 = translate(info1, lang2=lang2, lang1=self.lang)
 			info2 = info2.replace(f"#{self.lang}", f"#{lang2}")
-		if __name__ == "__main__":
+		if __name__ == "__main__":  # 直接运行时输出上传 Telegram 的信息
 			print(info1, info2, sep="\n\n")
 		return info1, info2
 	
 	
 	@timer
 	def saveAuthor(self, lang2="") -> tuple:
-		self.setAuthorDir()
+		self.makeAuthorDir()
 		self.getNovelsList()
 		self.getLang()
 		self.saveAuthorIcon()
@@ -999,9 +991,7 @@ class PixivAuthor(PixivBase):
 	
 	
 	def getNovelsData(self) -> list[list]:
-		if not self.novels_list:
-			self.getNovelsList()
-			
+		self.getNovelsList()
 		self.novels_data = []
 		for novel_id in self.novels_list_all:
 			n = PixivNovels(novel_id)
@@ -1105,7 +1095,7 @@ class PixivObject(PixivNovels, PixivSeries, PixivAuthor):
 		elif "artworks" in self.url:
 			print("不支持下载插画，请重新输入")
 			score = 0
-			result = (("", "" ,0), ("", "", 0))
+			result = (("", "", 0), ("", "", 0))
 			# PixivIllust(id).save()   # todo
 		
 		return result, score
@@ -1168,7 +1158,7 @@ def test():
 	
 
 if __name__ == "__main__":
-	# testMode = 1
+	testMode = 1
 	if testMode:
 		test()
 	else:

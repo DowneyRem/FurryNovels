@@ -98,7 +98,7 @@ def uploadAll(path: os.PathLike, folder: str, *, encrypt=0, delete=0):
 		baseurl = webdav.get("baseurl")
 		if encrypt == 1 or baseurl in encryptlist:  # 加密压缩
 			if not os.path.exists(zippath):
-				filepath = zipFile(path, "furry")
+				filepath = zipFile(path, password="furry")
 			else:
 				filepath = zippath
 		else:  # 直接上传
