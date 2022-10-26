@@ -4,7 +4,7 @@ from nonebot.default_config import *
 
 
 # 超级用户
-SUPERUSERS = {
+SUPERUSERS = {}
 
 # 命令头
 COMMAND_START = ['', re.compile(r'[/／!！]+')]
