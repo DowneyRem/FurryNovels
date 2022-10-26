@@ -1,4 +1,6 @@
 .idea
 __pycache__
 config.py
-TelegramBot/config.py
+configuration.py
+/Novels/
+/Translation/
