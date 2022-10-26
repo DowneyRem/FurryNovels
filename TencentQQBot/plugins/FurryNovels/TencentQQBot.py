@@ -40,7 +40,7 @@ credits = """
 开发：@唐尼瑞姆 DowneyRem
 协助：@upanther, @eatswap, @windyhusky
 
-Github：https://github.com/DowneyRem/FurryNovels/TencentQQBot
+Github：https://github.com/DowneyRem/FurryNovels/tree/main/TencentQQBot
 Pixiv：https://www.pixiv.net/users/16721009
 爱发电：https://afdian.net/@TNTwwxs
 
