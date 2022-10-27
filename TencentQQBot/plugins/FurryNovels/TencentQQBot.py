@@ -91,6 +91,7 @@ async def upload(session, path1, path2, score, furry):
 	elif session.ctx.message_type == "group":
 		zippath1, zippath2 = "", ""
 		zipfolder = os.path.join(novel_path, "ZipFiles")
+		await session.send("密码：【furry】，请使用支持 AES256 加密的解压软件解压")
 		
 		name1 = os.path.splitext(os.path.basename(path1))[0]
 		zippath1 = os.path.join(zipfolder, f"{name1}.zip")
@@ -104,7 +105,6 @@ async def upload(session, path1, path2, score, furry):
 			zipFile(path2, password=password, zippath=zippath2)
 			await session.bot.upload_group_file(
 				group_id=session.ctx.group_id, file=zippath2, name=f"{name2} (密码：{password}).zip")
-			await session.send("密码：【furry】，请使用支持 AES256 加密的解压软件解压")
 		removeFile(zipfolder)
 	
 	if not path2 and ".zip" not in path1 and furry >= 2 and score >= 6:
