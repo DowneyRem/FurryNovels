@@ -1,0 +1,21 @@
+nonebot >= 1.9.1
+requests>= 2.28.1
+pixivpy >= 3.7.0
+pygtrans >= 1.4.0
+opencc >= 1.1.1
+numpy >= 1.22.1
+pyzipper >= 0.3.6
+webdav4 >= 0.9.5
+docx-hitalent >= 0.8.30
+# instead of python-docx on python 310
+
+
+# dispensable packages
+# pywin32 # only used on Windows
+
+
+# dispensable packages, todo in the future
+# pixivpy_async
+# aiohttp_socks
+
+

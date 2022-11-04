@@ -1,7 +1,9 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
 from nonebot import on_command, CommandSession
-from .TencentQQBot import *
+
+from .PixivClass import getUrl
+from .TencentQQBot import download
 
 
 # on_command 装饰器将函数声明为一个命令处理器
@@ -50,3 +52,48 @@ async def down3(session: CommandSession):
 @on_command("down4", aliases=("开发者", "赞助", "其他", "開發者", "贊助"), only_to_me=False)
 async def down4(session: CommandSession):
 	await session.send(credits)
+	
+	
+download_help = """
+⬇️FFF下载功能帮助
+下列文字指令同样支持繁体中文；
+群内下载后会自动加密，密码：furry，请使用支持 AES256 加密方式的解压软件解压；
+所有下载的 txt 兽人小说 均会转发到TG频道 @FurryReading ，作为你的分享
+
+0️⃣根据链接自行下载
+【FFF 下载 + 网址】
+
+1️⃣指定方法下载
+⏺下载单篇小说
+【FFF 下载 小说 + 网址】
+⏺下载系列合集
+【FFF 下载 系列 + 网址】
+⏺指定下载作者合集
+【FFF 下载 作者 + 网址】
+
+2️⃣指定格式下载
+⏺下载系列为txt合集
+【FFF 下载 系列 txt + 网址】
+⏺下载系列为zip合集
+【FFF 下载 系列 zip + 网址】
+
+3️⃣帮助 & 其他：
+⏺查看下载指令【下载帮助】
+【FFF 下载 帮助/命令/指令】
+⏺查看源代码等
+【FFF 开发者/赞助/其他】
+""".strip()
+
+
+credits = """
+开发：@唐尼瑞姆 DowneyRem
+协助：@upanther, @eatswap, @windyhusky
+
+Github：https://github.com/DowneyRem/FurryNovels/tree/main/TencentQQBot
+Pixiv：https://www.pixiv.net/users/16721009
+爱发电：https://afdian.net/@TNTwwxs
+
+ＱＱ机器人：@FFF
+电报机器人：https://t.me/FurryNovelsBot
+兽人小说频道：https://t.me/FurryNovels
+""".strip()

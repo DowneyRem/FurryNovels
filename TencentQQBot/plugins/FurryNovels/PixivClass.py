@@ -15,7 +15,7 @@ import pixivpy3.utils
 
 import numpy as np
 
-from .FileOperate import saveText, zipFile, openFile, timer
+from .FileOperate import saveText, zipFile, openFile, makeDirs,  timer
 from .GetLanguage import getLanguage, getLangSystem
 from .PrintInfo import getFormattedTags, getInfoFromText
 from .TextFormat import formatNovelName, formatCaption, formatText
@@ -242,7 +242,6 @@ class PixivBase(PixivABC):  # 共用方法
 		return self.score
 	
 	
-	# @timer
 	def getLang(self, force_update=False) -> str:
 		if self.lang and not force_update:
 			return self.lang
@@ -438,7 +437,7 @@ class PixivNovels(PixivBase):
 			print(self.trans_path)
 		
 		if not author and not series:  # 直接运行时
-			self.setFileInfo(lang2)
+			self.setFileInfo(lang2=lang2)
 		return self.file_path, self.trans_path
 	
 	
@@ -573,6 +572,10 @@ class PixivSeries(PixivBase):
 					elif novel.x_restrict == 2:
 						self.tags.add("R18G")
 		
+		self.tags = set()   # 第二次下载时，清空原有内容
+		self.novels_list_all, self.novels_list = [], []
+		self.novels_name, self.novels_caption = [], []
+		
 		addList(self.getJson())
 		if len(self.novels_list_all) >= 30:  # 1次最多可请求到30个id
 			next_qs = tokenPool.getAPI().parse_qs(self.json.next_url)
@@ -639,7 +642,7 @@ class PixivSeries(PixivBase):
 			self.file_path = zipFile(self.file_path)
 			if self.trans_path:  # 压缩翻译目录
 				self.trans_path = zipFile(self.trans_path)
-			self.setFileInfoForZip(lang2)
+			self.setFileInfoForZip(lang2=lang2)
 		return self.file_path, self.trans_path
 	
 	
@@ -696,7 +699,7 @@ class PixivSeries(PixivBase):
 			print(self.trans_path)
 		
 		if not author:  # 直接运行时
-			self.setFileInfo()
+			self.setFileInfo(lang2=lang2)
 		return self.file_path, self.trans_path
 	
 	
@@ -719,6 +722,7 @@ class PixivSeries(PixivBase):
 	
 	@timer
 	def saveSeries(self, author="", lang="", lang2="") -> tuple[str, str]:
+		self.getNovelsList(force_update=True)  # 强制更新
 		if self.checkCommission():
 			print("委托系列将下载成zip文件")
 			paths = self.saveAsZip(author, lang, lang2)
@@ -768,6 +772,8 @@ class PixivAuthor(PixivBase):
 	novels_list = list[int]()       # 所有可见小说 ID
 	single_list = list[int]()       # 无系列小说 ID
 	series_list = list[int]()       # 全部系列 ID
+	novel_id = 0                    # 最近1篇小说
+	series_id = 0                   # 最近1篇系列小说
 	
 	novels_name = list[str]()       # 所有小说名称
 	novels_caption = list[str]()    # 所有小说 capithon
@@ -870,6 +876,11 @@ class PixivAuthor(PixivBase):
 					elif novel.series.id not in self.series_list:
 						self.series_list.append(novel.series.id)
 					
+		self.tags = set()   # 第二次下载时，清空原有内容
+		self.novels_list_all, self.novels_list = [], []
+		self.novels_name, self.novels_caption = [], []
+		self.single_list, self.series_list = [], []
+		
 		json = tokenPool.getAPI().user_novels(self.author_id)
 		addList(json)
 		if len(self.novels_list_all) >= 30:  # 1次最多可请求到30个id
@@ -879,6 +890,12 @@ class PixivAuthor(PixivBase):
 				addList(json)
 				next_qs = tokenPool.getAPI().parse_qs(json.next_url)
 		
+		self.novel_id = self.novels_list_all[0]   # 最近1篇小说
+		try:
+			self.series_id = self.series_list[0]  # 最近1篇系列小说
+		except IndexError:
+			self.series_id = 0
+			
 		self.count = len(self.novels_list_all)
 		visible_count = len(self.novels_list)
 		if not visible_count:
@@ -888,11 +905,10 @@ class PixivAuthor(PixivBase):
 			print(f"正在下载 {visible_count} 篇小说")
 		# print(len(self.novels_list_all), len(self.single_list), len(self.series_list), sep="\n")
 		# print(self.novels_list_all, self.single_list, self.series_list, self.tags, sep="\n")
-	
+		
 	
 	def makeAuthorDir(self) -> None:
-		if not os.path.exists(self.author_dir):
-			os.makedirs(self.author_dir)
+		makeDirs(self.author_dir)
 	
 	
 	def saveAuthorIcon(self, force_update=False) -> str:
@@ -978,7 +994,7 @@ class PixivAuthor(PixivBase):
 			self.trans_path = zipFile(trans_dir)
 			# print(self.author_dir, self.trans_path, sep="\n")
 			
-		self.setFileInfo()
+		self.setFileInfo(lang2=lang2)
 		return self.file_path, self.trans_path
 	
 	
@@ -997,9 +1013,9 @@ class PixivAuthor(PixivBase):
 			self.trans_info = self.trans_info.replace(f"#{self.lang}", f"#{lang2}")
 		if __name__ == "__main__":  # 直接运行时输出上传 Telegram 的信息
 			if self.trans_path:
-				print(self.file_info, self.trans_info, sep="\n\n")
+				print(f"\n{self.file_info}\n\n{self.trans_info}\n")
 			else:
-				print(self.file_info, sep="\n\n")
+				print(f"\n{self.file_info}\n")
 		return self.file_info, self.trans_info
 	
 	
@@ -1007,6 +1023,7 @@ class PixivAuthor(PixivBase):
 	def saveAuthor(self, lang2="") -> tuple:
 		self.makeAuthorDir()
 		self.getNovelsList()
+		# self.getNovelsList(force_update=True)  # 已在 PixivObject 中强制更新
 		self.getLang()
 		self.saveAuthorIcon()
 		self.saveAuthorInfo()
@@ -1052,7 +1069,10 @@ class PixivAuthor(PixivBase):
 
 
 class PixivObject(object):
-	url = ""
+	url = ""          # 传入的 url
+	novel_url = ""    # 小说 url
+	series_url = ""   # 系列小说 url
+	author_url = ""   # 作者 url
 	novel_id = 0
 	series_id = 0
 	author_id = 0
@@ -1081,29 +1101,24 @@ class PixivObject(object):
 		self.url = getUrl(string)
 		if "user" in self.url:  # 去末尾s，兼容linpx
 			self.obj = PixivAuthor(self.url)
-			self.author_id = self.obj.author_id
-			self.obj.getNovelsList()
-			self.novel_id = self.obj.novels_list[0]
-			self.series_id = self.obj.series_list[0]
-		
+			self.obj.getNovelsList(force_update=True)  # 强制更新
 		elif "user" in self.url and "series" in self.url:
 			pass
-		
 		elif "novel/series" in self.url:
 			self.obj = PixivSeries(self.url)
-			self.author_id = self.obj.author_id
-			self.novel_id, self.series_id = self.obj.novel_id, self.obj.series_id
-		
 		elif "novel" in self.url or "pn" in self.url:  # 去末尾s，兼容linpx
 			self.obj = PixivNovels(self.url)
-			self.author_id = self.obj.author_id
-			self.novel_id, self.series_id = self.obj.novel_id, self.obj.series_id
-	
 		elif "artworks" in self.url:
-			pass
+			raise ValueError("输入有误")
 		else:
 			raise ValueError("输入有误")
-	
+		
+		self.author_id = self.obj.author_id
+		self.novel_id, self.series_id = self.obj.novel_id, self.obj.series_id
+		self.novel_url = f"https://www.pixiv.net/novel/show.php?id={self.novel_id}"
+		self.series_url = f"https://www.pixiv.net/novel/series/{self.series_id}"
+		self.author_url = f"https://www.pixiv.net/users/{self.author_id}"
+		
 	
 	def __str__(self):
 		return self.obj.__str__()
@@ -1126,40 +1141,40 @@ class PixivObject(object):
 	@addAttribute
 	def saveNovel(self, lang2=""):
 		print("开始下载单章小说……")
-		if ("novel" not in self.url) or ("pn" not in self.url):
-			self.obj = PixivNovels(self.novel_id)
+		if str(self.novel_id) not in self.url:
+			self.obj = PixivNovels(self.novel_url)
 		return self.obj.saveNovel(lang2=lang2)
 	
 	
 	@addAttribute
 	def saveSeries(self, lang2=""):
 		print("开始下载系列小说……")
-		if "novel/series" not in self.url:
-			self.obj = PixivSeries(self.series_id)
+		if str(self.series_id) not in self.url:
+			self.obj = PixivSeries(self.series_url)
 		return self.obj.saveSeries(lang2=lang2)
 	
 	
 	@addAttribute
 	def saveSeriesAsZip(self, lang2=""):
 		print("开始下载系列小说zip合集……")
-		if "novel/series" not in self.url:
-			self.obj = PixivSeries(self.series_id)
+		if str(self.series_id) not in self.url:
+			self.obj = PixivSeries(self.series_url)
 		return self.obj.saveAsZip(lang2=lang2)
 	
 	
 	@addAttribute
 	def saveSeriesAsTxt(self, lang2=""):
 		print("开始下载系列小说txt合集……")
-		if "novel/series" not in self.url:
-			self.obj = PixivSeries(self.series_id)
+		if str(self.series_id) not in self.url:
+			self.obj = PixivSeries(self.series_url)
 		return self.obj.saveAsTxt(lang2=lang2)
 	
 	
 	@addAttribute
 	def saveAuthor(self, lang2=""):  # author
 		print("开始下载此作者的全部小说……")
-		if "user" not in self.url:  # 去末尾s，兼容linpx
-			self.obj = PixivAuthor(self.author_id)
+		if str(self.author_id) not in self.url:
+			self.obj = PixivAuthor(self.author_url)
 		return self.obj.saveAuthor(lang2=lang2)
 	
 	
@@ -1227,7 +1242,7 @@ def test():
 	
 	
 if __name__ == "__main__":
-	testMode = 1
+	testMode = 0
 	if testMode:
 		test()
 	else:
