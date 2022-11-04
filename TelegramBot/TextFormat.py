@@ -1,11 +1,13 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
 import re
+import logging
 from html import unescape
 from functools import wraps
 
 from FileOperate import formatFileName
-from config import cjklist, eulist, testMode
+from GetLanguage import getLanguage
+from configuration import cjklist, eulist, testMode
 
 
 def checkNone(function):
@@ -14,10 +16,33 @@ def checkNone(function):
 		try:
 			result = function(*args, **kwargs)
 		except Exception as e:
-			print(e)
 			result = ""
+			logging.error(f"{function.__name__}: {e}")
 		return result
 	return wrapper
+	
+	
+class MyStr(str):
+	def __new__(cls, value):
+		return str.__new__(cls, value)
+	
+	
+	def __init__(self, value):
+		self.value = value
+	
+	
+	def isAlpha(self) -> bool:
+		for char in self.value:
+			if not "\u0000" <= char <= "\u007f":
+				return False
+		return True
+	
+	
+	def isChinese(self) -> bool:  # 检验是否全是中文字符
+		for char in self.value:
+			if not "\u4e00" <= char <= "\u9fa5":
+				return False
+		return True
 	
 	
 def isAlpha(string: str) -> bool:
@@ -27,7 +52,7 @@ def isAlpha(string: str) -> bool:
 	return True
 
 
-def isContainAlpha(string: str) -> bool:
+def containsAlpha(string: str) -> bool:
 	for char in string:
 		if "\u4e00" <= char <= "\u9fa5":
 			return True
@@ -41,13 +66,13 @@ def isChinese(string: str) -> bool:  # 检验是否全是中文字符
 	return True
 
 
-def isContainsChinese(string: str) -> bool: # 检验是否含有中文字符
+def containsChinese(string: str) -> bool:  # 检验是否含有中文字符
 	for char in string:
 		if "\u4e00" <= char <= "\u9fa5":
 			return True
 	return False
-	
-	
+
+
 @checkNone
 def formatNovelName(name: str) -> str:
 	if re.findall("[(（].*(委托|赠给).*[)）]", name):  # 梦川云岚OwO，优化
@@ -75,7 +100,8 @@ def formatNovelName(name: str) -> str:
 			if len(b) >= 1:
 				name = text[0][1].strip()
 	
-	name = name.replace("《", "").replace("》", "")
+	# name = name.replace("《", "").replace("》", "")
+	name = re.sub("[《》【】（）]", "", name)
 	name = formatFileName(name)
 	# print(name)
 	return name
@@ -206,11 +232,13 @@ def formatCaption(text: str) -> str:
 
 
 # def formatText(text: str, lang:str) -> str:
-def formatText(text: str, lang="zh") -> str:
+def formatText(text: str, lang="") -> str:
 	text = f"\n{text}"
 	text = formatTextIndent(text)
 	text = formatPixivText(text)
 	text = formatTextPunctuation(text)
+	if not lang:
+		lang = getLanguage(text)
 	if lang in cjklist:                       # 中文格式
 		text = re.sub("\n", "\n　　", text)    # 添加2个全角空格
 	elif lang in eulist:                      # 英文格式
@@ -219,11 +247,12 @@ def formatText(text: str, lang="zh") -> str:
 	
 	
 def test():
+	print("测试")
 	pass
 	
 	
 if __name__ == '__main__':
-	# testMode = 1
+	testMode = 1
 	if testMode:
 		test()
 	

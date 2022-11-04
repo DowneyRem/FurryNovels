@@ -11,7 +11,7 @@ from webbrowser import open as open_url
 
 import requests
 
-from config import proxy_list
+from configuration import proxy_list
 
 
 # Latest app version can be found using GET /v1/application-info/android

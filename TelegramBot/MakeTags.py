@@ -8,15 +8,16 @@ from opencc import OpenCC
 
 from FileOperate import readJson, saveJson, removeFile, timer
 from TextFormat import isAlpha
-from config import testMode
+from configuration import testMode
+
 
 hashtags, entags, cntags, races, others, races_tw, others_tw = {}, {}, {}, {}, {}, {}, {}
 racetags, racedict, racelist = {}, {}, []
-json0 = os.path.join(os.getcwd(), "backup", "hashtags.json")  # 备用标签数据文件
-json1 = os.path.join(os.getcwd(), "data", "hashtags.json")    # 主要标签数据文件
-json2 = os.path.join(os.getcwd(), "data", "usedtags.json")    # 读取 entags,cntags
-json3 = os.path.join(os.getcwd(), "data", "races.json")       # 读取 races,others
-json4 = os.path.join(os.getcwd(), "data", "racedict.json")    # 讀取 racedict.json 會更慢
+json0 = os.path.join(os.path.dirname(__file__), "backup", "hashtags.json")  # 备用标签数据文件
+json1 = os.path.join(os.path.dirname(__file__), "data", "hashtags.json")    # 主要标签数据文件
+json2 = os.path.join(os.path.dirname(__file__), "data", "usedtags.json")    # 读取 entags,cntags
+json3 = os.path.join(os.path.dirname(__file__), "data", "races.json")       # 读取 races,others
+json4 = os.path.join(os.path.dirname(__file__), "data", "racedict.json")    # 讀取 racedict.json 會更慢
 
 
 def makeHashTags(dic: dict) -> dict:  # DictNovel 原始tags生成 hashtags.json

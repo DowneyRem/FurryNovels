@@ -15,6 +15,8 @@ from platform import platform
 import pyzipper as zf
 from docx import Document  # 使用 docx-hitalent
 
+from configuration import testMode
+
 
 logging.basicConfig(
 		level=logging.INFO,
@@ -71,21 +73,65 @@ def openFileCheck(function):
 				result = function(*args, **kwargs)
 				return result
 			except IOError:
-				print(f"文件被占用：{path}")
+				logging.error(f"文件被占用：{path}")
 		else:
-			print(f"文件不存在：{path}")
+			logging.error(f"文件不存在：{path}")
 	return wrapper
 
 
 def saveFileCheck(function):
 	@wraps(function)
 	def wrapper(*args, **kwargs):
-		folder = os.path.dirname(args[0])
-		if not os.path.exists(folder):
-			os.makedirs(folder)
+		if not os.path.exists(os.path.dirname(args[0])):
+			os.makedirs(os.path.dirname(args[0]))
 		result = function(*args, **kwargs)
 		return result
 	return wrapper
+
+
+@checkWindows
+def desktop() -> str:
+	if "Windows" in platform():  # 其他平台没用过
+		key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, r'Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders')
+		path = winreg.QueryValueEx(key, "Desktop")[0]
+	else:  # 未测试
+		path = os.path.expanduser("~/Desktop")
+	return path
+
+
+def makeDirs(path: str, delete=False):
+	if not os.path.exists(path):
+		os.makedirs(path)
+	if os.path.exists(path) and delete:  # 删除后重建
+		removeFile(path)
+		os.makedirs(path)
+
+
+def makeFile(path: str, data=""):  # 新建空文件，不检查拓展名
+	if not os.path.exists(path):
+		return saveText(path, data)
+	
+	
+def copyFile(path1: str, path2: str):
+	shutil.copy2(path1, path2)
+	
+	
+def removeFile(*paths: str):
+	# 删除多个文件或文件夹
+	for path in paths:
+		if os.path.isdir(path):
+			try:
+				shutil.rmtree(path)
+				logging.info(f"已经删除：{path}")
+			except IOError:
+				logging.error(f"删除失败：{path}")
+		
+		elif os.path.isfile(path):
+			try:
+				os.remove(path)
+				logging.info(f"已经删除：{path}")
+			except IOError:
+				logging.error(f"删除失败：{path}")
 
 
 def formatFileName(text: str) -> str:
@@ -96,7 +142,7 @@ def formatFileName(text: str) -> str:
 		return text
 	else:
 		return ""
-	
+
 
 def findFile(path: str, *extnames: str) -> list:
 	"""
@@ -117,60 +163,8 @@ def findFile(path: str, *extnames: str) -> list:
 			elif len(extnames) == 0:
 				pathlist.append(fullpath)
 	return pathlist
-	
-	
-@checkWindows
-def desktop() -> str:
-	if "Windows" in platform():  # 其他平台没用过
-		key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, r'Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders')
-		path = winreg.QueryValueEx(key, "Desktop")[0]
-	else:  # 未测试
-		path = os.path.expanduser("~/Desktop")
-	return path
 
 
-def setFilePath(folder: str, file: str) -> str:
-	return os.path.join(os.getcwd(), folder, file)
-
-
-def monthNow() -> str:
-	year = str(time.localtime()[0])
-	month = str(time.localtime()[1])
-	if len(month) == 1:
-		month = f"0{month}"
-	return os.path.join(year, month)
-	
-	
-def makeDirs(path: str):
-	if not os.path.exists(path):
-		os.makedirs(path)
-	
-	
-def getFileTime(path: str):
-	time1 = os.path.getctime(path)  # 文件创建日期，返回时间戳
-	time2 = os.path.getmtime(path)  # 文件最近修改时间
-	time3 = os.path.getatime(path)  # 文件最近访问时间
-	return time1, time2, time3
-
-
-def removeFile(*paths: str):
-	# 删除多个文件或文件夹
-	for path in paths:
-		if os.path.isdir(path):
-			try:
-				shutil.rmtree(path)
-				logging.info(f"已经删除：{path}")
-			except IOError:
-				logging.error(f"删除失败：{path}")
-		
-		elif os.path.isfile(path):
-			try:
-				os.remove(path)
-				logging.info(f"已经删除：{path}")
-			except IOError:
-				logging.error(f"删除失败：{path}")
-	
-	
 def openFile(path: str):
 	# 使用默认应用打开文件
 	if os.path.exists(path):
@@ -180,11 +174,11 @@ def openFile(path: str):
 @checkWindows
 @openFileCheck
 def openExcel(path: str):  # 打开 Excel
-	excel = DispatchEx('Excel.Application')  # 独立进程
-	excel.Visible = 1  # 0为后台运行
-	excel.DisplayAlerts = 0  # 不显示，不警告
+	app = DispatchEx('Excel.Application')  # 独立进程
+	app.Visible = 1  # 0为后台运行
+	app.DisplayAlerts = 0  # 不显示，不警告
 	try:
-		excel.Workbooks.Open(path)  # 打开文档
+		app.Workbooks.Open(path)  # 打开文档
 		print("打开Excel……")
 	except IOError as e:
 		logging.error(e)
@@ -369,27 +363,27 @@ def saveDoc(path: str, text: str, **kwargs):
 		".odt": 23, # OpenDocument Text format
 	}
 	
-	word = DispatchEx('Word.Application')  # 独立进程
-	word.Visible = 0  # 0为后台运行
-	word.DisplayAlerts = 0  # 不显示，不警告
+	app = DispatchEx('Word.Application')  # 独立进程
+	app.Visible = 0  # 0为后台运行
+	app.DisplayAlerts = 0  # 不显示，不警告
 	try:
-		docx = word.Documents.Add(template_dotm)  # 创建新的word文档
+		doc = app.Documents.Add(template_dotm)  # 创建新的word文档
 	except IOError as e:
 		logging.error(e)
 	else:
 		# text = docx.Content.Text
-		s = word.Selection
+		s = app.Selection
 		s.FormatText = text  # 写入文本
-		docx.Application.Run("小说排版")  # 运行宏
+		doc.Application.Run("小说排版")  # 运行宏
 		extname = os.path.splitext(path)[1]
 		if extname == ".txt":
-			docx.SaveAs2(path, 7, Encoding=65001, AddToRecentFiles=0, AllowSubstitutions=0, LineEnding=0)  # txt UTF8 CRLF
+			doc.SaveAs2(path, 7, Encoding=65001, AddToRecentFiles=0, AllowSubstitutions=0, LineEnding=0)  # txt UTF8 CRLF
 		else:
-			docx.SaveAs2(path, extdict.get(extname, 16))
+			doc.SaveAs2(path, extdict.get(extname, 16))
 		logging.debug(f"已保存为：{path}")
-		docx.Close(True)
+		doc.Close(True)
 	finally:
-		word.Quit()
+		app.Quit()
 	
 	
 @saveFileCheck
@@ -404,7 +398,7 @@ def saveJson(path: str, data: any, **kwargs):
 	
 	
 def zipMultiFiles(path: [str, list], *, password="", zippath="", delete=0) -> str:
-	"""压缩单个或多个的文件；使用 pyzipper 可用aes256加密
+	"""压缩多个的文件成单个zip文件；使用 pyzipper 可用aes256加密
 	Args:
 		path: path 待压缩的文件路径
 		password: password 密码
@@ -426,6 +420,11 @@ def zipMultiFiles(path: [str, list], *, password="", zippath="", delete=0) -> st
 		if not zippath:
 			zippath = f"{os.path.split(path[0])[0]}.zip"
 	
+	if zippath:
+		zipfolder = os.path.dirname(zippath)
+		if not os.path.exists(zipfolder):
+			os.makedirs(zipfolder)
+	
 	removeFile(zippath)
 	# with zf.ZipFile(zippath, 'w', compression=zf.ZIP_DEFLATED) as z:
 	with zf.AESZipFile(zippath, 'w', compression=zf.ZIP_LZMA, encryption=encryption) as z:
@@ -443,6 +442,52 @@ def zipMultiFiles(path: [str, list], *, password="", zippath="", delete=0) -> st
 	return zippath
 	
 	
+def zipEachFile(path: [str, list], *, password="", zippath="", delete=0) -> str:
+	"""添加到单独”压缩文件名.zip“，压缩多个文件成多个zip文件；使用 pyzipper 可用aes256加密
+	Args:
+		path: path 待压缩的文件路径
+		password: password 密码
+		zippath: path 指定zip路径，或其存放其的文件夹
+		delete: delete != 0 时，删除源文件
+	"""
+	if password:
+		encryption = zf.WZ_AES
+	else:
+		encryption = None
+		
+	if isinstance(path, str):  # 单个文件
+		path = [path]
+		folder = os.path.dirname(path[0])  # 上级文件夹
+	else:
+		folder = os.path.commonpath(path)  # 共同路径，应该是上级文件夹
+	
+	for file in path:
+		if not zippath:
+			zippath = f"{os.path.splitext(file)[0]}.zip"  # 源路径写入压缩文件
+		else:
+			if zippath.lower().endswith(".zip"):  # 将指定的zip文件路径转换成文件夹路径
+				zipfolder = os.path.dirname(zippath)
+			else:
+				zipfolder = zippath
+			if not os.path.exists(zipfolder):
+				os.makedirs(zipfolder)
+			name = os.path.splitext(os.path.basename(file))[0]
+			zippath = os.path.join(zipfolder, f"{name}.zip")
+		
+		removeFile(zippath)
+		# with zf.ZipFile(zippath, 'w', compression=zf.ZIP_DEFLATED) as z:
+		with zf.AESZipFile(zippath, 'w', compression=zf.ZIP_LZMA, encryption=encryption) as z:
+			z.setpassword(password.encode(encoding="utf-8"))
+			# z.comment = b"Comment"  # 无法写入注释
+			arcname = os.path.relpath(file, folder)  # 获取 zip 内文件路径
+			# print(filepath, arcname, sep="\n")
+			z.write(filename=file, arcname=arcname)
+	
+		if delete:
+			removeFile(file)
+	return zippath
+
+
 def zipFolder(path: str, *, password="", zippath="", delete=0) -> str:
 	"""压缩文件夹与子文件；使用 pyzipper 可用aes256加密
 	Args:
@@ -475,16 +520,20 @@ def zipFolder(path: str, *, password="", zippath="", delete=0) -> str:
 	return zippath
 
 
-def zipFile(path: [str, list], *, password="", zippath="", delete=0) -> str:
+def zipFile(path: [str, list], *, password="", zippath="", delete=0, each=0) -> str:
 	"""压缩传入的文件或文件夹；使用 pyzipper 可用aes256加密
 	Args:
 		path: path 待压缩的文件/文件夹路径
 		password: password 密码
 		zippath: path 指定zip路径
 		delete: delete != 0 时，删除源文件
+		each: each==1 时，将相应文件添加到单独”压缩文件名.zip“
 	"""
 	if isinstance(path, list) or os.path.isfile(path):
-		zippath = zipMultiFiles(path, password=password, zippath=zippath, delete=delete)
+		if each:
+			zippath = zipEachFile(path, password=password, zippath=zippath, delete=delete)
+		else:
+			zippath = zipMultiFiles(path, password=password, zippath=zippath, delete=delete)
 	elif os.path.isdir(path):
 		zippath = zipFolder(path, password=password, zippath=zippath, delete=delete)
 	else:
@@ -519,7 +568,8 @@ def unzipZipFile(zippath: str, *, password="", path="", mode=1, delete=0) -> str
 			zip_dir0 = z.namelist()[0].replace("/", "")
 		
 		if path:  # 指定位置解压
-			makeDirs(path)
+			if not os.path.exists(path):
+				os.makedirs(path)
 			# zip 内文件夹与zip名称相同
 			if zip_dir0 == zip_name:
 				result = os.path.join(path, zip_dir0)  # 返回路径
@@ -597,4 +647,3 @@ def test():
 
 if __name__ == '__main__':
 	test()
-	pass

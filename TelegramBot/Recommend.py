@@ -1,6 +1,6 @@
 import requests
 
-import config
+import configuration
 
 
 # 初始化推荐
@@ -20,11 +20,11 @@ def do_recommend(url: str, method: str = "get") -> list:
     headers = {
         'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
                       'Chrome/104.0.5112.81 Safari/537.36 Edg/104.0.1293.47',
-        'cookie': config.Pixiv_Cookie[0]
+        'cookie': configuration.Pixiv_Cookie[0]
         }
     proxies = {
-        "http": config.proxy_list[0],
-        "https": config.proxy_list[0]
+        "http": configuration.proxy_list[0],
+        "https": configuration.proxy_list[0]
     }
     r = requests.request(method=method, url=url, headers=headers, proxies=proxies)
     novels = r.json()['body']['novels']

@@ -1,16 +1,15 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
-import os
-import logging
 from platform import platform
 from functools import cmp_to_key
 
 from opencc import OpenCC
 
+from FileOperate import readFile, findFile, timer
+from GetLanguage import getLanguage
 from MakeTags import hashtags, cntags, entags, racetags, racedict, racelist, cmp
-from FileOperate import readText, readDocx, readDoc, findFile, timer
-from Translate import getLanguage, transWords
-from config import default_path, testMode
+from Translate import transWords
+from configuration import novel_path, testMode
 
 
 def sortTags(tags: set) -> str:  # 按dict内顺序对转换后的标签排序
@@ -46,7 +45,7 @@ def getTagsFromText(text: str, lang="") -> tuple[set, set]:  # 获取可能存�
 		times = 5  # 15过高；
 	else:
 		times = 5
-		if "zh" in lang or "ja" in lang:
+		if "zh" in lang or "ja" in lang:  # 提高运行速度
 			dict0.update(cntags)
 		else:
 			dict0.update(entags)
@@ -141,43 +140,20 @@ def getInfoFromText(text: str, tags="", lang="", *, num=0) -> tuple[str, int]:
 	return info, furry
 
 
-def printInfo(path: str, *, num=0):
-	text = ""
-	name = os.path.split(path)[1]
-	ext = os.path.splitext(path)[1]
+def printInfo(path, num=0) -> tuple[str, int]:
+	return getInfoFromText(readFile(path), num=num)
 	
-	if ext.lower() == ".txt":
-		text = readText(path)
-	elif ext.lower() == ".docx":
-		try:
-			text = readDocx(path)
-		except Exception as e:
-			logging.warning(e)
-			try:
-				text = readDoc(path)
-			except Exception as e:
-				logging.warning(e)
-	elif ext.lower() == ".doc" and "Windows" in platform():
-		try:
-			text = readDoc(path)
-		except Exception as e:
-			logging.warning(e)
-	else:
-		print(f"当前文件：{name}暂不支持打印相关信息")
-	if text:
-		getInfoFromText(text, num=num)
 	
-
 @timer
-def main(path=default_path):
-	if "Windows" in platform():
-		files = findFile(path, ".txt", ".docx", ".doc")
-	else:
-		files = findFile(path, ".txt", ".docx")
-		
+def main(path=novel_path):
+	print(f"当前目录：{path}\n")
+	files = findFile(path, ".txt", ".docx")
+	# if "Windows" in platform():  # 跑得很慢
+	# 	files.append(findFile(path, ".doc"))
+	
 	for i in range(len(files)):
-		file = files[i]
-		printInfo(file, num=i+1)
+		print(files[i])
+		printInfo(files[i], num=i+1)
 	
 	
 @timer
@@ -185,7 +161,6 @@ def test():
 	print("测试")
 
 	
-
 if __name__ == "__main__":
 	# testMode = 1
 	if testMode:

@@ -7,7 +7,7 @@ from platform import platform
 import pixivpy3
 from pixivpy3 import AppPixivAPI, ByPassSniApi
 
-from config import Pixiv_Tokens, proxy_list
+from configuration import Pixiv_Tokens, proxy_list
 
 
 class TokenRoundRobin:
@@ -45,7 +45,7 @@ class TokenRoundRobin:
 				
 			except pixivpy3.utils.PixivError as e:
 				# print(f"请检查网络是否可用，或更换TOKEN{i+1} ")
-				print(f"{i+1}.{token} is not OK, ignoring!")
+				print(f"{i+1}. {token} is not OK, ignoring!")
 		print(f"Finished initialising, {self.tokenCount} tokens is available.")
 
 
