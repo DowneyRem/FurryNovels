@@ -1,4 +1,23 @@
 {
+    "": {
+        "zh10": "小说",
+        "zh11": "委托",
+        "zh12": "世界观",
+        "zh13": "设定",
+        "zh20": "日常",
+        "zh21": "幻想",
+        "zh22": "西幻",
+        "zh23": "西方幻想",
+        "zh24": "奇幻",
+        "zh25": "玄幻",
+        "zh30": "超短篇",
+        "zh31": "短篇",
+        "zh32": "中篇",
+        "zh33": "长篇",
+        "zh34": "超长篇",
+        "zh35": "微型小说",
+        "zh36": "微小说"
+    },
     "txt": {
         "en": "txt"
     },
@@ -16,19 +35,19 @@
     "zh": {
         "en": "zh",
         "en2": "Chinese",
-        "zh": "中文",
-        "zh2": "中国語",
-        "zh3": "中國語"
+        "zh": "中文"
     },
     "zh_cn": {
         "en": "zh_cn",
         "zh": "简体中文",
-        "zh1": "简中"
+        "zh1": "简中",
+        "zh2": "中国語"
     },
     "zh_tw": {
         "en": "zh_tw",
         "zh": "正體中文",
-        "zh2": "繁中"
+        "zh2": "繁中",
+        "zh3": "中國語"
     },
     "ja": {
         "en": "ja",
@@ -50,13 +69,27 @@
         "zh": "同人",
         "zh1": "二次创作"
     },
+    "Plot": {
+        "zh": "剧情",
+        "zh1": "剧情向"
+    },
+    "Romance": {
+        "en": "Romance",
+        "zh": "纯爱"
+    },
     "SFW": {
         "en": "SFW"
     },
     "R18": {
         "en": "R18",
         "en2": "R-18",
-        "en3": "NSFW"
+        "en3": "NSFW",
+        "zh1": "交配",
+        "zh2": "交尾",
+        "zh3": "发情",
+        "zh4": "色情",
+        "ja": "エロ",
+        "zh5": "工口"
     },
     "R18G": {
         "en": "R18G",
@@ -65,17 +98,27 @@
     },
     "Gay": {
         "en": "Gay",
-        "zh": "BL",
+        "en2": "BL",
+        "zh": "男同",
+        "zh1": "男男",
+        "zh2": "同性",
+        "zh3": "同性向",
         "ja": "腐向け",
-        "ja2": "ゲイ"
+        "ja2": "ゲイ",
+        "ja3": "やおい",
+        "ja4": "yaoi",
+        "ja5": "男同士"
     },
     "Lesbian": {
         "en": "Lesbian",
-        "zh": "GL"
+        "en2": "GL",
+        "zh": "女同",
+        "zh1": "女女"
     },
     "General": {
         "en": "General",
-        "zh": "BG"
+        "zh": "BG",
+        "zh1": "异性"
     },
     "Furry": {
         "en": "furry",
@@ -83,6 +126,7 @@
         "zh_tw": "獸人",
         "ja_han": "獣人",
         "ja_hira": "じゅうじん",
+        "ja_kanji": "獣",
         "ja_roma": "kemono",
         "ja_hiragana": "けもの",
         "ja_katakana": "ケモノ",
@@ -102,8 +146,9 @@
         "zh": "兽人正太",
         "zh2": "兽太"
     },
-    "Romance": {
-        "en": "Romance"
+    "Chibi":{
+        "zh": "少年",
+        "ja": "正太"
     },
     "Human": {
         "en": "Human",
@@ -113,26 +158,24 @@
         "en": "Robot",
         "zh": "机器人"
     },
-    "Slime": {
-        "en": "Slime",
-        "zh": "史莱姆"
-    },
-    "Tentacles": {
-        "en": "Tentacles",
-        "zh": "触手"
-    },
     "Vampire": {
         "en": "Vampire",
         "zh": "吸血鬼"
     },
     "Hero": {
         "en": "Hero",
-        "zh": "英雄"
+        "zh": "英雄",
+        "zh1": "小英雄",
+        "ja": "ヒーロー"
     },
     "Police": {
         "en": "Police",
         "zh": "警察",
         "zh1": "特警"
+    },
+    "Devil": {
+        "en": "Devil",
+        "zh": "恶魔"
     },
     "DevilKing": {
         "en": "DevilKing",
@@ -140,7 +183,9 @@
     },
     "Brave": {
         "en": "Brave",
-        "zh": "勇者"
+        "zh": "勇者",
+        "zh1": "魔王与勇者",
+        "zh2": "勇者与魔王"
     },
     "Succubus": {
         "en": "Succubus",
@@ -156,15 +201,15 @@
         "zh": "肛交",
         "zh1": "后入"
     },
-    "69BlowJob": {
-        "en": "69",
-        "en2": "69 BlowJob",
-        "zh": "六九",
-        "zh2": "互口"
-    },
     "BlowJob": {
         "en": "BlowJob",
-        "zh": "口交"
+        "en2": "69 BlowJob",
+        "zh": "口交",
+        "zh0": "六九",
+        "zh1": "互口",
+        "zh2": "吞精",
+        "zh3": "食精",
+        "zh4": "灌精"
     },
     "Cloaca": {
         "en": "Cloaca",
@@ -191,17 +236,20 @@
     "Paw": {
         "en": "Paw",
         "zh": "爪子",
+        "zh1": "肉垫",
         "zh2": "手爪",
-        "zh3": "脚爪"
-    },
-    "SockJob": {
-        "en": "SockJob",
-        "zh": "袜交",
-        "zh2": "白袜"
+        "zh3": "脚爪",
+        "zh4": "足控",
+        "zh5": "爪控",
+        "zh6": "臭脚",
+        "zh7": "踩踏",
+        "zh8": "舔脚",
+        "zh9": "舔脚爪"
     },
     "UrethraInsertion": {
         "en": "UrethraInsertion",
-        "zh": "尿道插入"
+        "zh1": "尿道奸",
+        "zh2": "尿道插入"
     },
     "tickling": {
         "en": "tickling",
@@ -215,44 +263,60 @@
     },
     "Incest": {
         "en": "Incest",
-        "zh": "乱伦"
+        "zh": "乱伦",
+        "zh2": "近亲相交"
     },
     "Group": {
         "en": "Group",
         "en1": "3p",
         "en2": "np",
         "zh": "群交",
-        "zh2": "群p",
+        "zh1": "群p",
+        "zh2": "群P",
         "zh3": "轮奸"
     },
     "Cuckold": {
         "en": "Cuckold",
-        "zh": "绿帽",
-        "ja": "netorare",
-        "ja2": "ntr"
+        "en2": "NTR",
+        "zh": "出轨",
+        "ja": "netorare"
     },
     "Oyakodon": {
         "en": "Oyakodon",
-        "ja": "父子丼"
+        "ja": "父子丼",
+        "zh": "父子",
+        "zh2": "父子play"
     },
     "brother": {
         "en": "brother",
-        "ja": "兄弟丼"
+        "ja": "兄弟丼",
+        "zh": "兄弟",
+        "zh2": "兄弟play"
     },
     "BDSM": {
         "en": "BDSM",
-        "en2": "SM",
-        "zh": "调教"
+        "zh": "调教",
+        "zh2": "奴化"
+    },
+    "SM": {
+        "en": "SM",
+        "zh": "性虐"
     },
     "Bondage": {
         "en": "Bondage",
         "zh": "捆绑",
         "zh1": "束缚",
-        "zh2": "绑缚"
+        "zh2": "绑缚",
+        "zh3": "拘束",
+        "zh4": "紧缚"
     },
     "ElectricShocks": {
         "en": "ElectricShocks",
         "zh": "电击"
+    },
+    "Hypnosis": {
+        "en": "Hypnosis",
+        "zh": "催眠"
     },
     "MindControl": {
         "en": "MindControl",
@@ -260,7 +324,15 @@
         "en3": "BrainWashing",
         "zh": "精神控制",
         "zh1": "精控",
-        "zh2": "洗脑"
+        "zh2": "洗脑",
+        "zh3": "认知修改",
+        "zh4": "催眠洗脑",
+        "ja": "洗脳"
+    },
+    "Control": {
+        "en": "Control",
+        "zh": "控制",
+        "zh2": "身体控制"
     },
     "Asphyxiation": {
         "en": "Asphyxiation",
@@ -271,17 +343,27 @@
     "OrgasmDenial": {
         "en": "OrgasmDenial",
         "zh": "控制射精",
-        "zh2": "射精控制"
+        "zh2": "射精控制",
+        "zh3": "控射"
     },
     "Slave": {
         "en": "Slave",
         "zh": "主奴",
+        "zh0": "主奴play",
         "zh1": "性奴",
+        "zh2": "狗奴",
         "zh3": "奴隶"
     },
     "CrotchTattoo": {
         "en": "CrotchTattoo",
         "zh": "淫纹"
+    },
+    "ChastityBelt": {
+        "en": "ChastityBelt",
+        "en2": "cb",
+        "zh1": "贞操带",
+        "zh2": "贞操锁",
+        "zh3": "锁包"
     },
     "PublicUse": {
         "en": "PublicUse",
@@ -308,6 +390,20 @@
         "zh1": "肥满化",
         "ja-kanji": "肥満化"
     },
+    "Defeated": {
+        "en":"Defeated",
+        "zh1":"战败",
+        "zh2":"败北",
+        "zh3": "战败受辱"
+    },
+    "Defeated Hero": {
+        "zh1": "英雄败北",
+        "zh2": "英雄战败"
+    },
+    "Defeated Brave": {
+        "zh1": "勇者败北",
+        "zh2": "勇者战败"
+    },
     "BattleDamage": {
         "en": "BattleDamage",
         "zh": "战损",
@@ -316,7 +412,8 @@
     },
     "BodyModification": {
         "en": "BodyModification",
-        "zh": "身体改造"
+        "zh": "身体改造",
+        "zh2": "人体改造"
     },
     "Transfur Furry": {
         "en": "Transfur",
@@ -334,46 +431,59 @@
     "corruption": {
         "en": "corruption",
         "zh": "堕落",
-        "zh1": "恶堕"
+        "zh1": "恶堕",
+        "ja": "悪堕ち"
     },
-    "corruption hero": {
+    "corruption Hero": {
         "zh": "英雄恶堕"
     },
-    "Hypnosis": {
-        "en": "Hypnosis",
-        "zh": "催眠"
-    },
     "Smell": {
-        "en": "Smell"
+        "en": "Smell",
+        "zh": "雄臭"
     },
     "Drugs": {
-        "en": "Drugs"
+        "en": "Drugs",
+        "zh": "迷奸",
+        "zh1": "药物催淫",
+        "zh2": "药物催情"
     },
     "BodySwap": {
         "en": "BodySwap",
         "zh": "灵魂交换",
         "zh1": "身体交换"
     },
+    "Milking": {
+        "zh": "榨精",
+        "zh2": "龟头责"
+    },
     "Machine": {
         "en": "Machine",
-        "zh": "机械奸"
+        "zh": "机械奸",
+        "zh2": "机械榨精"
     },
-    "Drone": {
-        "en": "Drone"
+    "Slime": {
+        "en": "Slime",
+        "zh": "史莱姆"
     },
-    "Diaper": {
-        "en": "Diaper",
-        "zh": "尿布"
+    "Tentacles": {
+        "en": "Tentacles",
+        "zh": "触手"
     },
     "Latex": {
         "en": "Latex",
         "zh": "乳胶衣",
-        "zh1": "胶衣"
+        "zh0": "乳胶",
+        "zh1": "胶衣",
+        "zh2": "胶衣化"
     },
     "Rubber": {
         "en": "Rubber",
         "zh": "胶液",
-        "zh1": "胶"
+        "zh1": "胶",
+        "zh2": "粘液"
+    },
+    "Drone": {
+        "en": "Drone"
     },
     "Armor": {
         "en": "Armor",
@@ -386,13 +496,21 @@
     },
     "Socks": {
         "en": "Socks",
+        "en2": "SockJob",
         "zh": "袜子",
-        "zh2": "白袜"
+        "zh1": "袜交",
+        "zh2": "白袜",
+        "zh3": "脏袜"
+    },
+    "Diaper": {
+        "en": "Diaper",
+        "zh": "尿布"
     },
     "Muscles": {
         "en": "Muscles",
         "zh": "肌肉",
-        "zh1": "筋肉"
+        "zh2": "肌肉男",
+        "ja": "筋肉"
     },
     "Hyper": {
         "en": "Hyper",
@@ -446,7 +564,7 @@
     "R18G Blood": {
         "en": "Blood",
         "en2": "Bloody",
-        "zh1": "流血"
+        "zh1": "血腥"
     },
     "R18G Mutilation": {
         "en": "Mutilation",

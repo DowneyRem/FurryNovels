@@ -3,7 +3,6 @@
 import os
 import logging
 from locale import getdefaultlocale
-from platform import platform
 from requests.exceptions import SSLError
 
 from pygtrans import Translate
@@ -12,12 +11,7 @@ from .configuration import proxy_list
 
 
 # 设置翻译格式，设置代理
-if "Windows" in platform():
-	# client = Translate(fmt="text", proxies={'https': 'http://127.0.0.1:10808'})
-	client = Translate(fmt="text", proxies={'https': proxy_list[0]})
-elif "Linux" in platform():
-	client = Translate(fmt="text")
-
+client = Translate(fmt="text", proxies={'https': proxy_list[0]})
 
 local_times, google_times = 0, 0
 wordsdict, langs, words = {}, [], []

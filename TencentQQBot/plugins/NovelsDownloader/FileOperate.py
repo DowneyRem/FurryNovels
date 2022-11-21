@@ -6,7 +6,6 @@ import json
 import time
 import shutil
 import logging
-import pathlib
 import webbrowser
 from functools import wraps
 from platform import platform
@@ -15,7 +14,9 @@ from platform import platform
 import pyzipper as zf
 from docx import Document  # 使用 docx-hitalent
 
+# from configuration import testMode
 from .configuration import testMode
+
 
 
 logging.basicConfig(
@@ -44,7 +45,7 @@ def timer(function):
 	return wrapper
 
 
-def checkWindows(function):
+def onWindows(function):
 	@wraps(function)
 	def wrapper(*args, **kwargs):
 		result = ""
@@ -82,14 +83,13 @@ def openFileCheck(function):
 def saveFileCheck(function):
 	@wraps(function)
 	def wrapper(*args, **kwargs):
-		if not os.path.exists(os.path.dirname(args[0])):
-			os.makedirs(os.path.dirname(args[0]))
+		os.makedirs(os.path.dirname(args[0]), exist_ok=True)
 		result = function(*args, **kwargs)
 		return result
 	return wrapper
 
 
-@checkWindows
+@onWindows
 def desktop() -> str:
 	if "Windows" in platform():  # 其他平台没用过
 		key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, r'Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders')
@@ -105,6 +105,7 @@ def makeDirs(path: str, delete=False):
 	if os.path.exists(path) and delete:  # 删除后重建
 		removeFile(path)
 		os.makedirs(path)
+		# os.makedirs(path, exist_ok=True)
 
 
 def makeFile(path: str, data=""):  # 新建空文件，不检查拓展名
@@ -171,7 +172,7 @@ def openFile(path: str):
 		webbrowser.open(path)
 	
 	
-@checkWindows
+@onWindows
 @openFileCheck
 def openExcel(path: str):  # 打开 Excel
 	app = DispatchEx('Excel.Application')  # 独立进程
@@ -247,7 +248,7 @@ def readDocx(path: str) -> str:
 
 
 @timer
-@checkWindows
+@onWindows
 @openFileCheck
 def readDoc(path: str) -> str:
 	text = ""
@@ -348,7 +349,7 @@ def saveDocx(path: str, text: str, *, template="", **kwargs):
 		logging.debug(f"已保存为：{path}")
 
 
-@checkWindows
+@onWindows
 @saveFileCheck
 def saveDoc(path: str, text: str, **kwargs):
 	extdict = {
@@ -398,32 +399,32 @@ def saveJson(path: str, data: any, **kwargs):
 	
 	
 def zipMultiFiles(path: [str, list], *, password="", zippath="", delete=0) -> str:
-	"""压缩多个的文件成单个zip文件；使用 pyzipper 可用aes256加密
+	"""
+	压缩多个的文件成单个zip文件；使用 pyzipper 可用aes256加密
 	Args:
 		path: path 待压缩的文件路径
 		password: password 密码
 		zippath: path 指定zip路径
 		delete: delete != 0 时，删除源文件
 	"""
+	if isinstance(path, str):  # 单个文件
+		path = [path]
+		folder = os.path.dirname(path[0])  # 上级文件夹
+	else:
+		folder = os.path.commonpath(path)  # 共同路径，应该是上级文件夹
+	
 	if password:
 		encryption = zf.WZ_AES
 	else:
 		encryption = None
-		
-	if isinstance(path, str):  # 单个文件
-		path = [path]
-		folder = os.path.dirname(path[0])  # 上级文件夹
-		if not zippath:
-			zippath = f"{os.path.splitext(path[0])[0]}.zip"
-	else:
-		folder = os.path.commonpath(path)  # 共同路径，应该是上级文件夹
-		if not zippath:
-			zippath = f"{os.path.split(path[0])[0]}.zip"
 	
 	if zippath:
-		zipfolder = os.path.dirname(zippath)
-		if not os.path.exists(zipfolder):
-			os.makedirs(zipfolder)
+		os.makedirs(os.path.dirname(zippath), exist_ok=True)
+	else:
+		if len(path) == 1:
+			zippath = f"{os.path.splitext(path[0])[0]}.zip"
+		else:
+			zippath = f"{os.path.split(path[0])[0]}.zip"
 	
 	removeFile(zippath)
 	# with zf.ZipFile(zippath, 'w', compression=zf.ZIP_DEFLATED) as z:
@@ -435,6 +436,7 @@ def zipMultiFiles(path: [str, list], *, password="", zippath="", delete=0) -> st
 			arcname = os.path.relpath(file, folder)  # 获取 zip 内文件路径
 			# print(filepath, arcname, sep="\n")
 			z.write(filename=file, arcname=arcname)
+	print(f"压缩完成：{zippath}")
 	
 	if delete:
 		for file in path:
@@ -443,53 +445,64 @@ def zipMultiFiles(path: [str, list], *, password="", zippath="", delete=0) -> st
 	
 	
 def zipEachFile(path: [str, list], *, password="", zippath="", delete=0) -> str:
-	"""添加到单独”压缩文件名.zip“，压缩多个文件成多个zip文件；使用 pyzipper 可用aes256加密
+	"""
+	添加到单独”压缩文件名.zip“，压缩多个文件成多个zip文件；使用 pyzipper 可用aes256加密
 	Args:
 		path: path 待压缩的文件路径
 		password: password 密码
 		zippath: path 指定zip路径，或其存放其的文件夹
 		delete: delete != 0 时，删除源文件
 	"""
+	if isinstance(path, str):  # 单个文件
+		path = [path]
+		
 	if password:
 		encryption = zf.WZ_AES
 	else:
 		encryption = None
-		
-	if isinstance(path, str):  # 单个文件
-		path = [path]
-		folder = os.path.dirname(path[0])  # 上级文件夹
-	else:
-		folder = os.path.commonpath(path)  # 共同路径，应该是上级文件夹
 	
-	for file in path:
-		if not zippath:
-			zippath = f"{os.path.splitext(file)[0]}.zip"  # 源路径写入压缩文件
+	_zippath = ""  # 区分传进来的 zippath；真正的压缩后的路径
+	if zippath:
+		if zippath.lower().endswith(".zip"):  # 将指定的zip文件路径转换成文件夹路径
+			zipfolder = os.path.dirname(zippath)
 		else:
-			if zippath.lower().endswith(".zip"):  # 将指定的zip文件路径转换成文件夹路径
-				zipfolder = os.path.dirname(zippath)
-			else:
-				zipfolder = zippath
-			if not os.path.exists(zipfolder):
-				os.makedirs(zipfolder)
-			name = os.path.splitext(os.path.basename(file))[0]
-			zippath = os.path.join(zipfolder, f"{name}.zip")
+			zipfolder = zippath
+		os.makedirs(zipfolder, exist_ok=True)
+	else:
+		zipfolder = ""
 		
-		removeFile(zippath)
-		# with zf.ZipFile(zippath, 'w', compression=zf.ZIP_DEFLATED) as z:
-		with zf.AESZipFile(zippath, 'w', compression=zf.ZIP_LZMA, encryption=encryption) as z:
+	for file in path:
+		folder = os.path.dirname(file)  # 上级文件夹
+		if zippath and zipfolder:  # 指定路径写入压缩文件
+			if len(path) == 1:  # 单个文件，丢失中间路径
+				name = os.path.basename(file)
+				_zippath = os.path.join(zipfolder, f"{os.path.splitext(name)[0]}.zip")
+			else:  # 多个文件，保留中间路径
+				name = os.path.relpath(file, os.path.commonpath(path))
+				_zippath = os.path.join(zipfolder, f"{os.path.splitext(name)[0]}.zip")
+		else:  # 源路径写入压缩文件
+			_zippath = f"{os.path.splitext(file)[0]}.zip"
+		os.makedirs(os.path.dirname(_zippath), exist_ok=True)
+		removeFile(_zippath)
+		
+		# with zf.ZipFile(_zippath, 'w', compression=zf.ZIP_DEFLATED) as z:
+		with zf.AESZipFile(_zippath, 'w', compression=zf.ZIP_LZMA, encryption=encryption) as z:
 			z.setpassword(password.encode(encoding="utf-8"))
 			# z.comment = b"Comment"  # 无法写入注释
 			arcname = os.path.relpath(file, folder)  # 获取 zip 内文件路径
 			# print(filepath, arcname, sep="\n")
 			z.write(filename=file, arcname=arcname)
-	
+		# print(f"压缩完成：{arcname}")
+		print(f"压缩完成：{_zippath}")
+		
 		if delete:
 			removeFile(file)
-	return zippath
+	return _zippath
 
 
 def zipFolder(path: str, *, password="", zippath="", delete=0) -> str:
-	"""压缩文件夹与子文件；使用 pyzipper 可用aes256加密
+	"""
+	压缩文件夹与子文件；使用 pyzipper 可用aes256加密
 	Args:
 		path: path 待压缩的文件夹路径
 		password: password 密码
@@ -514,6 +527,7 @@ def zipFolder(path: str, *, password="", zippath="", delete=0) -> str:
 			arcname = os.path.relpath(file, folder)  # 替换上级文件夹，建立当前文件夹
 			# print(filepath, arcname, sep="\n")
 			z.write(filename=file, arcname=arcname)
+	print(f"压缩完成：{zippath}")
 	
 	if delete:
 		removeFile(path)
@@ -521,7 +535,8 @@ def zipFolder(path: str, *, password="", zippath="", delete=0) -> str:
 
 
 def zipFile(path: [str, list], *, password="", zippath="", delete=0, each=0) -> str:
-	"""压缩传入的文件或文件夹；使用 pyzipper 可用aes256加密
+	"""
+	压缩传入的文件或文件夹；使用 pyzipper 可用aes256加密
 	Args:
 		path: path 待压缩的文件/文件夹路径
 		password: password 密码
@@ -539,12 +554,51 @@ def zipFile(path: [str, list], *, password="", zippath="", delete=0, each=0) -> 
 	else:
 		print(f"无法压缩，不存在：{path}")
 		return ""
-	print(f"压缩完成：{zippath}")
 	return zippath
+
+
+def unzipZipFileEasy(zippath: str, *, password="", mode=1, delete=0) -> str:
+	"""
+	解压 zip 文件；使用 pyzipper 可解压加密的zip文件（ase256 与 ZipCrypto）,前者会快得多
+	智能解压：zip内无文件夹，或有多个文件夹，新建以zip文件名为名的文件夹，再解压
+	智能解压：zip内只有1个文件夹，且与zip文件相同，直接解压
+	常规软件压缩设置：勾选zip使用Unicode文件名，避免解压后文件名乱码
+	Args:
+		zippath: path 待解压的zip文件
+		password: password 密码
+		mode: mode=1 解压zip内部的zip文件；同时删除内部zip
+		delete: delete=1 解压后删除zip源文件
+	"""
 	
+	# with zf.ZipFile(zippath, "r") as z:
+	with zf.AESZipFile(zippath, "r") as z:
+		if z.namelist()[0].endswith("/") or len(z.namelist()) == 1:  # 单文件，内有文件夹，直接解压
+			folder = os.path.split(zippath)[0]
+		else:  # 多个文件，新建文件夹
+			folder = os.path.splitext(zippath)[0]
+		
+		try:
+			for file in z.namelist():
+				z.extract(file, folder, password.encode('utf-8'))
+				# if not file.endswith("/"):
+				# 	print(f"解压：{file}")
+				
+				if file.endswith(".zip") and mode:  # 解压zip内的zip
+					_zippath = os.path.join(folder, file)
+					unzipZipFileEasy(_zippath, password=password, mode=mode, delete=1)
+			# print(f"解压：{file}")
+			print(f"解压完成：{zippath}")
+		except RuntimeError:
+			print(f"密码【{password}】错误，解压失败：{zippath}")
 	
+	if delete != 0:
+		removeFile(zippath)  # 删除zip文件
+	return folder
+
+
 def unzipZipFile(zippath: str, *, password="", path="", mode=1, delete=0) -> str:
-	"""解压 zip 文件；使用 pyzipper 可解压加密的zip文件（ase256 与 ZipCrypto）,前者会快得多
+	"""
+	解压 zip 文件；使用 pyzipper 可解压加密的zip文件（ase256 与 ZipCrypto）,前者会快得多
 	智能解压：zip内无文件夹，或有多个文件夹，新建以zip文件名为名的文件夹，再解压
 	智能解压：zip内只有1个文件夹，且与zip文件相同，直接解压
 	常规软件压缩设置：勾选zip使用Unicode文件名，避免解压后文件名乱码
@@ -552,45 +606,42 @@ def unzipZipFile(zippath: str, *, password="", path="", mode=1, delete=0) -> str
 		zippath: path 待解压的zip文件
 		password: password 密码
 		path: path 指定路径解压
-		mode: mode=1 解压zip内部的zip文件
-		delete: delete=1 解压后删除zip源文件；同时 mode=1 解压后会删除所有zip
+		mode: mode=1 解压zip内部的zip文件；同时删除内部zip
+		delete: delete=1 解压后删除zip源文件
 	"""
-	# with zf.ZipFile(path, "r") as z:
+	# with zf.ZipFile(zippath, "r") as z:
 	with zf.AESZipFile(zippath, "r") as z:
 		if z.comment:
 			comment = z.comment.decode(encoding="utf-8")
 			print(f"压缩文件注释：{comment}")
 		
-		zip_name = os.path.splitext(os.path.basename(zippath))[0]
+		zip_name = os.path.splitext(os.path.basename(zippath))[0].strip()
 		if len(z.namelist()) >= 2:
-			zip_dir0 = os.path.commonpath(z.namelist())
+			zip_dir0 = os.path.commonpath(z.namelist()).strip()
 		else:
-			zip_dir0 = z.namelist()[0].replace("/", "")
+			# zip_dir0 = z.namelist()[0].replace("/", "")
+			zip_dir0 = os.path.basename(z.namelist()[0]).strip()
 		
 		if path:  # 指定位置解压
-			if not os.path.exists(path):
-				os.makedirs(path)
-			# zip 内文件夹与zip名称相同
-			if zip_dir0 == zip_name:
+			os.makedirs(path, exist_ok=True)
+			if zip_dir0 == zip_name:  # zip 内文件夹与zip名称相同
 				result = os.path.join(path, zip_dir0)  # 返回路径
 			else:  # zip 内有多个文件，新建文件夹
 				path = result = os.path.join(path, zip_name)  # 解压到的目录 & 返回路径
-				
 		else:  # 默认位置解压
-			result = os.path.splitext(zippath)[0]  # 返回路径
-			# zip 内文件夹与zip名称相同
-			if zip_dir0 == zip_name:
-				path = os.path.dirname(zippath)  # 解压到的目录
+			result = os.path.splitext(zippath)[0].strip()  # 返回路径
+			if zip_dir0 == zip_name:  # zip 内文件夹与zip名称相同
+				path = os.path.dirname(zippath).strip()  # 解压到的目录
 			else:  # zip 内有多个文件，新建文件夹
-				path = os.path.splitext(zippath)[0]  # 解压到的目录
+				path = os.path.splitext(zippath)[0].strip()  # 解压到的目录
 		
 		try:
 			for file in z.namelist():  # 解压zip
 				z.extract(file, path, password.encode('utf-8'))
 				if file.lower().endswith(".zip") and mode:  # 解压zip内的zip
-					zippath = os.path.join(path, file)
-					print("解压：", zippath)
-					unzipZipFile(zippath, password=password, mode=mode, delete=delete)
+					_zippath = os.path.join(path, file)
+					print(f"解压：{_zippath}")
+					unzipZipFile(_zippath, password=password, mode=mode, delete=1)
 			print(f"解压完成：{zippath}")
 			# print(f"文件目录：{result}")
 		except RuntimeError:
@@ -602,7 +653,8 @@ def unzipZipFile(zippath: str, *, password="", path="", mode=1, delete=0) -> str
 
 
 def unzipFolder(zippath: str, *, password="", path="", mode=0, delete=0) -> str:
-	"""使用 pyzipper 可解压加密的zip文件（ase256 与 ZipCrypto）,前者会快得多
+	"""
+	使用 pyzipper 可解压加密的zip文件（ase256 与 ZipCrypto）,前者会快得多
 	常规软件压缩设置：勾选zip使用Unicode文件名，避免解压后文件名乱码
 	Args:
 		zippath: path 含有zip文件的文件夹路径
@@ -611,17 +663,22 @@ def unzipFolder(zippath: str, *, password="", path="", mode=0, delete=0) -> str:
 		mode: mode=1 解压zip内部的zip文件
 		delete: delete=1 解压后删除zip源文件；同时 mode=1 解压后会删除所有zip
 	"""
-	ziplist = findFile(zippath, ".zip")
-	if len(ziplist) == 0:
+	zippaths = findFile(zippath, ".zip")
+	if len(zippaths) == 0:
 		print(f"{zippath} 目录下无zip文件")
 		return ""
 	
-	for zipfile in ziplist:  # 未测试 path 参数
-		return unzipZipFile(zipfile, password=password, path=path, mode=mode, delete=delete)
+	file = ""
+	for zipfile in zippaths:  # 未测试 path 参数
+		print(f"正在解压：{zipfile}")
+		file = unzipZipFile(zipfile, password=password, path=path, mode=mode, delete=delete)
+		# print("————" * 30, "", sep="\n")
+	return file
 
 
 def unzipFile(zippath: str, *, password="", path="", mode=0, delete=0) -> str:
-	"""使用 pyzipper 可解压加密的zip文件（ase256 与 ZipCrypto）,前者会快得多
+	"""
+	使用 pyzipper 可解压加密的zip文件（ase256 与 ZipCrypto）,前者会快得多
 	智能解压：path传入zip路径解压zip，传入文件夹则解压其路径下的zip
 	智能解压：zip内无文件夹，则会新建以zip文件名为名的文件夹，zip只有单文件不新建文件夹
 	常规软件压缩设置：勾选zip使用Unicode文件名，避免解压后文件名乱码
@@ -643,6 +700,11 @@ def unzipFile(zippath: str, *, password="", path="", mode=0, delete=0) -> str:
 
 def test():
 	print("测试")
+	path = r"D:\Download\Browser\兽人小说\小说"
+	paths = findFile(path, ".txt", ".docx")
+	path2 = r"D:\Download\Browser\兽人小说翻译"
+	# zipEachFile(paths, password="furry")
+	zipEachFile(paths, password="furry", zippath=path2)
 	
 
 if __name__ == '__main__':

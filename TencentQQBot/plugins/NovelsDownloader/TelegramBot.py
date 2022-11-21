@@ -2,14 +2,10 @@
 # -*- coding: UTF-8 -*-
 import os
 import requests
-from platform import platform
 
-# from configuration import BOT_TOKEN, TEST_TOKEN, TEST_CHANNEL
-from .configuration import BOT_TOKEN, TEST_TOKEN, TEST_CHANNEL
-if "Windows" in platform():
-	token = TEST_TOKEN
-else:
-	token = BOT_TOKEN
+# from configuration import BOT_TOKEN, TEST_CHANNEL, testMode
+from .configuration import BOT_TOKEN, TEST_CHANNEL, testMode
+token = BOT_TOKEN
 
 
 def sendMessage(token: str, chat_id: [str, int], text: str):
@@ -58,5 +54,6 @@ def test():
 	
 	
 if __name__ == '__main__':
-	test()
+	if testMode:
+		test()
 	

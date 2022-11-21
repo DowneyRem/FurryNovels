@@ -133,7 +133,7 @@ def removeAll(path: str):
 		webdav = webdavs.get(webdav)
 		remove(webdav, path)
 		
-		
+	
 def addWebdavDict():
 	d0 = {}
 	i = 1
