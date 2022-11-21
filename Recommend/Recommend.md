@@ -38,7 +38,7 @@ if comments >= 1: # 根据评论量增加推荐指数
 
 下表中，首列为点击量，首行为收藏率，由点击量与收藏率则可以确定相应条件下的推荐指数
 
-![推荐指数1](https://raw.githubusercontent.com/DowneyRem/FurryNovels/main/TelegramBot/Recommend/1.png)
+![推荐指数1](https://raw.githubusercontent.com/DowneyRem/FurryNovels/main/Recommend/1.png)
 
 比如一篇 ` view=2365, bookmarks=203 即 rate=8.5 ` 的小说，推荐指数为 ` recommend=8.75 `
 
@@ -51,13 +51,13 @@ if comments >= 1: # 根据评论量增加推荐指数
 #### 直观表述
 不同阅读量档位，有其对应的收藏率
 
-![收藏率变化表](https://raw.githubusercontent.com/DowneyRem/FurryNovels/main/TelegramBot/Recommend/2.png)
+![收藏率变化表](https://raw.githubusercontent.com/DowneyRem/FurryNovels/main/Recommend/2.png)
 
 不同阅读量乘以不同的收藏率，就有不同的收藏量。达到对应收藏量，即被认为这是一篇较为优秀的小说
 
 下图是阅读量每增加100对应的收藏量
 
-![收藏率变化表](https://raw.githubusercontent.com/DowneyRem/FurryNovels/main/TelegramBot/Recommend/3.png)
+![收藏率变化表](https://raw.githubusercontent.com/DowneyRem/FurryNovels/main/Recommend/3.png)
 
 #### Q&A
 
