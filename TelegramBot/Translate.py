@@ -16,12 +16,7 @@ from configuration import proxy_list, novel_path, translation_path, cjklist, mon
 
 
 # 设置翻译格式，设置代理
-if "Windows" in platform():
-	# client = Translate(fmt="text", proxies={'https': 'http://127.0.0.1:10808'})
-	client = Translate(fmt="text", proxies={'https': proxy_list[0]})
-elif "Linux" in platform():
-	client = Translate(fmt="text")
-
+client = Translate(fmt="text", proxies={'https': proxy_list[0]})
 
 local_times, google_times = 0, 0
 wordsdict, langs, words = {}, [], []
@@ -203,24 +198,25 @@ def transDir(lang2="en") -> str:
 
 
 def transPath(path, mode, *, lang1, lang2):
+	extname = os.path.splitext(path)[1]  # 去后缀名再翻译
 	if mode == 0:  # Pixiv 小说，构造翻译路径
-		part_path = os.path.relpath(path, novel_path)
+		part_path = os.path.relpath(path, novel_path).replace(extname, "")
 		if transDir(lang1) in part_path:
 			part_path = os.path.relpath(part_path, transDir(lang1))
-		part_path = translate(part_path, lang1=lang1, lang2=lang2)
-		trans_path = os.path.join(novel_path, transDir(lang2), part_path)
+		part_path = translate(part_path, lang1=lang1, lang2=lang2).strip()
+		trans_path = os.path.join(novel_path, transDir(lang2), f"{part_path}{extname}")
 		
 	elif mode == 1:  # Trlegram 下载文件单独文件，构造翻译路径
-		name = os.path.basename(path)
-		name = translate(name, lang1=lang1, lang2=lang2)
-		trans_path = os.path.join(translation_path, monthNow(), name)
+		name = os.path.basename(path).strip().replace(extname, "")
+		name = translate(name, lang1=lang1, lang2=lang2).strip()
+		trans_path = os.path.join(translation_path, monthNow(), f"{name}{extname}")
 		
 	else:  # Trlegram 下载zip文件，构造翻译路径
 		down_folder = os.path.join(translation_path, "Download")
 		zip_folder = os.path.join(translation_path, "ZipFiles")
 		part_path = os.path.relpath(path, down_folder)
-		part_path = translate(part_path, lang1=lang1, lang2=lang2)
-		trans_path = os.path.join(zip_folder, part_path)
+		part_path = translate(part_path, lang1=lang1, lang2=lang2).strip()
+		trans_path = os.path.join(zip_folder, f"{part_path}{extname}")
 	# print(f"{path=}")
 	# print(f"{trans_path=}")
 	return trans_path
@@ -258,10 +254,10 @@ def transZip(zippath, lang2=getLangSystem()) -> str:
 	
 	removeFile(folder)  # 删除未翻译的文件
 	if len(trans_files) >= 2:
-		trans_fold = os.path.commonpath(trans_files)
+		trans_foldlder = os.path.commonpath(trans_files)
 	else:
-		trans_fold = os.path.dirname(trans_files[0])
-	zippath2 = zipFile(trans_fold, delete=1)
+		trans_foldlder = os.path.dirname(trans_files[0])
+	zippath2 = zipFile(trans_foldlder, delete=1)
 	# print(f"翻译完成：{zippath2}")
 	return zippath2
 
@@ -315,7 +311,7 @@ def test():
 	
 	
 if __name__ == "__main__":
-	testMode = 0
+	testMode = 1
 	if testMode:
 		test()
 	else:

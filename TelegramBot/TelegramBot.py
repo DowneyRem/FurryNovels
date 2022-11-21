@@ -18,7 +18,8 @@ from PixivClass import getUrl, PixivObject
 from Recommend import do_recommend, url_init_recommend
 from Translate import translateText, transFile
 from Webdav4 import uploadAll as uploadWebdav
-from configuration import BOT_TOKEN, TEST_TOKEN, heroku_app_name, proxy_list, TEST_CHANNEL
+from configuration import BOT_TOKEN, WEB_HOOK, proxy_list
+from configuration import testMode, TEST_CHANNEL
 
 
 # logger = logging.getLogger(__name__)
@@ -55,8 +56,8 @@ def deleteFolders(update: Update, context: ContextTypes):
 		path = os.getcwd()
 		li = "backup data".split(" ")
 		for folder in os.listdir(path):
-			if os.path.isdir(folder) and not folder.startswith(".") and folder not in li:
-				directory = os.path.join(path, folder)
+			directory = os.path.join(path, folder)
+			if os.path.isdir(directory) and not folder.startswith(".") and folder not in li:
 				removeFile(directory)
 				print(f"已删除：{directory}")
 				update.message.reply_text(f"已删除：{folder}")
@@ -122,7 +123,7 @@ def pixivFilters(update: Update, context: ContextTypes):
 				]]))
 			
 		elif "novel" in link or "/pn/" in link:
-			if not obj.series_url:
+			if not obj.series_id:
 				update.message.reply_text(info, reply_markup=InlineKeyboardMarkup(
 					[[
 						InlineKeyboardButton("下载本章为txt文件", callback_data=f"{1}:{obj.novel_url}"),
@@ -238,7 +239,7 @@ def savePixiv(update: Update, context: ContextTypes):
 		if infolist[2] != infolist[-1]:
 			log += f"\n{infolist[-1]}"
 		
-		if "Windows" in platform():  # 测试用
+		if testMode:  # 测试用
 			uploadToChannel(TEST_CHANNEL, path1, info)
 			if path2:
 				uploadToChannel(TEST_CHANNEL, path2, info2)
@@ -290,26 +291,31 @@ def timeoutcb(update: Update, context: ContextTypes):
 
 
 def translateFile(update: Update, context: ContextTypes):
-	chatid = update.message.chat.id
-	userid = update.message.from_user.id
-	username = update.message.from_user.first_name
-	lang2 = update.message.from_user.language_code
-	message = f"请求者：<a href='tg://user?id={userid}'>{username}</a> #UID{userid}\n"
+	try:
+		chatid = update.message.chat.id
+		userid = update.message.from_user.id
+		username = update.message.from_user.first_name
+		message = f"请求者：<a href='tg://user?id={userid}'>{username}</a> #UID{userid}\n"
+		text = update.message.text
+	except AttributeError: # 'NoneType' object has no attribute 'chat'
+		print(f"transFile: 长时间闲置，结束翻译")
+		return
 	
-	text = update.message.text
 	if text:  # 当前消息指定语言，回复消息指定文件
 		text = text.lower().strip().replace("/translate", "")
 		lang2 = text.replace("-", "_").strip()
-	if "zh-hans" in lang2:
-		lang2 = "zh_cn"
-	elif "zh-hant" in lang2:
-		lang2 = "zh_tw"
-	
+		if not lang2:
+			lang2 = update.message.from_user.language_code
+		if "zh-hans" in lang2:
+			lang2 = "zh_cn"
+		elif "zh-hant" in lang2:
+			lang2 = "zh_tw"
+
 	if update.message.document:  # 直接上传文件
 		file = context.bot.get_file(update.message.document.file_id)
 		name = update.message.document.file_name
 		caption = update.message.caption
-	elif update.message.reply_to_message and update.message.reply_to_message.document:
+	elif update.message.reply_to_message and update.message.reply_to_message.document:  # 回复文件
 		file = context.bot.get_file(update.message.reply_to_message.document.file_id)
 		name = update.message.reply_to_message.document.file_name
 		caption = update.message.reply_to_message.caption
@@ -322,6 +328,7 @@ def translateFile(update: Update, context: ContextTypes):
 	
 	extname = os.path.splitext(name)[1].replace(".", "")
 	path = os.path.join(os.getcwd(), "Translation", "Download", name)
+	message = f"#{extname}_{lang2} {name}\n{message}"
 	print(f"transFile: 正在将 {name} 翻译成 {lang2} ")
 	
 	try:
@@ -329,10 +336,11 @@ def translateFile(update: Update, context: ContextTypes):
 		file.download(custom_path=path)
 	except Exception as e:
 		update.message.reply_text(f"文件下载错误")
-		message = f"#下载错误 #{extname}_{lang2} {name}\n{message}\n{e}"
+		message = f"#下载错误 {message}\n{e}"
 		logging.error(e)
-		if "Windows" in platform():
+		if testMode:  # 测试用
 			message = f"#测试 {message}"
+		context.bot.send_message(TEST_CHANNEL, message, parse_mode="HTML")
 		print(f"transFile: 下载错误，结束翻译")
 		return
 		
@@ -343,22 +351,22 @@ def translateFile(update: Update, context: ContextTypes):
 			caption = caption.replace(lang1, lang2)
 	except RuntimeError:
 		update.message.reply_text(f"该文件已与你当前所用语言一致，故未翻译，如需翻译请更换 Telegram 语言包")
-		message = f"#无需翻译 #{extname}_{lang2} {name}\n{message}"
+		message = f"#无需翻译 {message}"
 	except AttributeError:
 		update.message.reply_text(f"无法打开当前类型的文件\n仅支持 txt 和 docx 文件")
-		message = f"#无法翻译 #{extname}_{lang2} {name}\n{message}"
+		message = f"#无法翻译 {message}"
 	except Exception as e:
-		update.message.reply_text(f"出现未知错误2，已向管理发送错误信息")
-		message = f"#翻译错误 #{extname}_{lang2} {name}\n{message}\n{e}"
+		update.message.reply_text(f"出现未知错误，已向管理发送错误信息")
+		message = f"#翻译错误 {message}\n{e}"
 		logging.error(e)
 	else:
 		context.bot.send_document(chatid, open(path, 'rb'), os.path.basename(path), caption)
 		if "zh" in lang2:
 			uploadWebdav(path, "翻译")
-		message = f"#已经翻译 #{lang2}_{extname} {name}\n{message}"
+		message = f"#已经翻译 {message}"
 		print(f"翻译完成：{path}")
 	finally:
-		if "Windows" in platform():
+		if testMode:  # 测试用
 			message = f"#测试 {message}"
 		context.bot.send_message(TEST_CHANNEL, message, parse_mode="HTML")
 	
@@ -369,7 +377,9 @@ def main():
 		disable_web_page_preview=True,
 		tzinfo=pytz.timezone('Asia/Shanghai'),
 		)
+	
 	updater = Updater(BOT_TOKEN, use_context=True, defaults=defaults, request_kwargs=REQUESTS_KWARGS)
+	
 	if "Windows" in platform():
 		updater.start_polling()
 	
@@ -378,7 +388,7 @@ def main():
 				listen="0.0.0.0",
 				port=int(os.environ.get('PORT', 5000)),
 				url_path=BOT_TOKEN,
-				webhook_url=f"https://{heroku_app_name}.herokuapp.com/{BOT_TOKEN}")
+				webhook_url=f"https://{WEB_HOOK}/{BOT_TOKEN}")
 	
 	updater.dispatcher.add_handler(CommandHandler("start", start))
 	updater.dispatcher.add_handler(CommandHandler("help", help))
@@ -408,17 +418,11 @@ def main():
 
 
 if __name__ == '__main__':
-	if "Windows" in platform():
-		# REQUESTS_KWARGS = {'proxy_url':'HTTPS://127.0.0.1:10808/'}
-		REQUESTS_KWARGS = {'proxy_url': proxy_list[0]}
-		BOT_TOKEN = TEST_TOKEN  # 使用测试bot
-		print("Test Bot Runs!")
-	elif "Linux" in platform():
-		REQUESTS_KWARGS = {}
-		BOT_TOKEN = BOT_TOKEN
-		print("Bot Runs!")
-		
+	REQUESTS_KWARGS = {'proxy_url': proxy_list[0]}
 	try:
+		print("Bot is Running!")
 		main()
 	except telegram.error.NetworkError as e:
 		logging.warning(e)
+		print("Error")
+		

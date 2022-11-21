@@ -9,7 +9,7 @@ from webdav4.client import Client, HTTPError
 from httpx import ConnectError, ReadTimeout, WriteTimeout
 
 from FileOperate import removeFile, zipFile, timer
-from config import webdavs4 as webdavs, encryptlist, testMode
+from configuration import webdavs4 as webdavs, encryptlist, testMode
 
 
 # webdavs = {
@@ -19,12 +19,6 @@ from config import webdavs4 as webdavs, encryptlist, testMode
 # 		"password": ""   # 你的密码
 # 	},
 # }
-
-
-logging.basicConfig(
-		level=logging.INFO,
-		format='[line:%(lineno)d]-%(levelname)s: %(message)s',
-		)
 
 
 def monthNow():
@@ -37,7 +31,7 @@ def monthNow():
 
 
 # @timer
-def upload(webdav: dict, path: os.PathLike, folder=""):
+def upload(webdav: dict, path: str, folder=""):
 	def makedirs(path: str):
 		a = path.split("/")
 		for i in range(1, len(a)):  # 去文件名
@@ -88,7 +82,7 @@ def upload(webdav: dict, path: os.PathLike, folder=""):
 		logging.exception(e)
 	
 	
-def uploadAll(path: os.PathLike, folder: str, *, encrypt=0, delete=0):
+def uploadAll(path: str, folder: str, *, encrypt=0, delete=0):
 	# 默认使用 encryptlist 进行加密；encrypt=1 强制加密
 	# delete=1 时，上传后删除源文件
 	
@@ -135,12 +129,11 @@ def remove(webdav: dict, path: str):
 	
 	
 def removeAll(path: str):
-	webdavs = list(webdavs.keys())
 	for webdav in webdavs:
 		webdav = webdavs.get(webdav)
 		remove(webdav, path)
 		
-		
+	
 def addWebdavDict():
 	d0 = {}
 	i = 1
@@ -200,8 +193,7 @@ def addWebdavDict():
 	
 	
 def test():
-	path = r""
-	uploadAll(path, "翻译")
+	print("测试")
 	pass
 
 

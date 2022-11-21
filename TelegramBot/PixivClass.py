@@ -16,7 +16,7 @@ import pixivpy3.utils
 
 import numpy as np
 
-from FileOperate import saveText, zipFile, openFile, makeDirs, timer
+from FileOperate import saveText, zipFile, openFile, timer
 from GetLanguage import getLanguage, getLangSystem
 from PrintInfo import getFormattedTags, getInfoFromText
 from TextFormat import formatNovelName, formatCaption, formatText
@@ -28,7 +28,6 @@ from configuration import novel_path, testMode
 sys.dont_write_bytecode = True
 _TEST_WRITE = False
 addTranslatedTags = 0   # 加入翻译过后的标签
-tokenPool = TokenRoundRobin()
 
 
 def checkNone(fun):
@@ -187,6 +186,17 @@ class PixivBase(PixivABC):  # 共用方法
 	
 	
 	@staticmethod
+	def tokenPoolInit():
+		try:
+			global tokenPool
+			tokenPool = TokenRoundRobin()
+		except RuntimeError as e:
+			print(e)
+			logging.critical(f"{e}")
+			return
+	
+	
+	@staticmethod
 	def getTags(tagslist: list) -> set[str]:  # 处理 json.novel.tags
 		tags = set()
 		for tag in tagslist:
@@ -307,11 +317,14 @@ class PixivNovels(PixivBase):
 		self.link = link
 		self.novel_id = getId(link)
 		self.novel_url = f"https://www.pixiv.net/novel/show.php?id={self.novel_id}"
+		self.tokenPoolInit()
 		self.json = self.getJson()
 		
+		if not self.json:
+			raise RuntimeError("网络状态不佳，请稍后尝试")
 		if self.json.error:  # 排除已删除/不可见小说
 			raise ValueError("小说ID不存在，或已被删除")
-		if self.json.novel.is_mypixiv_only:
+		elif self.json.novel.is_mypixiv_only:
 			raise ValueError("该小说仅好P友可见，无法下载")
 		elif not self.json.novel.visible:
 			raise ValueError("该小说未公开，无法下载")
@@ -323,9 +336,10 @@ class PixivNovels(PixivBase):
 	def getJson(self, force_update=False):
 		if self._is_json_retrieved and not force_update:
 			return self._original_json
-		self._is_json_retrieved = True
 		
 		self._original_json = tokenPool.getAPI().novel_detail(self.novel_id)
+		self._is_json_retrieved = True
+		# print(self._original_json)
 		return self._original_json
 	
 	
@@ -482,8 +496,11 @@ class PixivSeries(PixivBase):
 		self.link = link
 		self.series_id = getId(link)
 		self.series_url = f"https://www.pixiv.net/novel/series/{self.series_id}"
+		self.tokenPoolInit()
 		self.json = self.getJson()  # 原始数据
 		
+		if not self.json:
+			raise RuntimeError("网络状态不佳，请稍后尝试")
 		if self.json.error:
 			raise ValueError("系列ID不存在，或已被删除")
 		else:
@@ -494,9 +511,10 @@ class PixivSeries(PixivBase):
 	def getJson(self, force_update=False) -> any:
 		if self._is_json_retrieved and not force_update:
 			return self._original_json
-		self._is_json_retrieved = True
 		
 		self._original_json = tokenPool.getAPI().novel_series(self.series_id, last_order=None)
+		self._is_json_retrieved = True
+		print(self._original_json)
 		return self._original_json
 	
 	
@@ -792,8 +810,11 @@ class PixivAuthor(PixivBase):
 		self.link = link
 		self.author_id = getId(link)
 		self.author_url = f"https://www.pixiv.net/users/{self.author_id}"
+		self.tokenPoolInit()
 		self.json = self.getJson()
 		
+		if not self.json:
+			raise RuntimeError("网络状态不佳，请稍后尝试")
 		if self.json.error:
 			raise ValueError("作者ID不存在，或已被删除")
 		else:
@@ -804,9 +825,10 @@ class PixivAuthor(PixivBase):
 	def getJson(self, force_update=False) -> any:
 		if self._is_json_retrieved and not force_update:
 			return self._original_json
-		self._is_json_retrieved = True
 		
 		self._original_json = tokenPool.getAPI().user_detail(self.author_id)
+		self._is_json_retrieved = True
+		print(self._original_json)
 		return self._original_json
 	
 	
@@ -909,7 +931,7 @@ class PixivAuthor(PixivBase):
 		
 	
 	def makeAuthorDir(self) -> None:
-		makeDirs(self.author_dir)
+		os.makedirs(self.author_dir, exist_ok=True)
 	
 	
 	def saveAuthorIcon(self, force_update=False) -> str:
@@ -1117,7 +1139,8 @@ class PixivObject(object):
 		self.author_id = self.obj.author_id
 		self.novel_id, self.series_id = self.obj.novel_id, self.obj.series_id
 		self.novel_url = f"https://www.pixiv.net/novel/show.php?id={self.novel_id}"
-		self.series_url = f"https://www.pixiv.net/novel/series/{self.series_id}"
+		if self.series_id:
+			self.series_url = f"https://www.pixiv.net/novel/series/{self.series_id}"
 		self.author_url = f"https://www.pixiv.net/users/{self.author_id}"
 		
 	
@@ -1178,7 +1201,7 @@ class PixivObject(object):
 			self.obj = PixivAuthor(self.author_url)
 		return self.obj.saveAuthor(lang2=lang2)
 	
-	
+
 def main():
 	path, lang = "", ""
 	lang = getLangSystem()

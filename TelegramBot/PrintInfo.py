@@ -1,6 +1,5 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
-from platform import platform
 from functools import cmp_to_key
 
 from opencc import OpenCC
@@ -92,10 +91,10 @@ def formatTags(tags1: set, tags2: set, unsure1: set, unsure2: set) -> str:
 	tags3 = ""
 	if unsure1:
 		unsure1 = unsure1.difference(tags1)  # 去重，获取作者未标注的标签
-		if "Linux" in platform():
-			tags3 = f"可能存在：{sortTags(unsure1)}"
-		else:
+		if testMode:
 			tags3 = f"可能存在：{sortTags(unsure1)}\n{sortTags(unsure2)}"
+		else:
+			tags3 = f"可能存在：{sortTags(unsure1)}"
 	
 	if tags2:
 		tags2 = f"特殊：{sortTags(tags2)}\n"
@@ -148,6 +147,8 @@ def printInfo(path, num=0) -> tuple[str, int]:
 def main(path=novel_path):
 	print(f"当前目录：{path}\n")
 	files = findFile(path, ".txt", ".docx")
+	
+	# from platform import platform
 	# if "Windows" in platform():  # 跑得很慢
 	# 	files.append(findFile(path, ".doc"))
 	
