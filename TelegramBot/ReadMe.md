@@ -52,19 +52,5 @@ https://telegra.ph/FurryNovelsReading-04-04-07
 
 ~~其实装好第三方库，双击运行还是挺简单的~~
 
-**Python 310 下可用**`
+**Python 310 下可用 【2022-11-22】**
 
-``` Python 310
-python-telegram-bot >= 13.4
-pixivpy >= 3.7.0
-pygtrans >= 1.4.0
-opencc >= 1.1.1
-numpy >= 1.22.1
-pyzipper >= 0.3.6
-webdav4 >= 0.9.5
-docx-hitalent >= 0.8.30
-# instead of python-docx on python 310
-
-# dispensable packages
-# pywin32 # only used on Windows
-```
