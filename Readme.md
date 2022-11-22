@@ -27,8 +27,8 @@
 - 感谢 @DragonSaphira @realsAulduin 提供的服务器
 
 ### 推荐项目
-- [小动物的电报实用指南](https://telegra.ph/TNTwwxs-09-08-06)  没错，是我自己写的
+- [小动物的电报实用指南](https://telegra.ph/TNTwwxs-09-08-06)  没错，是我写的
 - [Linpx](https://www.furrynovel.xyz/) 	就叫 Linpx	 <u>*LINPXIS NOT PIXIV*</u>	免代理 Pixiv 小说第三方「镜像站」
-- [FurryGamesIndex](https://furrygames.top/zh-cn/list.html)	兽人控游戏索引	<u>*一个致力于收集、组织、分类、标签“兽人游戏”游戏项目。*</u>
-- [KemonoGames](https://kemono.games/zh-Hans) 	兽人控游戏库	*<u>做最全的兽人控游戏索引，由现代化前端技术驱动。</u>*
+- [FurryGamesIndex](https://furrygames.top/zh-cn/list.html)	兽人控游戏索引	<u>*一个致力于收集、组织、分类、标签“兽人游戏”游戏项目*</u>
+- [KemonoGames](https://kemono.games/zh-Hans) 	兽人控游戏库	*<u>做最全的兽人控游戏索引，由现代化前端技术驱动</u>*
 
