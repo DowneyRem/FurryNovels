@@ -1,0 +1,7 @@
+[Unit]
+Description= FurryNovels Telegram bot
+
+[Service]
+WorkingDirectory=/home/bot/furrynovels/
+ExecStart=/home/bot/furrynovels/bot.py
+Environment=PYTHONUNBUFFERED=1

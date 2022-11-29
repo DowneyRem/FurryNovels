@@ -25,8 +25,7 @@ https://github.com/DowneyRem/FurryNovels/tree/main/TencentQQBot
 | :-------------- | :------------------------- |
 | bot.py          | nonebot 主程序 |
 | config.py       | nonebot 配置文件 |
-| task.py         | 每隔10分钟，重启bot.py |
-| QQbot.bat       | 启动GOCPHTTP，通过 task.py 启动 bot.py |
+| QQbot.bat       | 启动GOCPHTTP，启动 bot.py |
 
 #### /plguins 目录：
 几个简单的小插件
