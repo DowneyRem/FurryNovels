@@ -3,7 +3,6 @@
 import os
 import time
 import logging
-from platform import platform
 
 
 def monthNow() -> str:
