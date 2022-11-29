@@ -1,8 +1,5 @@
-## [兽人小说频道](https://t.me/FurryNovels)标签
+## 标签使用方式
 
-### [标签表格版](https://github.com/DowneyRem/DowneyRem/blob/main/FurryNovels/Tags.md) 以此为准
-
-### 使用方式
 受 Telegram 限制，标签的功能为标记  
 **出现标签相关内容，即可使用该标签进行描述**  
 标签过多时，可选取主要标签  
