@@ -3,13 +3,14 @@ pixivpy >= 3.7.0
 pygtrans >= 1.4.0
 opencc >= 1.1.1
 numpy >= 1.22.1
-pyzipper >= 0.3.6
 webdav4 >= 0.9.5
+pyzipper >= 0.3.6
 docx-hitalent >= 0.8.30
 # instead of python-docx on python 310
+pdfplumber >= 0.7.6
+
 
 # dispensable packages
-
 # pywin32 # only used on Windows
 
 

@@ -5,6 +5,7 @@ import time
 import pytz
 import logging
 from platform import platform
+from datetime import datetime
 
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import messagequeue as mq
@@ -78,7 +79,8 @@ def pixivFilters(update: Update, context: ContextTypes):
 		for arg in args:
 			update.message.reply_text(str(arg))
 			print(arg)
-		
+			logging.info(str(arg))
+			
 			
 	def getLink():
 		link = ""
@@ -91,11 +93,12 @@ def pixivFilters(update: Update, context: ContextTypes):
 					text="请在 /download 后输入 pixiv 小说链接，或回复含有 pixiv 小说链接的消息",
 					reply_to_message_id=update.message.message_id)
 				print("pixivFilters: 回复内容无链接2")
+				logging.info("pixivFilters: 回复内容无链接2")
 				return ConversationHandler.END
 		return link
 	
 	
-	def filter(link):
+	def chooseFilter(link):
 		obj = PixivObject(link)
 		info = obj.setLinkInfo()
 		if "user" in link:
@@ -149,11 +152,15 @@ def pixivFilters(update: Update, context: ContextTypes):
 			myprint("输入有误，请重新输入")
 			return ConversationHandler.END
 		
+		
 	try:
-		filter(getLink())
+		chooseFilter(getLink())
 	except TypeError as e:
 		logging.debug(f"无链接{e}")
 	except ValueError as e:
+		myprint(e)
+		return ConversationHandler.END
+	except RuntimeError as e:
 		myprint(e)
 		return ConversationHandler.END
 	return SAVEPIXIV
@@ -168,21 +175,25 @@ def savePixiv(update: Update, context: ContextTypes):
 				query.message.edit_caption(str(arg))  # 修改图片 caption
 			except Exception as e:
 				logging.error(e)
-			print(arg)
+			finally:
+				logging.info(str(arg))
+				print(arg)
 	
 	@timer
 	def uploadToUser(path, info):
 		print(f"UploadTo: {username} ({userid})")
+		logging.info(f"UploadTo: {username} ({userid})")
 		query.message.chat.send_document(open(path, 'rb'), os.path.basename(path), info)
 	
 	
 	@timer
 	def uploadToChannel(channel, path, info):
 		print(f"上传至频道：{channel}")
+		logging.info(f"上传至频道：{channel}")
 		context.bot.send_document(channel, open(path, 'rb'), os.path.basename(path), info)
 	
 	
-	def sendMsgToChannel(channel, message):
+	def sendMsg(channel, message):
 		context.bot.send_message(channel, message, parse_mode="HTML")
 	
 	
@@ -198,7 +209,7 @@ def savePixiv(update: Update, context: ContextTypes):
 			logging.error(e)
 		
 		
-	def save(query: update.callback_query):
+	def saveNovels(query: update.callback_query):
 		method, url = int(query.data[0]), query.data[2:]
 		obj = PixivObject(url)
 		if method == 1:
@@ -217,17 +228,18 @@ def savePixiv(update: Update, context: ContextTypes):
 			return
 		myprint("下载完成，等待上传中……")
 		return result, (obj.file_info, obj.trans_info), obj.score, obj.furry
-		
 	
-	@timer
-	def upload(query: update.callback_query):
-		(path1, path2), (info1, info2), score, furry = save(query)
+	
+	def sendFileToUser(path1, path2, info1, info2):
 		print("上传文件路径：", path1, path2, sep="\n")
+		logging.info(f"上传文件路径：\n{path1}\n{path2}")
 		myprint("还请去Pixiv，给作者一个收藏/评论，以表支持")
 		uploadToUser(path1, info1)
 		if path2:
 			uploadToUser(path2, info2)
-		
+	
+	
+	def setUpdateLog(info1, info2, username, score):
 		info = f"{info1}\n\n来自 {username} 的分享\n"  # info 后半部分
 		if score > -100:
 			info += f"推荐指数： {score} (仅供参考)\n"
@@ -238,29 +250,53 @@ def savePixiv(update: Update, context: ContextTypes):
 		log = f" <a href='tg://user?id={userid}'>{username}</a> #U{userid}\n{infolist[0]}\n{infolist[1]}\n{infolist[2]}"
 		if infolist[2] != infolist[-1]:
 			log += f"\n{infolist[-1]}"
-		
+		return info, info2, log
+	
+	
+	def sendFileToChannels(path1, info, path2, info2, log, score, furry):
 		if testMode:  # 测试用
 			uploadToChannel(TEST_CHANNEL, path1, info)
 			if path2:
 				uploadToChannel(TEST_CHANNEL, path2, info2)
-			sendMsgToChannel(TEST_CHANNEL, f"#测试 {log}")
-			
+			sendMsg(TEST_CHANNEL, f"#测试 {log}")
+		
 		elif furry >= 2 and ".zip" not in path1:  # 兽人小说 txt
-			sendMsgToChannel(TEST_CHANNEL, f"#兽人小说 {log}")
+			sendMsg(TEST_CHANNEL, f"#兽人小说 {log}")
 			uploadToChannel("@FurryReading", path1, info)
 			if path2:  # 上传翻译文件
 				uploadToChannel("@FurryReading", path2, info2)
-				
+			
 			if "zh" in info and score >= 6:  # 中文优秀非机翻小说
 				uploadToChannel("@FurryNovels", path1, info)
 				uploadWebdav(path1, "小说")
-		
-		elif furry >= 2 and ".zip" in path1:  # 兽人小说 zip
-			sendMsgToChannel(TEST_CHANNEL, f"#兽人小说 {log}")
+	
+	
+	def sendLogToChannels(path1, furry, log):
+		if furry >= 2 and ".zip" in path1:  # 兽人小说 zip
+			sendMsg(TEST_CHANNEL, f"#兽人小说 {log}")
 		elif ".zip" in path1:  # 作者合集 zip
-			sendMsgToChannel(TEST_CHANNEL, f"#作者合集 {log}")
+			sendMsg(TEST_CHANNEL, f"#作者合集 {log}")
 		else:  # 非兽人小说
-			sendMsgToChannel(TEST_CHANNEL, f"#非兽人小说 {log}")
+			sendMsg(TEST_CHANNEL, f"#非兽人小说 {log}")
+			
+			
+	@timer
+	def uploadNovels(query: update.callback_query):
+		try:
+			(path1, path2), (info1, info2), score, furry = saveNovels(query)
+		except ValueError as e:
+			myprint(e)
+			sendMsg(userid, str(e))
+			return ConversationHandler.END
+		except RuntimeError as e:
+			myprint(e)
+			sendMsg(userid, str(e))
+			return ConversationHandler.END
+		else:
+			sendFileToUser(path1, path2, info1, info2)
+			info, info2, log = setUpdateLog(info1, info2, username, score)
+			sendFileToChannels(path1, info, path2, info2, log, score, furry)
+			sendLogToChannels(path1, furry, log)
 	
 	
 	query = update.callback_query
@@ -272,20 +308,21 @@ def savePixiv(update: Update, context: ContextTypes):
 	elif "zh-hant" in language:
 		language = "zh_tw"
 	print(f"当前语言：{language}")
+	logging.info(f"当前语言：{language}")
 	if query.data != "":  # 清除按钮
 		query.edit_message_reply_markup(InlineKeyboardMarkup([[]]))
 		
 	try:
-		upload(query)
+		uploadNovels(query)
 		time.sleep(3)
 		deleteMsg(query)
-	except ValueError as e:
-		myprint(e)
+	except Exception as e:
+		myprint(str(e))
 	return ConversationHandler.END
 	
 
 def timeoutcb(update: Update, context: ContextTypes):
-	print(f"Conversation timed out: uid={context.user_data['uid']}")
+	# print(f"Conversation timed out: uid={context.user_data['uid']}")
 	context.user_data.clear()
 	# return ConversationHandler.END
 
@@ -298,7 +335,8 @@ def translateFile(update: Update, context: ContextTypes):
 		message = f"请求者：<a href='tg://user?id={userid}'>{username}</a> #UID{userid}\n"
 		text = update.message.text
 	except AttributeError: # 'NoneType' object has no attribute 'chat'
-		print(f"transFile: 长时间闲置，结束翻译")
+		# print(f"transFile: 长时间闲置，结束翻译")
+		pass
 		return
 	
 	if text:  # 当前消息指定语言，回复消息指定文件
@@ -310,7 +348,7 @@ def translateFile(update: Update, context: ContextTypes):
 			lang2 = "zh_cn"
 		elif "zh-hant" in lang2:
 			lang2 = "zh_tw"
-
+		
 	if update.message.document:  # 直接上传文件
 		file = context.bot.get_file(update.message.document.file_id)
 		name = update.message.document.file_name
@@ -324,12 +362,14 @@ def translateFile(update: Update, context: ContextTypes):
 			text="请直接发送文件或用<code> /translate zh_cn </code>回复文件所在消息",
 			reply_to_message_id=update.message.message_id, parse_mode="HTML")
 		print(f"transFile: {username} 未发送或回复文件，结束翻译")
+		logging.info(f"transFile: {username} 未发送或回复文件，结束翻译")
 		return
 	
 	extname = os.path.splitext(name)[1].replace(".", "")
 	path = os.path.join(os.getcwd(), "Translation", "Download", name)
 	message = f"#{extname}_{lang2} {name}\n{message}"
 	print(f"transFile: 正在将 {name} 翻译成 {lang2} ")
+	logging.info(f"transFile: 正在将 {name} 翻译成 {lang2} ")
 	
 	try:
 		makeFile(path, "")  # 保存空文件后再覆盖
@@ -342,6 +382,7 @@ def translateFile(update: Update, context: ContextTypes):
 			message = f"#测试 {message}"
 		context.bot.send_message(TEST_CHANNEL, message, parse_mode="HTML")
 		print(f"transFile: 下载错误，结束翻译")
+		logging.info(f"transFile: 下载错误，结束翻译")
 		return
 		
 	try:
@@ -365,6 +406,7 @@ def translateFile(update: Update, context: ContextTypes):
 			uploadWebdav(path, "翻译")
 		message = f"#已经翻译 {message}"
 		print(f"翻译完成：{path}")
+		logging.info(f"翻译完成：{path}")
 	finally:
 		if testMode:  # 测试用
 			message = f"#测试 {message}"
@@ -386,9 +428,9 @@ def main():
 	elif "Linux" in platform():
 		updater.start_webhook(
 				listen="0.0.0.0",
-				port=int(os.environ.get('PORT', 5000)),
+				port=8080,
 				url_path=BOT_TOKEN,
-				webhook_url=f"https://{WEB_HOOK}/{BOT_TOKEN}")
+				webhook_url=f"{WEB_HOOK}/{BOT_TOKEN}")
 	
 	updater.dispatcher.add_handler(CommandHandler("start", start))
 	updater.dispatcher.add_handler(CommandHandler("help", help))
@@ -420,9 +462,10 @@ def main():
 if __name__ == '__main__':
 	REQUESTS_KWARGS = {'proxy_url': proxy_list[0]}
 	try:
-		print("Bot is Running!")
+		print(f"Bot is Running! {datetime.now()}")
+		# logging.info(f"Bot is Running! {datetime.now()}")
 		main()
 	except telegram.error.NetworkError as e:
 		logging.warning(e)
-		print("Error")
+		logging.info("Error")
 		
