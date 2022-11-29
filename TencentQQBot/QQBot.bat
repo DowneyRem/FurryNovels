@@ -5,7 +5,8 @@ set Folder=%~dp0%
 REM echo %Folder%
 cd %Folder%
 
-set QQBot="%Folder%task.py"
+set QQBot="%Folder%Bot.py"
+REM set QQBot="%Folder%task.py"
 set CQHTTP="%Folder%GOCQHTTP\go-cqhttp_windows_amd64.exe"
 REM echo %QQBot:"=%
 REM echo %CQHTTP:"=%

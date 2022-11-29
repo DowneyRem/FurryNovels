@@ -90,8 +90,8 @@ webdavdict4 = {
 		"baseurl": "https://dav.jianguoyun.com/dav/",
 		"username": "",  # 你的账号，支持多组
 		"password": ""   # 你的密码
-	},
-}
+		},
+	}
 
 
 # Webdav3.py 配置

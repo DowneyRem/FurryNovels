@@ -12,9 +12,9 @@ from platform import platform
 
 # import zipfile as zf
 import pyzipper as zf
+import pdfplumber
 from docx import Document  # 使用 docx-hitalent
 
-# from configuration import testMode
 from .configuration import testMode
 
 
@@ -283,21 +283,131 @@ def readJson(path: str) -> any:
 	else:
 		return data
 	
+	
+def readENPdf(path: str, *, password="", **kwargs) :
+	name = os.path.basename(path)
+	with pdfplumber.open(path, password=password) as pdf:
+		newpages = []
+		for page in pdf.pages:
+			text = page.extract_text()
+			lines = text.split("\n")  # 获取每一行的文本
+			# print(text)
+			newlines = []
+			for line in lines:
+				# print(line)
+				words = line.split(" ")
+				# print(words)
+				
+				# 段落首行
+				if len(words) > 1 and words[0][0].isupper():  # 首字母大写
+					# print(words)
+					if len(words) > 1 and words == lines[0].split(" "):  # 第一行
+						count = 0
+						l1 = " ".join(words).lower().split()
+						l2 = name.lower().replace(".", " ").replace("_", " ").split()
+						for word in l1:
+							if word in l2:
+								count += 1
+								
+						if count >= len(l1) - 1: # 是标题
+						# if " ".join(words).lower() in name.split("_"):
+							words = words + ["\n"]
+						else:
+							words = ["\n", "   "] + words    # 3个空格
+							
+					else:
+						words = ["\n", "   "] + words    # 3个空格
+					# print(words)
+					
+				# 段落末行
+				if len(words) > 1 and words[-1][-1] in ". ? ! 。 ？ ！".split():
+					words.extend(["\n", "   "])  # 3个空格
+				# print(words)
+				newline = " ".join(words)  # 空格间隔每个词
+				# print(newline)
+				newlines.append(newline)
+			# print(newlines)
+			newpage = "".join(newlines)
+			# print(newpage)
+			newpages.append(newpage)
+		# print(newpage)
+		newtext = "".join(newpages)
+		# print(newtext)
+	return newtext
+
+
+def readCNPdf(path: str, *, password="", **kwargs):
+	name = os.path.basename(path)
+	with pdfplumber.open(path, password=password) as pdf:
+		# first_page = pdf.pages[0]
+		# print(first_page.extract_text())
+		newpages = []
+		for page in pdf.pages:
+			text = page.extract_text()
+			lines = text.split("\n")  # 获取每一行的文本
+			# print(text)
+			newlines = []
+			for line in lines:
+				words = line.split()  # 拆分每行内容
+				# print(words)
+				if len(words) > 0 and words == lines[0].split():  # 第一行
+					# print(words)
+					if name in words or words[0] in name:  # 第一行是标题
+						words = words + ["\n\n", "　　"]
+					else:
+						words = ["\n", "　　"] + words
+					
+				if len(words) > 0 and words[-1][-1] in ". ? ! 。 ？ ！".split():  # 最后一行最后一个字符
+					words.extend(["\n", "　　"])
+				# print(words)
+				newline = "".join(words)
+				# print(newline)
+				newlines.append(newline)
+			# print(newlines)
+			newpage = "".join(newlines)
+			# print(newpage)
+			newpages.append(newpage)
+		# print(newpage)
+		newtext = "".join(newpages)
+		# print(newtext)
+	return newtext
+
+
+@openFileCheck
+def readPdf(path: str, *, password="", **kwargs) -> any:
+	with pdfplumber.open(path, password=password) as pdf:
+		first_page = pdf.pages[0].extract_text()
+		# first_page = pdf.pages[0].extract_words()
+		# print(first_page)
+		
+	if "，" in first_page or "。" in first_page:
+		text = readCNPdf(path, password=password, **kwargs)
+	else:
+		text = readENPdf(path, password=password, **kwargs)
+	if not text:
+		raise ValueError(f"不支持扫描版 PDF 文件")
+	return text
+
 
 @saveFileCheck
 def saveFile(path: str, data: any, **kwargs):
 	# 根据文件后缀名，自动选用保存函数
-	extname = os.path.splitext(path)[1]
+	extname = os.path.splitext(path)[1].lower()
 	if not extname:
 		return saveText(path, data)
 	elif extname in office_old_ext:
 		path, extname = f"{path}x", f"{extname}x"  # .doc -> .docx
 		print(f"保存为新格式：{path}")
+	elif extname == ".pdf":
+		extname = ".txt"
+		path = f"{os.path.splitext(path)[0]}{extname}"
+		
 	funname = f"save{extname.replace(os.path.extsep, '').capitalize()}"
 	try:
 		globals()[funname](path, data, **kwargs)
 	except KeyError:  # 有后缀名，无函数
 		logging.error(f"没有 {funname} 方法")
+	return path
 
 
 @saveFileCheck
@@ -309,6 +419,7 @@ def saveText(path: str, text="", **kwargs):
 		logging.error(f"保存失败：{path}")
 	else:
 		logging.debug(f"已保存为：{path}")
+	return path
 
 
 saveMd = saveText
@@ -347,6 +458,7 @@ def saveDocx(path: str, text: str, *, template="", **kwargs):
 		logging.error(e)
 	else:
 		logging.debug(f"已保存为：{path}")
+	return path
 
 
 @onWindows
@@ -385,7 +497,8 @@ def saveDoc(path: str, text: str, **kwargs):
 		doc.Close(True)
 	finally:
 		app.Quit()
-	
+	return path
+
 	
 @saveFileCheck
 def saveJson(path: str, data: any, **kwargs):
@@ -396,7 +509,8 @@ def saveJson(path: str, data: any, **kwargs):
 		logging.error(f"保存失败：{path}")
 	else:
 		logging.debug(f"已保存为：{path}")
-	
+	return path
+
 	
 def zipMultiFiles(path: [str, list], *, password="", zippath="", delete=0) -> str:
 	"""
@@ -700,11 +814,6 @@ def unzipFile(zippath: str, *, password="", path="", mode=0, delete=0) -> str:
 
 def test():
 	print("测试")
-	path = r"D:\Download\Browser\兽人小说\小说"
-	paths = findFile(path, ".txt", ".docx")
-	path2 = r"D:\Download\Browser\兽人小说翻译"
-	# zipEachFile(paths, password="furry")
-	zipEachFile(paths, password="furry", zippath=path2)
 	
 
 if __name__ == '__main__':

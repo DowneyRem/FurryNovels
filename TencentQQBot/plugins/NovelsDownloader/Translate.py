@@ -232,7 +232,7 @@ def transDocument(path: str, lang2=getLangSystem(), mode=1) -> str:
 		text = translate(text, lang1=lang1, lang2=lang2)
 		trans_path = transPath(path, mode=mode, lang1=lang1, lang2=lang2)
 		# saveDocx(trans_path, text, template=path)
-		saveFile(trans_path, text, template=path)
+		trans_path = saveFile(trans_path, text, template=path)
 		return trans_path
 	
 	
@@ -249,7 +249,7 @@ def transZip(zippath, lang2=getLangSystem()) -> str:
 		except RuntimeError:  # 语言一致
 			text = readFile(file)
 			trans_path = transPath(file, mode=2, lang1=lang2, lang2=lang2)
-			saveFile(trans_path, text, template=file)
+			trans_path = saveFile(trans_path, text, template=file)
 		trans_files.append(trans_path)
 	
 	removeFile(folder)  # 删除未翻译的文件
@@ -264,7 +264,7 @@ def transZip(zippath, lang2=getLangSystem()) -> str:
 
 @timer
 def transFile(path: str, lang2=getLangSystem()) -> str:
-	extnames = ".txt .docx".split()
+	extnames = ".txt .docx .pdf".split()
 	extname = os.path.splitext(path)[1].lower()
 	if path.lower().endswith(".zip"):
 		return transZip(path, lang2=lang2)
@@ -311,7 +311,7 @@ def test():
 	
 	
 if __name__ == "__main__":
-	testMode = 0
+	testMode = 1
 	if testMode:
 		test()
 	else:

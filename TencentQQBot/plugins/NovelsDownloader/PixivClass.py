@@ -6,13 +6,14 @@ import re
 import math
 import logging
 from abc import ABC, abstractmethod
+from datetime import datetime
 from functools import wraps
+from threading import Thread
 from ssl import SSLError
 from urllib.parse import unquote
 import urllib3.exceptions
 import requests.exceptions
 import pixivpy3.utils
-
 
 import numpy as np
 
@@ -28,7 +29,19 @@ from .configuration import novel_path, testMode
 sys.dont_write_bytecode = True
 _TEST_WRITE = False
 addTranslatedTags = 0   # 加入翻译过后的标签
+# tokenPool = TokenRoundRobin()
 
+
+def tokenPoolInit():
+	global tokenPool
+	# tokenPool = TokenRoundRobin()
+	try:
+		tokenPool = TokenRoundRobin()
+	except RuntimeError as e:
+		print(e)
+		logging.critical(f"{e}")
+		return
+	
 
 def checkNone(fun):
 	@wraps(fun)
@@ -111,6 +124,10 @@ class PixivABC(ABC):
 		pass
 	
 	@abstractmethod
+	def checkJson(self):
+		pass
+	
+	@abstractmethod
 	def getInfo(self):
 		pass
 	
@@ -186,17 +203,6 @@ class PixivBase(PixivABC):  # 共用方法
 	
 	
 	@staticmethod
-	def tokenPoolInit():
-		try:
-			global tokenPool
-			tokenPool = TokenRoundRobin()
-		except RuntimeError as e:
-			print(e)
-			logging.critical(f"{e}")
-			return
-	
-	
-	@staticmethod
 	def getTags(tagslist: list) -> set[str]:  # 处理 json.novel.tags
 		tags = set()
 		for tag in tagslist:
@@ -268,7 +274,7 @@ class PixivBase(PixivABC):  # 共用方法
 	
 	
 	def __repr__(self) -> str:
-		return f"{self.__class__.__name__}({self.link})"
+		return f"{self.__class__.__name__}('{self.link}')"
 	
 	
 	def setLinkInfo(self) -> str:   # 发送链接后的文本
@@ -317,19 +323,8 @@ class PixivNovels(PixivBase):
 		self.link = link
 		self.novel_id = getId(link)
 		self.novel_url = f"https://www.pixiv.net/novel/show.php?id={self.novel_id}"
-		self.tokenPoolInit()
 		self.json = self.getJson()
-		
-		if not self.json:
-			raise RuntimeError("网络状态不佳，请稍后尝试")
-		if self.json.error:  # 排除已删除/不可见小说
-			raise ValueError("小说ID不存在，或已被删除")
-		elif self.json.novel.is_mypixiv_only:
-			raise ValueError("该小说仅好P友可见，无法下载")
-		elif not self.json.novel.visible:
-			raise ValueError("该小说未公开，无法下载")
-		else:
-			self.getInfo()
+		self.checkJson()
 	
 	
 	@checkNone
@@ -341,6 +336,32 @@ class PixivNovels(PixivBase):
 		self._is_json_retrieved = True
 		# print(self._original_json)
 		return self._original_json
+	
+	
+	def checkJson(self):
+		if not self.json:
+			raise RuntimeError("网络状态不佳，请稍后尝试")
+		
+		try:
+			# {'error': {'user_message': '', 'message': 'Error occurred at the OAuth process. Please check your Access Token to fix this. Error Message: invalid_grant'}
+			if self.json.error.message:  # 排除已删除/不可见小说
+				raise RuntimeError("Tokens 已失效")
+			
+			# {'error': {'user_message': 'The creator has limited who can view this content', 'message': '', 'reason': '', 'user_message_details': {}}}
+			elif self.json.error.user_message:  # 排除已删除/不可见小说
+				raise ValueError("小说ID不存在，或已被删除")
+			
+		except AttributeError:  # 非正常小说，有 error 信息
+			# "visible": false, "is_mypixiv_only": true
+			if self.json.novel.is_mypixiv_only:
+				raise ValueError("该小说仅好P友可见，无法下载")
+			
+			# "visible": false, "is_mypixiv_only": false
+			elif not self.json.novel.visible:
+				raise ValueError("该小说未公开，无法下载")
+			
+			else:  # 正常小说
+				self.getInfo()
 	
 	
 	def getInfo(self) -> None:
@@ -496,15 +517,8 @@ class PixivSeries(PixivBase):
 		self.link = link
 		self.series_id = getId(link)
 		self.series_url = f"https://www.pixiv.net/novel/series/{self.series_id}"
-		self.tokenPoolInit()
 		self.json = self.getJson()  # 原始数据
-		
-		if not self.json:
-			raise RuntimeError("网络状态不佳，请稍后尝试")
-		if self.json.error:
-			raise ValueError("系列ID不存在，或已被删除")
-		else:
-			self.getInfo()
+		self.checkJson()
 	
 	
 	@checkNone
@@ -514,8 +528,17 @@ class PixivSeries(PixivBase):
 		
 		self._original_json = tokenPool.getAPI().novel_series(self.series_id, last_order=None)
 		self._is_json_retrieved = True
-		print(self._original_json)
+		# print(self._original_json)
 		return self._original_json
+	
+	
+	def checkJson(self):
+		if not self.json:
+			raise RuntimeError("网络状态不佳，请稍后尝试")
+		if self.json.error:
+			raise ValueError("系列ID不存在，或已被删除")
+		else:
+			self.getInfo()
 	
 	
 	def getInfo(self) -> None:
@@ -634,6 +657,7 @@ class PixivSeries(PixivBase):
 	@timer
 	def saveAsZip(self, author="", lang="", lang2="") -> tuple:
 		print(f"SaveAsZip: {self.title}")
+		logging.info(f"SaveAsZip: {self.title}")
 		if not self.novels_list:
 			self.getNovelsList()
 		if lang:
@@ -668,6 +692,7 @@ class PixivSeries(PixivBase):
 	@timer
 	def saveAsTxt(self, author="", lang="", lang2="") -> tuple:
 		print(f"SaveAsTxt: {self.title}")
+		logging.info(f"SaveAsTxt: {self.title}")
 		if not self.novels_list:
 			self.getNovelsList()
 		
@@ -685,7 +710,7 @@ class PixivSeries(PixivBase):
 				novel_caption = novel.caption
 				novel_text = novel.getText()
 			except ValueError as e:
-				print(e)
+				print(e)  # todo 系列中有1篇未公开小说，如何处理？
 			else:
 				novel_title_replaced = novel_title.replace(self.title, "").replace("-", "")
 				if len(novel_title_replaced) >= 2:
@@ -810,15 +835,8 @@ class PixivAuthor(PixivBase):
 		self.link = link
 		self.author_id = getId(link)
 		self.author_url = f"https://www.pixiv.net/users/{self.author_id}"
-		self.tokenPoolInit()
 		self.json = self.getJson()
-		
-		if not self.json:
-			raise RuntimeError("网络状态不佳，请稍后尝试")
-		if self.json.error:
-			raise ValueError("作者ID不存在，或已被删除")
-		else:
-			self.getInfo()
+		self.checkJson()
 	
 	
 	@checkNone
@@ -828,8 +846,17 @@ class PixivAuthor(PixivBase):
 		
 		self._original_json = tokenPool.getAPI().user_detail(self.author_id)
 		self._is_json_retrieved = True
-		print(self._original_json)
+		# print(self._original_json)
 		return self._original_json
+	
+	
+	def checkJson(self):
+		if not self.json:
+			raise RuntimeError("网络状态不佳，请稍后尝试")
+		if self.json.error:
+			raise ValueError("作者ID不存在，或已被删除")
+		else:
+			self.getInfo()
 	
 	
 	def getInfo(self) -> None:
@@ -1122,6 +1149,13 @@ class PixivObject(object):
 	
 	def __init__(self, string):
 		self.url = getUrl(string)
+		# self.factory()
+		t2 = Thread(target=PixivObject.factory, args=(self,))
+		t2.start()
+		t2.join()
+	
+	
+	def factory(self):
 		if "user" in self.url:  # 去末尾s，兼容linpx
 			self.obj = PixivAuthor(self.url)
 			self.obj.getNovelsList(force_update=True)  # 强制更新
@@ -1201,7 +1235,7 @@ class PixivObject(object):
 			self.obj = PixivAuthor(self.author_url)
 		return self.obj.saveAuthor(lang2=lang2)
 	
-
+	
 def main():
 	path, lang = "", ""
 	lang = getLangSystem()
@@ -1212,6 +1246,9 @@ def main():
 				path = PixivObject(string).save(lang)[0]
 			except ValueError as e:
 				print(e)
+			except RuntimeError as e:
+				print(e)
+				return
 		else:
 			print("输入有误，请重新输入，退出下载请直接按 Enter 键")
 		string = input("\n请输入Pixiv或Linpx小说链接或作者链接，按 Enter 键确认：\n")
@@ -1223,12 +1260,13 @@ def main():
 
 
 def test():
-	print("测试\n")
+	print(f"测试 {datetime.now()}\n")
 	# a0 = PixivNovels(18012577).save()    #莱当社畜不如变胶龙  无系列
 	# a1 = PixivNovels(17463359).save("zh_tw")    #莱恩的委托:双龙警察故事  无系列
 	# a2 = PixivNovels(18131976).save("zh_cn")    # Summer Time is Naked Time 无系列
 	# a3 = PixivNovels(15789643).save()   # 狼铠侠的末路，委托系列
-	# a4 = PixivNovels(14059797).save()   # 浅色的蓝天，非委托系列
+	# a4 = PixivNovels(14059797).save()   # 浅色的蓝天，非委托系列，已删除
+	# a5 = PixivNovels(18078490).save()   # 仅好P友可见
 	
 	# b0 = PixivSeries(2399683).save("zh_tw")  # 维卡斯委托系列
 	# b0 = PixivSeries(2399683).setTelegramUploadInfo() # 维卡斯委托系列
@@ -1265,10 +1303,14 @@ def test():
 	# d2 = PixivObject("https://www.pixiv.net/users/10894035").saveSeries()
 	
 	
+if True:
+	tokenPoolInit()
+	
+	
 if __name__ == "__main__":
 	testMode = 0
 	if testMode:
 		test()
 	else:
 		main()
-		
+
