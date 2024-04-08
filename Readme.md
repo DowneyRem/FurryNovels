@@ -9,7 +9,7 @@
 **这是一个龙学习的练手项目，欢迎指点**
 - Telegram：[@FurryNovelsBot](https://t.me/FurryNovelsBot)
 
-### 版权投诉：  
+### [版权投诉](./DMCA.md)  
 请（小说作者）来到 [@FurryNovels](https://t.me/FurryNovels) 关联群组进行版权投诉
 
 ### 如何支持我们？
