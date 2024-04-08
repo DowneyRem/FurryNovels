@@ -26,7 +26,8 @@
 
 ### 📣 声明
 兽人小说频道 [@FurryNovels](https://t.me/FurryNovels) 与下列网站无关，非同一运营实体。
-原 Linpx：https://furrynovel.xyz
-新 Linpx：https://furrynovel.ink
-兽人控小说站：https://furrynovel.com
+- 原 Linpx：https://furrynovel.xyz
+- 新 Linpx：https://furrynovel.ink
+- 兽人控小说站：https://furrynovel.com
+
 如需版权投诉，请去对应平台分别进行投诉。
