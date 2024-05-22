@@ -8,7 +8,7 @@ from webdav3.client import Client
 from webdav3.exceptions import *
 
 from FileOperate import removeFile, zipFile, timer
-from config import webdavs3 as webdavs, encryptlist
+from configuration import webdavs3 as webdavs, encryptlist
 
 
 # webdavs = {

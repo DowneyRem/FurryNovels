@@ -51,6 +51,18 @@
         "korean": [
             "ko"
         ],
+        "Series": [
+            "Series"
+        ],
+        "series": [
+            "Series"
+        ],
+        "Commission": [
+            "Commission"
+        ],
+        "commission": [
+            "Commission"
+        ],
         "Original": [
             "Original"
         ],
@@ -62,6 +74,12 @@
         ],
         "doujin": [
             "Doujin"
+        ],
+        "Romance": [
+            "Romance"
+        ],
+        "romance": [
+            "Romance"
         ],
         "SFW": [
             "SFW"
@@ -117,6 +135,9 @@
         "bl": [
             "Gay"
         ],
+        "yaoi": [
+            "Gay"
+        ],
         "Lesbian": [
             "Lesbian"
         ],
@@ -127,6 +148,9 @@
             "Lesbian"
         ],
         "gl": [
+            "Lesbian"
+        ],
+        "yuri": [
             "Lesbian"
         ],
         "General": [
@@ -155,11 +179,17 @@
             "Gay",
             "furry"
         ],
-        "Romance": [
-            "Romance"
+        "Lolita": [
+            "Lolita"
         ],
-        "romance": [
-            "Romance"
+        "lolita": [
+            "Lolita"
+        ],
+        "Loli": [
+            "Lolita"
+        ],
+        "loli": [
+            "Lolita"
         ],
         "Human": [
             "Human"
@@ -172,18 +202,6 @@
         ],
         "robot": [
             "Robot"
-        ],
-        "Slime": [
-            "Slime"
-        ],
-        "slime": [
-            "Slime"
-        ],
-        "Tentacles": [
-            "Tentacles"
-        ],
-        "tentacles": [
-            "Tentacles"
         ],
         "Vampire": [
             "Vampire"
@@ -202,6 +220,12 @@
         ],
         "police": [
             "Police"
+        ],
+        "Devil": [
+            "Devil"
+        ],
+        "devil": [
+            "Devil"
         ],
         "DevilKing": [
             "DevilKing"
@@ -233,19 +257,16 @@
         "anal": [
             "Anal"
         ],
-        "69": [
-            "69BlowJob"
-        ],
-        "69 BlowJob": [
-            "69BlowJob"
-        ],
-        "69 blowjob": [
-            "69BlowJob"
-        ],
         "BlowJob": [
             "BlowJob"
         ],
         "blowjob": [
+            "BlowJob"
+        ],
+        "69 BlowJob": [
+            "BlowJob"
+        ],
+        "69 blowjob": [
             "BlowJob"
         ],
         "Cloaca": [
@@ -283,12 +304,6 @@
         ],
         "paw": [
             "Paw"
-        ],
-        "SockJob": [
-            "SockJob"
-        ],
-        "sockjob": [
-            "SockJob"
         ],
         "UrethraInsertion": [
             "UrethraInsertion"
@@ -329,10 +344,13 @@
         "cuckold": [
             "Cuckold"
         ],
-        "netorare": [
+        "NTR": [
             "Cuckold"
         ],
         "ntr": [
+            "Cuckold"
+        ],
+        "netorare": [
             "Cuckold"
         ],
         "Oyakodon": [
@@ -351,10 +369,10 @@
             "BDSM"
         ],
         "SM": [
-            "BDSM"
+            "SM"
         ],
         "sm": [
-            "BDSM"
+            "SM"
         ],
         "Bondage": [
             "Bondage"
@@ -367,6 +385,12 @@
         ],
         "electricshocks": [
             "ElectricShocks"
+        ],
+        "Hypnosis": [
+            "Hypnosis"
+        ],
+        "hypnosis": [
+            "Hypnosis"
         ],
         "MindControl": [
             "MindControl"
@@ -385,6 +409,12 @@
         ],
         "brainwashing": [
             "MindControl"
+        ],
+        "Control": [
+            "Control"
+        ],
+        "control": [
+            "Control"
         ],
         "Asphyxiation": [
             "Asphyxiation"
@@ -409,6 +439,15 @@
         ],
         "crotchtattoo": [
             "CrotchTattoo"
+        ],
+        "ChastityBelt": [
+            "ChastityBelt"
+        ],
+        "chastitybelt": [
+            "ChastityBelt"
+        ],
+        "cb": [
+            "ChastityBelt"
         ],
         "PublicUse": [
             "PublicUse"
@@ -458,6 +497,12 @@
         "gainingweight": [
             "WeightGain"
         ],
+        "Defeated": [
+            "Defeated"
+        ],
+        "defeated": [
+            "Defeated"
+        ],
         "BattleDamage": [
             "BattleDamage"
         ],
@@ -495,12 +540,6 @@
         "corruption": [
             "corruption"
         ],
-        "Hypnosis": [
-            "Hypnosis"
-        ],
-        "hypnosis": [
-            "Hypnosis"
-        ],
         "Smell": [
             "Smell"
         ],
@@ -525,17 +564,17 @@
         "machine": [
             "Machine"
         ],
-        "Drone": [
-            "Drone"
+        "Slime": [
+            "Slime"
         ],
-        "drone": [
-            "Drone"
+        "slime": [
+            "Slime"
         ],
-        "Diaper": [
-            "Diaper"
+        "Tentacles": [
+            "Tentacles"
         ],
-        "diaper": [
-            "Diaper"
+        "tentacles": [
+            "Tentacles"
         ],
         "Latex": [
             "Latex"
@@ -548,6 +587,12 @@
         ],
         "rubber": [
             "Rubber"
+        ],
+        "Drone": [
+            "Drone"
+        ],
+        "drone": [
+            "Drone"
         ],
         "Armor": [
             "Armor"
@@ -566,6 +611,21 @@
         ],
         "socks": [
             "Socks"
+        ],
+        "SockJob": [
+            "Socks"
+        ],
+        "sockjob": [
+            "Socks"
+        ],
+        "Diaper": [
+            "Diaper"
+        ],
+        "diaper": [
+            "Diaper"
+        ],
+        "skinsuit": [
+            "SkinSuit"
         ],
         "Muscles": [
             "Muscles"
@@ -681,6 +741,75 @@
         ]
     },
     {
+        "小说": [
+            ""
+        ],
+        "小說": [
+            ""
+        ],
+        "委托": [
+            "Commission"
+        ],
+        "委託": [
+            "Commission"
+        ],
+        "约稿": [
+            "Commission"
+        ],
+        "約稿": [
+            "Commission"
+        ],
+        "日常": [
+            ""
+        ],
+        "幻想": [
+            ""
+        ],
+        "西幻": [
+            ""
+        ],
+        "西方幻想": [
+            ""
+        ],
+        "奇幻": [
+            ""
+        ],
+        "玄幻": [
+            ""
+        ],
+        "超短篇": [
+            ""
+        ],
+        "短篇": [
+            ""
+        ],
+        "中篇": [
+            ""
+        ],
+        "长篇": [
+            "Series"
+        ],
+        "長篇": [
+            "Series"
+        ],
+        "超长篇": [
+            ""
+        ],
+        "超長篇": [
+            ""
+        ],
+        "微型小说": [
+            ""
+        ],
+        "微型小說": [
+            ""
+        ],
+        "微小说": [
+            ""
+        ],
+        "微小說": [
+            ""
+        ],
         "翻译": [
             "translated"
         ],
@@ -693,19 +822,22 @@
         "中国語": [
             "zh"
         ],
-        "中國語": [
-            "zh"
-        ],
         "简体中文": [
             "zh_cn"
         ],
         "简中": [
             "zh_cn"
         ],
+        "中国语": [
+            "zh_cn"
+        ],
         "正體中文": [
             "zh_tw"
         ],
         "繁中": [
+            "zh_tw"
+        ],
+        "中國語": [
             "zh_tw"
         ],
         "日本語": [
@@ -716,6 +848,15 @@
         ],
         "日語": [
             "ja"
+        ],
+        "系列": [
+            "Series"
+        ],
+        "长篇小说": [
+            "Series"
+        ],
+        "長篇小說": [
+            "Series"
         ],
         "原创": [
             "Original"
@@ -732,11 +873,86 @@
         "二次創作": [
             "Doujin"
         ],
+        "剧情": [
+            "Plot"
+        ],
+        "劇情": [
+            "Plot"
+        ],
+        "剧情向": [
+            "Plot"
+        ],
+        "劇情向": [
+            "Plot"
+        ],
+        "纯爱": [
+            "Romance"
+        ],
+        "純愛": [
+            "Romance"
+        ],
+        "交配": [
+            "R18"
+        ],
+        "交尾": [
+            "R18"
+        ],
+        "发情": [
+            "R18"
+        ],
+        "發情": [
+            "R18"
+        ],
+        "色情": [
+            "R18"
+        ],
+        "エロ": [
+            "R18"
+        ],
+        "工口": [
+            "R18"
+        ],
+        "男同": [
+            "Gay"
+        ],
+        "男男": [
+            "Gay"
+        ],
+        "同性": [
+            "Gay"
+        ],
+        "同性向": [
+            "Gay"
+        ],
         "腐向け": [
             "Gay"
         ],
         "ゲイ": [
             "Gay"
+        ],
+        "やおい": [
+            "Gay"
+        ],
+        "男同士": [
+            "Gay"
+        ],
+        "女同": [
+            "Lesbian"
+        ],
+        "女女": [
+            "Lesbian"
+        ],
+        "百合": [
+            "Lesbian"
+        ],
+        "ユリ": [
+            "Lesbian"
+        ],
+        "异性": [
+            "General"
+        ],
+        "異性": [
+            "General"
         ],
         "兽人": [
             "Furry"
@@ -748,6 +964,9 @@
             "Furry"
         ],
         "じゅうじん": [
+            "Furry"
+        ],
+        "獣": [
             "Furry"
         ],
         "けもの": [
@@ -778,8 +997,20 @@
             "Gay",
             "furry"
         ],
+        "ケモ百合": [
+            "Lesbian",
+            "Furry"
+        ],
+        "兽人百合": [
+            "Lesbian",
+            "Furry"
+        ],
+        "獸人百合": [
+            "Lesbian",
+            "Furry"
+        ],
         "ケモロリ": [
-            "Chibi",
+            "Lolita",
             "Furry"
         ],
         "ケモショタ": [
@@ -806,6 +1037,42 @@
             "Chibi",
             "Furry"
         ],
+        "少年": [
+            "Chibi"
+        ],
+        "正太": [
+            "Chibi"
+        ],
+        "兽人萝莉": [
+            "Lolita",
+            "Furry"
+        ],
+        "獸人蘿莉": [
+            "Lolita",
+            "Furry"
+        ],
+        "ロリケモ": [
+            "Lolita",
+            "Furry"
+        ],
+        "ロリータ": [
+            "Lolita"
+        ],
+        "ロリ": [
+            "Lolita"
+        ],
+        "萝莉": [
+            "Lolita"
+        ],
+        "蘿莉": [
+            "Lolita"
+        ],
+        "少女": [
+            "Lolita"
+        ],
+        "幼女": [
+            "Lolita"
+        ],
         "人类": [
             "Human"
         ],
@@ -818,22 +1085,16 @@
         "機器人": [
             "Robot"
         ],
-        "史莱姆": [
-            "Slime"
-        ],
-        "史萊姆": [
-            "Slime"
-        ],
-        "触手": [
-            "Tentacles"
-        ],
-        "觸手": [
-            "Tentacles"
-        ],
         "吸血鬼": [
             "Vampire"
         ],
         "英雄": [
+            "Hero"
+        ],
+        "小英雄": [
+            "Hero"
+        ],
+        "ヒーロー": [
             "Hero"
         ],
         "警察": [
@@ -842,10 +1103,28 @@
         "特警": [
             "Police"
         ],
+        "恶魔": [
+            "Devil"
+        ],
+        "惡魔": [
+            "Devil"
+        ],
         "魔王": [
             "DevilKing"
         ],
         "勇者": [
+            "Brave"
+        ],
+        "魔王与勇者": [
+            "Brave"
+        ],
+        "魔王與勇者": [
+            "Brave"
+        ],
+        "勇者与魔王": [
+            "Brave"
+        ],
+        "勇者與魔王": [
             "Brave"
         ],
         "魅魔": [
@@ -872,13 +1151,22 @@
         "後入": [
             "Anal"
         ],
+        "口交": [
+            "BlowJob"
+        ],
         "六九": [
-            "69BlowJob"
+            "BlowJob"
         ],
         "互口": [
-            "69BlowJob"
+            "BlowJob"
         ],
-        "口交": [
+        "吞精": [
+            "BlowJob"
+        ],
+        "食精": [
+            "BlowJob"
+        ],
+        "灌精": [
             "BlowJob"
         ],
         "生殖缝": [
@@ -908,6 +1196,12 @@
         "爪子": [
             "Paw"
         ],
+        "肉垫": [
+            "Paw"
+        ],
+        "肉墊": [
+            "Paw"
+        ],
         "手爪": [
             "Paw"
         ],
@@ -917,17 +1211,35 @@
         "腳爪": [
             "Paw"
         ],
-        "袜交": [
-            "SockJob"
+        "足控": [
+            "Paw"
         ],
-        "襪交": [
-            "SockJob"
+        "爪控": [
+            "Paw"
         ],
-        "白袜": [
-            "Socks"
+        "臭脚": [
+            "Paw"
         ],
-        "白襪": [
-            "Socks"
+        "臭腳": [
+            "Paw"
+        ],
+        "踩踏": [
+            "Paw"
+        ],
+        "舔脚": [
+            "Paw"
+        ],
+        "舔腳": [
+            "Paw"
+        ],
+        "舔脚爪": [
+            "Paw"
+        ],
+        "舔腳爪": [
+            "Paw"
+        ],
+        "尿道奸": [
+            "UrethraInsertion"
         ],
         "尿道插入": [
             "UrethraInsertion"
@@ -962,10 +1274,19 @@
         "亂倫": [
             "Incest"
         ],
+        "近亲相交": [
+            "Incest"
+        ],
+        "近親相交": [
+            "Incest"
+        ],
         "群交": [
             "Group"
         ],
         "群p": [
+            "Group"
+        ],
+        "群P": [
             "Group"
         ],
         "轮奸": [
@@ -974,16 +1295,28 @@
         "輪姦": [
             "Group"
         ],
-        "绿帽": [
+        "出轨": [
             "Cuckold"
         ],
-        "綠帽": [
+        "出軌": [
             "Cuckold"
         ],
         "父子丼": [
             "Oyakodon"
         ],
+        "父子": [
+            "Oyakodon"
+        ],
+        "父子play": [
+            "Oyakodon"
+        ],
         "兄弟丼": [
+            "brother"
+        ],
+        "兄弟": [
+            "brother"
+        ],
+        "兄弟play": [
             "brother"
         ],
         "调教": [
@@ -991,6 +1324,12 @@
         ],
         "調教": [
             "BDSM"
+        ],
+        "奴化": [
+            "BDSM"
+        ],
+        "性虐": [
+            "SM"
         ],
         "捆绑": [
             "Bondage"
@@ -1010,11 +1349,23 @@
         "綁縛": [
             "Bondage"
         ],
+        "拘束": [
+            "Bondage"
+        ],
+        "紧缚": [
+            "Bondage"
+        ],
+        "緊縛": [
+            "Bondage"
+        ],
         "电击": [
             "ElectricShocks"
         ],
         "電擊": [
             "ElectricShocks"
+        ],
+        "催眠": [
+            "Hypnosis"
         ],
         "精神控制": [
             "MindControl"
@@ -1027,6 +1378,30 @@
         ],
         "洗腦": [
             "MindControl"
+        ],
+        "认知修改": [
+            "MindControl"
+        ],
+        "認知修改": [
+            "MindControl"
+        ],
+        "催眠洗脑": [
+            "MindControl"
+        ],
+        "催眠洗腦": [
+            "MindControl"
+        ],
+        "洗脳": [
+            "MindControl"
+        ],
+        "控制": [
+            "Control"
+        ],
+        "身体控制": [
+            "Control"
+        ],
+        "身體控制": [
+            "Control"
         ],
         "窒息": [
             "Asphyxiation"
@@ -1043,10 +1418,19 @@
         "射精控制": [
             "OrgasmDenial"
         ],
+        "控射": [
+            "OrgasmDenial"
+        ],
         "主奴": [
             "Slave"
         ],
+        "主奴play": [
+            "Slave"
+        ],
         "性奴": [
+            "Slave"
+        ],
+        "狗奴": [
             "Slave"
         ],
         "奴隶": [
@@ -1060,6 +1444,24 @@
         ],
         "淫紋": [
             "CrotchTattoo"
+        ],
+        "贞操带": [
+            "ChastityBelt"
+        ],
+        "貞操帶": [
+            "ChastityBelt"
+        ],
+        "贞操锁": [
+            "ChastityBelt"
+        ],
+        "貞操鎖": [
+            "ChastityBelt"
+        ],
+        "锁包": [
+            "ChastityBelt"
+        ],
+        "鎖包": [
+            "ChastityBelt"
         ],
         "肉便器": [
             "PublicUse"
@@ -1091,16 +1493,60 @@
         "肥満化": [
             "WeightGain"
         ],
-        "战损": [
-            "BattleDamage"
-        ],
-        "戰損": [
-            "BattleDamage"
-        ],
         "战败": [
             "BattleDamage"
         ],
         "戰敗": [
+            "BattleDamage"
+        ],
+        "败北": [
+            "Defeated"
+        ],
+        "敗北": [
+            "Defeated"
+        ],
+        "战败受辱": [
+            "Defeated"
+        ],
+        "戰敗受辱": [
+            "Defeated"
+        ],
+        "英雄败北": [
+            "Defeated",
+            "Hero"
+        ],
+        "英雄敗北": [
+            "Defeated",
+            "Hero"
+        ],
+        "英雄战败": [
+            "Defeated",
+            "Hero"
+        ],
+        "英雄戰敗": [
+            "Defeated",
+            "Hero"
+        ],
+        "勇者败北": [
+            "Defeated",
+            "Brave"
+        ],
+        "勇者敗北": [
+            "Defeated",
+            "Brave"
+        ],
+        "勇者战败": [
+            "Defeated",
+            "Brave"
+        ],
+        "勇者戰敗": [
+            "Defeated",
+            "Brave"
+        ],
+        "战损": [
+            "BattleDamage"
+        ],
+        "戰損": [
             "BattleDamage"
         ],
         "欠損": [
@@ -1110,6 +1556,12 @@
             "BodyModification"
         ],
         "身體改造": [
+            "BodyModification"
+        ],
+        "人体改造": [
+            "BodyModification"
+        ],
+        "人體改造": [
             "BodyModification"
         ],
         "兽化": [
@@ -1147,16 +1599,40 @@
         "惡墮": [
             "corruption"
         ],
+        "悪堕ち": [
+            "corruption"
+        ],
+        "悪墮ち": [
+            "corruption"
+        ],
         "英雄恶堕": [
             "corruption",
-            "hero"
+            "Hero"
         ],
         "英雄惡墮": [
             "corruption",
-            "hero"
+            "Hero"
         ],
-        "催眠": [
-            "Hypnosis"
+        "雄臭": [
+            "Smell"
+        ],
+        "迷奸": [
+            "Drugs"
+        ],
+        "迷姦": [
+            "Drugs"
+        ],
+        "药物催淫": [
+            "Drugs"
+        ],
+        "藥物催淫": [
+            "Drugs"
+        ],
+        "药物催情": [
+            "Drugs"
+        ],
+        "藥物催情": [
+            "Drugs"
         ],
         "灵魂交换": [
             "BodySwap"
@@ -1170,14 +1646,38 @@
         "身體交換": [
             "BodySwap"
         ],
+        "榨精": [
+            "Milking"
+        ],
+        "龟头责": [
+            "Milking"
+        ],
+        "龜頭責": [
+            "Milking"
+        ],
         "机械奸": [
             "Machine"
         ],
         "機械奸": [
             "Machine"
         ],
-        "尿布": [
-            "Diaper"
+        "机械榨精": [
+            "Machine"
+        ],
+        "機械榨精": [
+            "Machine"
+        ],
+        "史莱姆": [
+            "Slime"
+        ],
+        "史萊姆": [
+            "Slime"
+        ],
+        "触手": [
+            "Tentacles"
+        ],
+        "觸手": [
+            "Tentacles"
         ],
         "乳胶衣": [
             "Latex"
@@ -1185,10 +1685,22 @@
         "乳膠衣": [
             "Latex"
         ],
+        "乳胶": [
+            "Latex"
+        ],
+        "乳膠": [
+            "Latex"
+        ],
         "胶衣": [
             "Latex"
         ],
         "膠衣": [
+            "Latex"
+        ],
+        "胶衣化": [
+            "Latex"
+        ],
+        "膠衣化": [
             "Latex"
         ],
         "胶液": [
@@ -1201,6 +1713,9 @@
             "Rubber"
         ],
         "膠": [
+            "Rubber"
+        ],
+        "粘液": [
             "Rubber"
         ],
         "盔甲": [
@@ -1224,7 +1739,37 @@
         "襪子": [
             "Socks"
         ],
+        "袜交": [
+            "Socks"
+        ],
+        "襪交": [
+            "Socks"
+        ],
+        "白袜": [
+            "Socks"
+        ],
+        "白襪": [
+            "Socks"
+        ],
+        "脏袜": [
+            "Socks"
+        ],
+        "髒襪": [
+            "Socks"
+        ],
+        "尿布": [
+            "Diaper"
+        ],
+        "皮物": [
+            "SkinSuit"
+        ],
+        "皮モノ": [
+            "SkinSuit"
+        ],
         "肌肉": [
+            "Muscles"
+        ],
+        "肌肉男": [
             "Muscles"
         ],
         "筋肉": [
@@ -1282,7 +1827,7 @@
             "R18G",
             "CBT"
         ],
-        "流血": [
+        "血腥": [
             "R18G",
             "Blood"
         ],

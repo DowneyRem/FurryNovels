@@ -8,7 +8,7 @@ from FileOperate import readFile, findFile, timer
 from GetLanguage import getLanguage
 from MakeTags import hashtags, cntags, entags, racetags, racedict, racelist, cmp
 from Translate import transWords
-from configuration import novel_path, testMode
+from configuration import novel_folder, testMode
 
 
 def sortTags(tags: set) -> str:  # 按dict内顺序对转换后的标签排序
@@ -144,7 +144,7 @@ def printInfo(path, num=0) -> tuple[str, int]:
 	
 	
 @timer
-def main(path=novel_path):
+def main(path=novel_folder):
 	print(f"当前目录：{path}\n")
 	files = findFile(path, ".txt", ".docx")
 	

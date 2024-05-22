@@ -8,16 +8,16 @@ from opencc import OpenCC
 
 from FileOperate import readJson, saveJson, removeFile, timer
 from TextFormat import isAlpha
-from configuration import testMode
 
 
 hashtags, entags, cntags, races, others, races_tw, others_tw = {}, {}, {}, {}, {}, {}, {}
 racetags, racedict, racelist = {}, {}, []
-json0 = os.path.join(os.path.dirname(__file__), "backup", "hashtags.json")  # 备用标签数据文件
-json1 = os.path.join(os.path.dirname(__file__), "data", "hashtags.json")    # 主要标签数据文件
-json2 = os.path.join(os.path.dirname(__file__), "data", "usedtags.json")    # 读取 entags,cntags
-json3 = os.path.join(os.path.dirname(__file__), "data", "races.json")       # 读取 races,others
-json4 = os.path.join(os.path.dirname(__file__), "data", "racedict.json")    # 讀取 racedict.json 會更慢
+foder = os.path.dirname(__file__)
+json0 = os.path.join(foder, "backup", "hashtags.json")  # 备用标签数据文件
+json1 = os.path.join(foder, "data", "hashtags.json")    # 主要标签数据文件
+json2 = os.path.join(foder, "data", "usedtags.json")    # 读取 entags,cntags
+json3 = os.path.join(foder, "data", "races.json")       # 读取 races,others
+json4 = os.path.join(foder, "data", "racedict.json")    # 讀取 racedict.json 會更慢
 
 
 def makeHashTags(dic: dict) -> dict:  # DictNovel 原始tags生成 hashtags.json
@@ -47,7 +47,7 @@ def makeHashTags(dic: dict) -> dict:  # DictNovel 原始tags生成 hashtags.json
 			break
 		d0[val] = d1
 		
-	if __name__ == "__main__" and testMode:  # 输出dict
+	if __name__ == "__main__":  # 输出dict
 		string = str(d0).replace("'", '"')
 		print(string)
 	saveJson(json1, d0)
@@ -90,9 +90,9 @@ def makeRaceTags():  # 翻譯標簽使用的標簽
 def makeRaceDict():  # 搜索正文使用的關鍵詞
 	hoof = "牛 马 羊 鹿 猪 象".split(" ")
 	fish = "鱼 鲨 鳄 海豚 鲸 蛇".split(" ")
-	prefix = "赤 红 橙 黄 绿 青 蓝 紫 黑 白 灰 棕 粉 小 胶".split(" ")
-	suffix = "兽 人 族 头 吻 身 尾".split(" ")
-	r18suffix = "棒 根 鞭 穴".split(" ")
+	prefix = "赤 红 橙 黄 绿 青 蓝 紫 黑 白 灰 棕 小 胶".split(" ")
+	suffix = "兽人 兽 人 族 头 吻 身 尾".split(" ")
+	r18suffix = "棒 根 鞭 屌 穴".split(" ")
 	prefix2 = "紅 黃 綠 藍 灰 膠".split(" ")
 	suffix2 = "獸 頭".split(" ")
 	
@@ -210,8 +210,8 @@ def test():
 	
 	
 if True:  # 初始化
-	testMode = 0
-	if testMode:
+	UpdataTags = 0
+	if UpdataTags:
 		updateJsons()
 	main()
 	# test()

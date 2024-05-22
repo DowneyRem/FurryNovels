@@ -30,6 +30,7 @@
 **⭐️ 若您作为作者不希望读者将您的作品以文件的形式发布在 [@FurryNovels](https://t.me/FurryNovels) 与 [@FurryReading](https://t.me/FurryReading) 两频道，请进入 [@FurryNovels](https://t.me/FurryNovels) 频道附属群组，提供 Pixiv 个人主页链接与 Pixiv 作者后台截图，给我们反馈。（后续将支持更多渠道）**
 
 **🛑 反馈完成后，上述两频道后续将不会接受您的作品作为分享内容。**
+
 **⚠️ 完成版权投诉后，您不能阻止用户继续从 [@FurryNovelsBot](https://t.me/FurryNovelsBot) 下载您的作品，他们会在完成下载后，收到这样的一条提示：**
 **`
 不好意思，作者 XXX  已禁止向本频道分享其作品，本次下载的内容将不会分享至 @FurryNovels 以及 @FurryReading

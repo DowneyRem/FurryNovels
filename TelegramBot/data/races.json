@@ -7,16 +7,18 @@
         "虎": "tiger",
         "龙": "dragon",
         "蜥蜴": "lizard",
-        "狗": "dog",
         "狼": "wolf",
+        "狗": "dog",
+        "鲨狗": "sergal",
+        "鬣狗": "hyena",
         "狐": "fox",
         "狐狸": "fox",
-        "鲨狗": "sergal",
         "象": "elephant",
         "鼠": "mouse",
         "袋鼠": "kangaroo",
         "猴": "monkey",
         "豹": "panther",
+        "猎豹": "cheetah",
         "猪": "pig",
         "兔": "rabbit",
         "蛇": "snake",
@@ -32,6 +34,9 @@
         "鲨鱼": "shark",
         "鳄鱼": "crocodile",
         "海豚": "dolphin",
+        "鲸": "whale",
+        "虎鲸": "orca",
+        "逆戟鲸": "orca",
         "胶": "rubber"
     },
     {
@@ -42,7 +47,8 @@
         "老虎": "tiger",
         "兔子": "rabbit",
         "大象": "elephant",
-        "老鼠": "mouse"
+        "老鼠": "mouse",
+        "狼人": "wolf"
     },
     {
         "貓熊": "panda",
@@ -50,6 +56,7 @@
         "獅": "lion",
         "龍": "dragon",
         "鯊格魯": "sergal",
+        "獵豹": "cheetah",
         "豬": "pig",
         "龜": "turtle",
         "鳥": "harpy",
@@ -58,6 +65,9 @@
         "鯊": "shark",
         "鯊魚": "shark",
         "鱷魚": "crocodile",
+        "鯨": "whale",
+        "虎鯨": "orca",
+        "逆戟鯨": "orca",
         "膠": "rubber"
     },
     {
