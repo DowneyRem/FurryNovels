@@ -1,5 +1,4 @@
-## 兽人小说频道 [@FurryNovels](https://t.me/FurryNovels)
-
+## 兽人小说系列频道 [@FurryReading](https://t.me/FurryReading)
 
 ### [成立宗旨](./doc/Channel.md)
 - 丰富 Telegram 中文兽圈内容，补齐小说-漫画-影视-游戏链条上缺少的一环
@@ -15,9 +14,9 @@
 
 ### 资源分享
 - Telegram 频道
-  - [@FurryNovels](https://t.me/FurryNovels)
-  - [@FurryReading](https://t.me/FurryReading) 
-  - [@TransfurNovels](https://t.me/TransfurNovels)
+  - 精品小说 [@FurryReading](https://t.me/FurryReading) 
+  - 兽人小说 [@FurryNovels](https://t.me/FurryNovels)
+  - 兽化小说 [@TransfurNovels](https://t.me/TransfurNovels)
 - 网盘分享
   - [Yandex Disk](https://disk.yandex.com/d/VEM1-GmZbzwzQw)
   - ~~MEGA~~(暂不支持)
@@ -26,14 +25,14 @@
 ### [版权投诉](DMCA.md)
 以下为【简述版】，详见[版权投诉](DMCA.md)
 
-如果您是作者本人，并且不希望网友将您的作品分享到上述频道，请进入 @FurryNovels 频道附属群组，**提供 Pixiv 个人主页链接与 Pixiv 作者后台截图**给我们。（后续将支持更多渠道）
+如果您是作者本人，并且不希望网友将您的作品分享到上述频道，**请进入 [@FurryReading 频道附属群组](https://t.me/FurryReading/27) ，提供 Pixiv 个人主页链接与 Pixiv 作者后台截图**给我们。（后续将支持更多渠道）
 
 **我们将永久撤下您所有的（包括未来的）作品。**
 
 
 ### 如何支持/加入我们？
 1. 分享本频道所推荐的小说 
-2. 使用 @FurryNovelsBot ，向我们分享你喜欢的小说
+2. 使用 [@FurryNovelsBot](https://t.me/FurryNovelsBot) ，向我们分享你喜欢的小说
 3. 为我们提供技术或其他支持
 4. 提出具有建设性的意见或规划
 

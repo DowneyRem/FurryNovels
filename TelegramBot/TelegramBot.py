@@ -52,8 +52,8 @@ def start(update: Update, context: ContextTypes):
 		update.message.reply_text("使用此功能请私聊我哦")
 	else:
 		update.message.reply_text(
-			"我是 @FurryNovels 的投稿bot。向我发送 <a href='https://www.pixiv.net/'>Pixiv</a> 或 <a href='https://furrynovel.ink/'>Linpx</a> 或 <a href='https://furrynovel.com/'>兽人控小说站</a> 的小说链接，我就可以帮你下载小说。\n\n"
-			"如果下载的小说满足【兽人小说】【txt文件】两个条件，我会转发一份到 @FurryReading ，作为你的分享。",
+			"我是 @FurryReading 的投稿bot。向我发送 <a href='https://www.pixiv.net/'>Pixiv</a> 或 <a href='https://furrynovel.ink/'>Linpx</a> 或 <a href='https://furrynovel.com/'>兽人控小说站</a> 的小说链接，我就可以帮你下载小说。\n\n"
+			"如果下载的小说满足【兽人小说】【txt文件】两个条件，我会转发一份到 @FurryNovels ，作为你的分享。",
 			parse_mode="HTML")
 		update.message.reply_text(
 			"此外，向我发送 txt 文件或 docx 文件，我还可以帮你翻译成你所用的 Telegram 语言。<a href='https://t.me/TNTwwxs/337'>点我查看 Telegram 语言包</a>。\n\n"
@@ -243,7 +243,7 @@ def downNovelsList(update, context):
 	share = f"\n\n来自 {username} 的分享\n"  # info 后半部分
 	if obj.score > -100:
 		share += f"推荐指数： {obj.score} (仅供参考)\n"
-	share += f"喜欢还请去Pixiv收藏或评论，以支持作者 @FurryNovels"
+	share += f"喜欢还请去Pixiv收藏或评论，以支持作者 @FurryReading"
 	myprint(update, "喜欢还请去Pixiv，给作者一个收藏/评论，以表支持")
 	
 	for path, info in zip(paths, infos):
@@ -255,11 +255,11 @@ def downNovelsList(update, context):
 				filename=os.path.basename(path), caption=f"{info}{share}")
 			
 		elif obj.furry >= 2 and ".zip" not in path:  # 兽人小说 txt
-			context.bot.send_document("@FurryReading", open(path, 'rb'),
+			context.bot.send_document("@FurryNovels", open(path, 'rb'),
 				filename=os.path.basename(path), caption=f"{info}{share}")
 			
 			if obj.furry >= 6.5:
-				context.bot.send_document("@FurryNovels", open(paths[0], 'rb'),
+				context.bot.send_document("@FurryReading", open(paths[0], 'rb'),
 					filename=os.path.basename(path), caption=f"{infos[0]}{share}")
 	
 	try:
@@ -430,7 +430,7 @@ def savePixiv(update: Update, context: ContextTypes):
 		info = f"{info1}\n\n来自 {username} 的分享\n"  # info 后半部分
 		if score > -100:
 			info += f"推荐指数： {score} (仅供参考)\n"
-		info += f"喜欢还请去Pixiv收藏或评论，以支持作者 @FurryNovels"
+		info += f"喜欢还请去Pixiv收藏或评论，以支持作者 @FurryReading"
 		info2 = info.replace(info1, info2)
 		
 		infolist = info1.split("\n")  # logs
@@ -457,12 +457,12 @@ def savePixiv(update: Update, context: ContextTypes):
 				uploadToChannel(TEST_CHANNEL, path2, info2)
 		
 		elif furry >= 2 and ".zip" not in path1:  # 兽人小说 txt
-			uploadToChannel("@FurryReading", path1, info)
+			uploadToChannel("@FurryNovels", path1, info)
 			if path2:  # 上传翻译文件
-				uploadToChannel("@FurryReading", path2, info2)
+				uploadToChannel("@FurryNovels", path2, info2)
 			
 			if "zh" in info and score >= 6:  # 中文优秀非机翻小说
-				uploadToChannel("@FurryNovels", path1, info)
+				uploadToChannel("@FurryReading", path1, info)
 				uploadToWebdav(path1, "小说")
 				uploadToWebSite(info)   # 上传至 www.novel.com
 				
@@ -501,7 +501,7 @@ def savePixiv(update: Update, context: ContextTypes):
 			if not checkLimited(author_id): # 未被限制的小说
 				sendFileToChannels(path1, info, path2, info2, score, furry)
 			else:
-				sendMsg(userid, f"不好意思，作者 {author_name} 已禁止向本频道分享其作品，本次下载的内容将不会分享至 @FurryNovels 以及 @FurryReading")
+				sendMsg(userid, f"不好意思，作者 {author_name} 已禁止向本频道分享其作品，本次下载的内容将不会分享至 @FurryReading 以及 @FurryNovels")
 				log = f"#作者已限制 {log}"
 			sendLogToChannels(path1, furry, log)
 	
