@@ -21,13 +21,16 @@
   - [Yandex Disk](https://disk.yandex.com/d/VEM1-GmZbzwzQw)
   - ~~MEGA~~(暂不支持)
 
+### [推荐指数](./Recommend/ReadMe.md)
+> 推荐指数：为区分优质小说，使用 Pixiv 数据进行计算的一个非官方标准。
+> 具体详见：[推荐指数](./Recommend/ReadMe.md)
 
-### [版权投诉](DMCA.md)
-以下为【简述版】，详见[版权投诉](DMCA.md)
+### [版权投诉](./DMCA.md)
+以下为【简述版】，详见：[版权投诉](DMCA.md)
 
-如果您是作者本人，并且不希望网友将您的作品分享到上述频道，**请进入 [@FurryReading 频道附属群组](https://t.me/FurryReading/27) ，提供 Pixiv 个人主页链接与 Pixiv 作者后台截图**给我们。（后续将支持更多渠道）
-
-**我们将永久撤下您所有的（包括未来的）作品。**
+> 如果您是作者本人，并且不希望网友将您的作品分享到上述频道，**请进入 [@FurryReading 频道附属群组](https://t.me/FurryReading/27) ，提供 Pixiv 个人主页链接与 Pixiv 作者后台截图**给我们。（后续将支持更多渠道）
+>
+> **我们将永久撤下您所有的（包括未来的）作品。**
 
 
 ### 如何支持/加入我们？
