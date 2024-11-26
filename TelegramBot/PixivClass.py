@@ -1,22 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import re
 import os
 import sys
-import re
-import math
 import logging
-from abc import ABC, abstractmethod
-from datetime import datetime
 from functools import wraps
-from threading import Thread
 from ssl import SSLError
-from urllib.parse import unquote
 import urllib3.exceptions
 import requests.exceptions
 import pixivpy3.utils
 
-import numpy as np
-
+from PixivBase import PixivBase
 from FileOperate import saveText, zipFile, openFile, removeFile, timer
 from GetLanguage import getLanguage, getLangSystem
 from PrintInfo import getFormattedTags, getInfoFromText
@@ -75,308 +69,6 @@ def checkNone(fun):
 			return
 	return wrapper
 
-
-class PixivABC(ABC):
-	link = ""          # 传入链接
-	novel_id = 0       # 小说 ID
-	novel_url = ""     # 小说网址
-	novel_name = ""
-	
-	illust_id = 0      # 插画 ID
-	illust_url = ""    # 插画网址
-	illust_name = ""
-	medium_urls = []   # 压缩链接
-	original_urls = [] # 原图链接
-	
-	title = ""         # 标题
-	tags = set[str]()  # tags
-	caption = ""       # Caption
-	text = ""          # 小说文本
-	date = ""          # 创建日期
-	pages = 0          # 页面数
-	characters = 0     # 字数
-	
-	views = 0      # 点击数
-	bookmarks = 0  # 收藏数
-	comments = 0   # 评论数
-	
-	author_id = 0      # 作者 ID
-	author_url = ""
-	author_name = ""   # 作者名字
-	author_icon = ""
-	
-	series_id = 0      # (所属)系列的 ID
-	series_url = ""
-	series_name = ""   # 系列名字
-	count = 0          # 系列内篇数
-	
-	
-	@abstractmethod    # 所有子类必须实现的方法
-	def getJson(self):
-		pass
-	
-	@abstractmethod
-	def checkJson(self):
-		pass
-	
-	@abstractmethod
-	def getInfo(self):
-		pass
-	
-	def getScore(self):
-		pass
-	
-	@abstractmethod
-	def __str__(self):
-		pass
-	
-	def __repr__(self):
-		pass
-	
-	@abstractmethod
-	def setLinkInfo(self):
-		pass
-	
-	def getNovelsList(self):
-		pass
-	
-	def getText(self):
-		pass
-	
-	def getLang(self):
-		pass
-	
-	def setFileHead(self):
-		pass
-	
-	@abstractmethod
-	def save(self):
-		pass
-	
-	def setFileInfo(self):
-		pass
-	
-	def getTokenTimes(self):
-		pass
-	
-	
-class PixivBase(PixivABC):  # 共用方法
-	views = 0      # 点击数
-	bookmarks = 0  # 收藏数
-	comments = 0   # 评论数
-	rate = 0       # 收藏率
-	score = -100   # 推荐指数
-	
-	novels_list_all = list[int]()  # 所有小说的 ID
-	novels_list = list[int]()      # 所有可见小说的 ID
-	novels_name = list[str]()      # 所有可见小说名称
-	novels_caption = list[str]()   # 系列所有可见小说 capithon
-	single_list = list[int]()      # 无系列小说 ID
-	series_list = list[int]()      # 全部系列 ID
-	lang = ""                      # 小说语言
-	
-	title = ""         # 标题
-	author_name = ""   # 作者名字
-	novel_url = ""     # 小说网址
-	tags = set[str]()  # tags
-	caption = ""       # Caption
-	info = ""          # __str__()
-	link_info = ""     # 发送链接后的信息 setLinkInfo()
-	file_head = ""     # 小说文件头部信息 setFileHead()
-	
-	file_path = ""       # 小说文件路径
-	file_text = ""       # 小说文件文本
-	# tags = set[str]()  # tags
-	file_info = ""       # 下载后，上传Telegram的信息 setFileInfo()
-	furry = 0
-	
-	trans_path = ""      # 翻译文件路径
-	trans_text = ""      # 翻译文件文本
-	trans_tags = set[str]()
-	trans_info = ""      # 上传Telegram的翻译信息
-	furry2 = 0
-	
-	
-	@staticmethod
-	def getTags(tagslist: list) -> set[str]:  # 处理 json.novel.tags
-		tags = set()
-		for tag in tagslist:
-			pattern = r"[,./;:\|，。：；、]"
-			stag = re.split(pattern, tag.name)
-			if "中国語" in stag and "中文" in stag:
-				pass  # 避免干扰语言标签
-			elif len(stag) >= 2:  # 添加拆分后标签
-				tags.update(stag)
-			elif "R-18" in tag.name:  # R18,R18G 规范化
-				tags.add(tag.name.replace("-", ""))
-			else:
-				tags.add(tag.name)
-				
-			if tag.translated_name and addTranslatedTags:
-				tags.add(tag.translated_name)
-		return tags
-	
-	
-	def addTags(self, novel: any):  # 处理 json.novel
-		dic = {
-			0: "SFW",
-			1: "R18",
-			2: "R18G"
-		}
-		self.tags = set()
-		self.tags.add(dic[novel.x_restrict])
-		if novel.visible:  # visible==False, 标签为空，可获取 x_restrict
-			self.tags.update(self.getTags(novel.tags))
-			
-			
-	def addNovelsList(self, novel: any):  # 处理 json.novel
-		self.novels_list_all.append(novel.id)
-		if novel.visible:  # visible==False, 只能获取ID
-			self.novels_list.append(novel.id)
-			self.novels_name.append(novel.title)
-			self.novels_caption.append(novel.caption)
-	
-	
-	def addSeriesList(self, novel: any):  # 处理 json.novel
-		if not novel.series.id:  # visible==False, 可获取seriesID
-			self.single_list.append(novel.id)
-		elif novel.series.id not in self.series_list:
-			self.series_list.append(novel.series.id)
-	
-	
-	def checkTags(self) -> set:
-		if ("R18" in self.tags or "R18G" in self.tags) and "SFW" in self.tags:
-			self.tags.remove("SFW")
-		# if "R18" in self.tags and "R18G" in self.tags:
-		# 	self.tags.remove("R18")
-		
-		if "zh" in self.tags and "zh_cn" in self.tags:
-			self.tags.remove("zh")
-		elif "zh" in self.tags and "zh_tw" in self.tags:
-			self.tags.remove("zh")
-		elif "zh_cn" in self.tags and "zh_tw" in self.tags:
-			self.tags.remove("zh_cn")
-			self.tags.remove("zh_tw")
-			self.tags.add(self.lang)
-		return self.tags
-	
-	
-	def formatTags(self) -> str:
-		self.checkTags()
-		tags = list(self.tags)
-		if tags:
-			if "#" in tags[0]:
-				tags = " ".join(tags)  # 有#直接间断
-			else:
-				tags = f"#{' #'.join(tags)}"  # 无#逐个添加
-		else:
-			tags = ""
-		return tags.replace("# ", "")
-	
-	
-	def getAuthorInfo(self, obj):
-		self.author_id = obj.user.id
-		self.author_url = f"https://www.pixiv.net/users/{self.author_id}"
-		self.author_name = obj.user.name
-		self.author_icon = obj.user.profile_image_urls.medium
-		
-	
-	def getScore(self) -> float:
-		self.score = 0
-		if self.views:  # 计算收藏率
-			self.rate = 100 * self.bookmarks / self.views
-		# print(self.views, self.bookmarks, self.comments, round(self.rate, 2))
-		
-		if self.views:  # 根据阅读量和收藏率增加推荐指数
-			nums = []; a = -7.75; step1 = 1; step2 = 0.75
-			for a in np.arange(a, a + 9 * step1, step1):  # 生成首列数据
-				b = np.arange(a, a + 21 * step2, step2)   # 生成首行数据
-				nums.append(list(b))
-			nums = np.asarray(nums)
-			# print(nums)
-			
-			x = int(self.views // 500)
-			y = int(self.rate // 0.5)
-			if x >= len(nums):
-				x = len(nums) - 1
-			if y >= len(nums[0]):
-				y = len(nums[0]) - 1
-			self.score += nums[x, y]
-			# print(nums[x,y])
-		
-		if self.comments >= 1:  # 根据评论量增加推荐指数
-			i = math.log2(self.comments)
-			self.score += round(i, 2)
-			
-		if self.views <= 1000:  # 对阅读量小于1000的小说适当提高要求
-			self.score += -0.75
-		logging.info(f"【{self.title}】推荐指数：{self.score:.2f}")
-		# print(f"推荐指数：{sore:.2f}")
-		return round(self.score, 2)
-	
-	
-	def getLang(self, force_update=False) -> str:
-		if self.lang and not force_update:
-			return self.lang
-		if not self.novels_list_all:
-			self.getNovelsList()
-		
-		text = []
-		text.extend(self.novels_name)
-		text.extend(self.novels_caption)
-		self.lang = getLanguage("".join(text))
-		self.tags.add(self.lang)
-		return self.lang
-	
-	
-	def __repr__(self) -> str:
-		return f"{self.__class__.__name__}('{self.link}')"
-	
-	
-	def setLinkInfo(self) -> str:   # 发送链接后的文本
-		return f"未实现：{self.__class__.__name__}.setLinkInfo()"
-	
-	
-	def setFileHead(self) -> str:  # 写入文件的信息
-		if not self.lang:
-			self.lang = getLanguage(self.title + self.caption)
-		
-		author = transWords("author", self.lang) + f"{self.author_name}\n"
-		url = transWords("url", self.lang) + f"{self.novel_url}\n"
-		tags = self.formatTags()
-		tags = transWords("hashtags", self.lang) + f"{tags}\n"
-		if self.caption:
-			self.caption = transWords("others", self.lang) + f"{self.caption}\n"
-		
-		if self.count >= 1:  # 系列提示
-			print(f"【{self.title}】，共有{self.count}章")
-		self.file_head = f"{self.title}\n{author}{url}{tags}{self.caption}"
-		# print(self.file_head)
-		return self.file_head
-	
-	
-	def setFileInfo(self, lang2="") -> tuple[str, str]:  # 上传文件至 Telegram 的信息
-		self.file_info, self.furry = getInfoFromText(self.file_text, self.tags, self.lang)
-		logging.info(f"【{self.title}】福瑞指数：{self.furry:.1f}")
-		
-		if lang2 and self.trans_text:
-			self.trans_info, self.furry2 = getInfoFromText(self.trans_text, self.trans_tags, lang2)
-		if __name__ == "__main__":  # 直接运行时输出上传 Telegram 的信息
-			if self.trans_path:
-				print(self.file_info, self.trans_info, sep="\n\n")
-			else:
-				print(self.file_info, sep="\n\n")
-		return self.file_info, self.trans_info
-	
-	
-	def checkLanguage(self):
-		if "zh" in self.file_info and "zh_cn" in self.file_info:
-			pass
-		if "zh" in self.file_info and "zh_tw" in self.file_info:
-			pass
-		if "zh_cn" in self.file_info and "zh_tw" in self.file_info:
-			pass
-	
 	
 class PixivNovels(PixivBase):
 	_is_json_retrieved = False
@@ -667,8 +359,8 @@ class PixivSeries(PixivBase):
 	
 	novels_list_all = list[int]()  # 系列所有小说的 ID
 	novels_list = list[int]()      # 系列所有可见小说的 ID
-	novels_name = list[str]()      # 系列所有可见小说名称
-	novels_caption = list[str]()   # 系列所有可见小说 capithon
+	novels_names = list[str]()      # 系列所有可见小说名称
+	novels_captions = list[str]()   # 系列所有可见小说 capithon
 	commission = None              # 默认非委托系列
 	lang = ""                      # 系列语言
 	
@@ -735,10 +427,13 @@ class PixivSeries(PixivBase):
 		self.comments = novel.total_comments
 		self.score = self.getScore()
 		if self.count <= 30:
-			self.getFirst30NovelsList()
+			self.getNovelsListFirst30()
 			
 	
-	def getFirst30NovelsList(self) -> None:  # 获取前三十小说id和标签
+	def getNovelsListFirst30(self, force_update=False) -> None:  # 获取前三十小说id和标签
+		if self.novels_list and not force_update:
+			return
+		
 		for novel in self.json.novels:
 			self.addNovelsList(novel)
 			self.addTags(novel)
@@ -764,7 +459,7 @@ class PixivSeries(PixivBase):
 	
 	
 	def getNovelsList(self, force_update=False) -> None:
-		if self.novels_list and self.tags and not force_update:
+		if self.novels_list and not force_update:
 			return
 		
 		def addList(json: any):
@@ -773,7 +468,7 @@ class PixivSeries(PixivBase):
 				self.addNovelsList(novel)
 		self.tags = set()   # 第二次下载时，清空原有内容
 		self.novels_list_all, self.novels_list = [], []
-		self.novels_name, self.novels_caption = [], []
+		self.novels_names, self.novels_captions = [], []
 		
 		addList(self.getJson())
 		if len(self.novels_list_all) >= 30:  # 1次最多可请求到30个id
@@ -792,28 +487,6 @@ class PixivSeries(PixivBase):
 			print(f"正在下载 {visible_count} 篇小说")
 		# print(len(self.novels_list), len(self.tags))
 		# print(self.novels_list, self.novels_names, self.novels_captions, self.tags, sep="\n")
-	
-	
-	def checkCommission(self) -> bool:
-		if self.commission is not None:
-			return self.commission
-		
-		if not self.novels_list:
-			self.getNovelsList()
-		text = []  # 计算委托出现次数
-		text.extend([self.title, self.caption])
-		text.extend(self.novels_name)
-		text.extend(self.novels_caption)
-		text = " ".join(text)
-		times = text.count("委托") + text.count("约稿") + text.count("約稿") + text.count("commission")
-		
-		if times >= 0.2 * len(self.novels_list):
-			self.commission = True
-			self.tags.add("Commission")
-		else:
-			self.commission = False
-			self.tags.add("Series")
-		return self.commission
 	
 	
 	@timer
@@ -916,23 +589,6 @@ class PixivSeries(PixivBase):
 		return self.file_path, self.trans_path
 	
 	
-	def setFileInfoForZip(self, lang2="") -> tuple[str, str]:  # 上传文件至 Telegram 的信息
-		tags = getFormattedTags(self.tags)
-		self.file_info = f"{self.title}\nBy #{self.author_name}\n{tags}\n{self.novel_url}"
-		
-		if lang2 and self.trans_path:
-			title = os.path.splitext(os.path.basename(self.trans_path))[0]
-			tags = getFormattedTags(self.trans_tags)
-			self.trans_info = f"{title}\nBy #{self.author_name}\n{tags}\n{self.novel_url}"
-		
-		if __name__ == "__main__":  # 直接运行时输出上传 Telegram 的信息
-			if self.trans_path:
-				print(self.file_info, self.trans_info, sep="\n\n")
-			else:
-				print(self.file_info, sep="\n\n")
-		return self.file_info, self.trans_info
-	
-	
 	@timer
 	def saveSeries(self, author="", lang="", lang2="") -> tuple[str, str]:
 		self.getNovelsList(force_update=True)  # 强制更新
@@ -967,8 +623,12 @@ class PixivFakeSeries(PixivSeries):  # 自定义Series
 		if isinstance(links, str) and "\n" in links:
 			links = links.split()
 		if isinstance(links, list):
+			if "pixiv" in str(links[0]):
+				self.links = links
+			else:  # 数字id列表
+				self.links = [f"https://www.pixiv.net/novel/show.php?id={i}" for i in links]
+			
 			self.link = "\n".join(links)
-			self.links = links
 			self.commission = False  # 默认下载成 TXT
 			self.getNovelsList(force_update=True)  # 检测 Series 链接，并入 self.novels_list
 			self.count = len(self.novels_list)
@@ -984,8 +644,6 @@ class PixivFakeSeries(PixivSeries):  # 自定义Series
 		self.tags.update(self.novel.tags)
 		self.caption = self.novel.caption
 		self.characters += self.novel.characters
-		# self.novel.getText()
-		# self.lang = self.novel.getLang()
 
 		self.views = self.novel.views
 		self.bookmarks = self.novel.bookmarks
@@ -1047,20 +705,19 @@ class PixivAuthor(PixivBase):
 	followers = 0     # 总关注者
 	
 	manga = 0
-	illusts = 0
-	illusts_series = 0
-	novels = 0
-	novels_series = 0
+	illusts_count = 0
+	illusts_series_count = 0
+	novels_count = 0
+	novels_series_count = 0
 	
-	novels_list_all = list[int]()   # 所有小说 ID
 	novels_list = list[int]()       # 所有可见小说 ID
 	single_list = list[int]()       # 无系列小说 ID
 	series_list = list[int]()       # 全部系列 ID
 	novel_id = 0                    # 最近1篇小说
 	series_id = 0                   # 最近1篇系列小说
 	
-	novels_name = list[str]()       # 所有小说名称
-	novels_caption = list[str]()    # 所有小说 capithon
+	novels_names = list[str]()       # 所有小说名称
+	novels_captions = list[str]()    # 所有小说 capithon
 	novels_data = list[str, int]()
 	lang = ""        # 小说语言
 	
@@ -1114,10 +771,10 @@ class PixivAuthor(PixivBase):
 		self.caption = formatCaption(user.comment)
 		
 		profile = self.json.profile
-		self.illusts = profile.total_illusts + profile.total_manga
-		self.illusts_series = profile.total_illust_series
-		self.novels = profile.total_novels
-		self.novels_series = profile.total_novel_series
+		self.illusts_count = profile.total_illusts + profile.total_manga
+		self.illusts_series_count = profile.total_illust_series
+		self.novels_count = profile.total_novels
+		self.novels_series_count = profile.total_novel_series
 		
 		self.webpage = profile.webpage
 		self.twitter = profile.twitter_url
@@ -1131,15 +788,15 @@ class PixivAuthor(PixivBase):
 		if self.twitter:
 			self.info += f"推特：{self.twitter}\n"
 		
-		if self.novels and self.single_list:
+		if self.novels_count and self.single_list:
 			single_novels = len(self.single_list)
-			self.info += f"小说：{self.novels}篇：单篇：{single_novels}篇；" \
-				f"系列：{self.novels_series}个共{self.novels - single_novels}篇\n"
-		elif self.novels:
-			self.info += f"小说：{self.novels}篇：系列：{self.novels_series}个\n"
+			self.info += f"小说：{self.novels_count}篇：单篇：{single_novels}篇；" \
+				f"系列：{self.novels_series_count}个共{self.novels_count - single_novels}篇\n"
+		elif self.novels_count:
+			self.info += f"小说：{self.novels_count}篇：系列：{self.novels_series_count}个\n"
 			
-		if self.illusts:
-			self.info += f"插画：{self.illusts}幅；系列：{self.illusts_series}个\n"
+		if self.illusts_count:
+			self.info += f"插画：{self.illusts_count}幅；系列：{self.illusts_series_count}个\n"
 		self.info = self.info.strip()
 		# print(self.info)
 		return self.info
@@ -1147,10 +804,10 @@ class PixivAuthor(PixivBase):
 	
 	def setLinkInfo(self) -> str:
 		self.link_info = f"{self.author_name}\n"
-		if self.novels >= 1:
-			self.link_info += f"小说：{self.novels}篇，系列：{self.novels_series}个\n"
-		if self.illusts >= 1:
-			self.link_info += f"插画：{self.illusts}幅，系列：{self.illusts_series}个\n"
+		if self.novels_count >= 1:
+			self.link_info += f"小说：{self.novels_count}篇，系列：{self.novels_series_count}个\n"
+		if self.illusts_count >= 1:
+			self.link_info += f"插画：{self.illusts_count}幅，系列：{self.illusts_series_count}个\n"
 		self.link_info = self.link_info.strip()
 		# print(self.link_info)
 		return self.link_info
@@ -1167,13 +824,13 @@ class PixivAuthor(PixivBase):
 				self.addSeriesList(novel)
 				
 		self.tags = set()   # 第二次下载时，清空原有内容
-		self.novels_list_all, self.novels_list = [], []
-		self.novels_name, self.novels_caption = [], []
+		self.novels_list, self.novels_list = [], []
+		self.novels_names, self.novels_captions = [], []
 		self.single_list, self.series_list = [], []
 		
 		json = tokenPool.getAPI().user_novels(self.author_id)
 		addList(json)
-		if len(self.novels_list_all) >= 30:  # 1次最多可请求到30个id
+		if len(self.novels_list) >= 30:  # 1次最多可请求到30个id
 			next_qs = tokenPool.getAPI().parse_qs(json.next_url)
 			while next_qs is not None:
 				json = tokenPool.getAPI().user_novels(**next_qs)
@@ -1181,13 +838,13 @@ class PixivAuthor(PixivBase):
 				next_qs = tokenPool.getAPI().parse_qs(json.next_url)
 		self.checkTags()
 		
-		self.novel_id = self.novels_list_all[0]   # 最近1篇小说
+		self.novel_id = self.novels_list[0]   # 最近1篇小说
 		try:
 			self.series_id = self.series_list[0]  # 最近1篇系列小说
 		except IndexError:
 			self.series_id = 0
 			
-		self.count = len(self.novels_list_all)
+		self.count = len(self.novels_list)
 		visible_count = len(self.novels_list)
 		if not visible_count:
 			raise ValueError(f"{self.title} 全部 {self.count} 篇小说均有限制，不可下载")
@@ -1296,9 +953,9 @@ class PixivAuthor(PixivBase):
 		self.file_info = f"#{self.author_name} #ID{self.author_id} #{self.lang}\n"
 		single_novels = len(self.single_list)
 		if self.single_list:
-			self.file_info += f"小说：{self.novels}篇：单篇：{single_novels}篇\n"
-		if self.novels_series:
-			self.file_info += f"系列：{self.novels_series}个，共{self.novels - single_novels}篇\n"
+			self.file_info += f"小说：{self.novels_count}篇：单篇：{single_novels}篇\n"
+		if self.novels_series_count:
+			self.file_info += f"系列：{self.novels_series_count}个，共{self.novels_count - single_novels}篇\n"
 		self.file_info += f"{self.author_url}"
 			
 		if lang2:
@@ -1316,7 +973,7 @@ class PixivAuthor(PixivBase):
 	def saveAuthor(self, lang2="") -> tuple:
 		self.makeAuthorDir()
 		self.getNovelsList()
-		# self.getNovelsList(force_update=True)  # 已在 PixivObject 中强制更新
+		# self.getNovelsList(force_update=True)  # 已在 PixivFactory 中强制更新
 		self.getLang()
 		self.saveAuthorIcon()
 		self.saveAuthorInfo()
@@ -1342,8 +999,8 @@ class PixivAuthor(PixivBase):
 	def getTokenTimes(self, precise=0) -> int:
 		# precise 精确计算
 		a = 1  # 默认 getinfo 1个请求
-		b = 2 * (self.novels // 30 + 1) + a   # getNovelsList 每30个小说，2个请求
-		num = 2 * self.novels + 2 * self.novels_series + b  # saveAuthor 每个小说2个请求，保守计算
+		b = 2 * (self.novels_count // 30 + 1) + a   # getNovelsList 每30个小说，2个请求
+		num = 2 * self.novels_count + 2 * self.novels_series_count + b  # saveAuthor 每个小说2个请求，保守计算
 		
 		if precise:
 			if not self.single_list:
@@ -1361,7 +1018,7 @@ class PixivAuthor(PixivBase):
 		return num
 
 
-class PixivObject(object):
+class PixivFactory(object):
 	url = ""          # 传入的 url
 	novel_url = ""    # 小说 url
 	illust_url = ""
@@ -1397,7 +1054,13 @@ class PixivObject(object):
 	
 	
 	def __init__(self, string):
-		self.obj = None
+		self.obj = None  # 初始化变量，防止旧数据未被覆盖
+		self.file_path, self.trans_path = "", ""
+		self.file_info, self.trans_info = "", ""
+		self.score, self.furry = 0, 0
+		self.lang, self.tags = "", set()
+		self.author_id, self.author_name = 0, ""
+		self.novel_id, self.series_id = 0, 0
 		if (isinstance(string, str) and "\n" in string) or isinstance(string, list):
 			self.obj = PixivFakeSeries(string)
 		
@@ -1405,10 +1068,10 @@ class PixivObject(object):
 			self._url = getUrl(string)  # 用于保留 furrynovel.com 的网址链接
 			self.url = self._url
 			self.factory()
-			# 不可创建线程 AttributeError: 'PixivObject' object has no attribute 'obj'
-			# t2 = Thread(target=PixivObject.factory, args=(self,))
+			# 不可创建线程 AttributeError: 'PixivFactory' object has no attribute 'obj'
+			# t2 = Thread(target=PixivFactory.factory, args=(self,))
 			# t2.start()
-			# t2.join()  # 不join AttributeError: 'PixivObject' object has no attribute 'obj'
+			# t2.join()  # 不join AttributeError: 'PixivFactory' object has no attribute 'obj'
 	
 	
 	def factory(self):
@@ -1424,7 +1087,7 @@ class PixivObject(object):
 			# self.obj.getNovelsList(force_update=True)  # 强制更新
 		elif "user" in self.url and "series" in self.url:
 			raise ValueError("输入链接有误，不支持漫画/插画系列")
-		elif "novel/series" in self.url:
+		elif "series" in self.url:
 			self.obj = PixivSeries(self.url)
 			# self.obj.getNovelsList(force_update=True)  # 强制更新
 		elif "novel" in self.url or "pn" in self.url:  # 去末尾s，兼容linpx
@@ -1560,11 +1223,11 @@ def main():
 			try:
 				url = getUrl(string)
 				if re.search("zip", string, re.IGNORECASE):
-					path = PixivObject(url).saveAsZip(lang)[0]
+					path = PixivFactory(url).saveAsZip(lang)[0]
 				elif re.search("txt", string, re.IGNORECASE):
-					path = PixivObject(url).saveAsTxt(lang)[0]
+					path = PixivFactory(url).saveAsTxt(lang)[0]
 				else:
-					path = PixivObject(url).save(lang)[0]
+					path = PixivFactory(url).save(lang)[0]
 			except ValueError as e:
 				print(e)
 			except RuntimeError as e:
@@ -1581,13 +1244,13 @@ def main():
 
 
 def test():  # tokenPoolInit() 不开线程才可用
-	print(f"测试 {datetime.now()}\n")
+	print(f"测试\n{__file__}")
 	# a0 = PixivNovels(18012577).save()    #莱当社畜不如变胶龙  无系列
 	# a1 = PixivNovels(17463359).save("zh_tw")    #莱恩的委托:双龙警察故事  无系列
-	# a2 = PixivNovels(18131976).save("zh_cn")    # Summer Time is Naked Time 无系列
+	# # a2 = PixivNovels(18131976).save("zh_cn")    # Summer Time is Naked Time 无系列
 	# a3 = PixivNovels(15789643).save()   # 狼铠侠的末路，委托系列
-	# a4 = PixivNovels(14059797).save()   # 浅色的蓝天，非委托系列，已删除
-	# a5 = PixivNovels(18078490).save()   # 仅好P友可见
+	# # a4 = PixivNovels(14059797).save()   # 浅色的蓝天，非委托系列，已删除
+	# # a5 = PixivNovels(18078490).save()   # 仅好P友可见
 	# a6 = PixivNovels(15688116).save()   # 逗号分隔标签
 	# a7 = PixivNovels(18004759).save()   # 斜杠分割标签
 	
@@ -1628,41 +1291,41 @@ def test():  # tokenPoolInit() 不开线程才可用
 	# f1.saveAsZip()
 	# f1.save()
 	
-	# d0 = PixivObject("https://www.pixiv.net/novel/show.php?id=15789643").saveNovel()
-	# d0 = PixivObject("https://www.pixiv.net/novel/show.php?id=15789643").saveSeries()
-	# d0 = PixivObject("https://www.pixiv.net/novel/show.php?id=15789643").saveSeriesAsZip()
-	# d0 = PixivObject("https://www.pixiv.net/novel/show.php?id=15789643").saveSeriesAsTxt()
-	# d0 = PixivObject("https://www.pixiv.net/novel/show.php?id=15789643").saveAuthor("zh-tw")
+	# d0 = PixivFactory("https://www.pixiv.net/novel/show.php?id=15789643").saveNovel()
+	# d0 = PixivFactory("https://www.pixiv.net/novel/show.php?id=15789643").saveSeries()
+	# d0 = PixivFactory("https://www.pixiv.net/novel/show.php?id=15789643").saveSeriesAsZip()
+	# d0 = PixivFactory("https://www.pixiv.net/novel/show.php?id=15789643").saveSeriesAsTxt()
+	# d0 = PixivFactory("https://www.pixiv.net/novel/show.php?id=15789643").saveAuthor("zh-tw")
 	
-	# d1 = PixivObject("https://www.pixiv.net/novel/series/8590168").saveSeries()
-	# d1 = PixivObject("https://www.pixiv.net/novel/series/8590168").saveSeriesAsZip()
-	# d1 = PixivObject("https://www.pixiv.net/novel/series/8590168").saveSeriesAsTxt()
-	# d1 = PixivObject("https://www.pixiv.net/novel/series/8590168").saveNovel()
-	# d1 = PixivObject("https://www.pixiv.net/novel/series/8590168").saveAuthor()
-	# d1 = PixivObject("https://www.pixiv.net/novel/show.php?id=18762548").saveSeries() # 不死与不死，超长长篇
+	# d1 = PixivFactory("https://www.pixiv.net/novel/series/8590168").saveSeries()
+	# d1 = PixivFactory("https://www.pixiv.net/novel/series/8590168").saveSeriesAsZip()
+	# d1 = PixivFactory("https://www.pixiv.net/novel/series/8590168").saveSeriesAsTxt()
+	# d1 = PixivFactory("https://www.pixiv.net/novel/series/8590168").saveNovel()
+	# d1 = PixivFactory("https://www.pixiv.net/novel/series/8590168").saveAuthor()
+	# d1 = PixivFactory("https://www.pixiv.net/novel/show.php?id=18762548").saveSeries() # 不死与不死，超长长篇
 	
-	# d2 = PixivObject("https://www.pixiv.net/users/10894035").saveAuthor()
-	# d2 = PixivObject("https://www.pixiv.net/users/10894035").saveNovel()
-	# d2 = PixivObject("https://www.pixiv.net/users/10894035").saveSeries()
-	# d2 = PixivObject("https://www.pixiv.net/users/38256034")
+	# d2 = PixivFactory("https://www.pixiv.net/users/10894035").saveAuthor()
+	# d2 = PixivFactory("https://www.pixiv.net/users/10894035").saveNovel()
+	# d2 = PixivFactory("https://www.pixiv.net/users/10894035").saveSeries()
+	# d2 = PixivFactory("https://www.pixiv.net/users/38256034")
 	# d2.getTokenTimes()
 	
-	# d3 = PixivObject("https://www.pixiv.net/artworks/103646563").save()  #todo 暂不可用
-	# d3 = PixivObject("https://www.pixiv.net/novel/show.php?id=19318723").save()
-	# d3 = PixivObject("https://www.pixiv.net/novel/series/8590168").save()
-	# d3 = PixivObject("https://www.pixiv.net/users/10894035").save()
+	# d3 = PixivFactory("https://www.pixiv.net/artworks/103646563").save()  #todo 暂不可用
+	# d3 = PixivFactory("https://www.pixiv.net/novel/show.php?id=19318723").save()
+	# d3 = PixivFactory("https://www.pixiv.net/novel/series/8590168").save()
+	# d3 = PixivFactory("https://www.pixiv.net/users/10894035").save()
 	
-	# d4 = PixivObject("https://furrynovel.ink/pixiv/novel/21954460").save()
-	# d4 = PixivObject("https://furrynovel.com/zh/novel/6").save()  # Pixiv 系列有原文
-	# d4 = PixivObject("https://furrynovel.com/zh/novel/8247").save()  # Pixiv 单篇有原文
-	# d4 = PixivObject("https://furrynovel.com/zh/novel/501").save()  # bilibili 小说 ，Pixiv 无原文
-	# d4 = PixivObject("https://furrynovel.com/zh/novel/827").save()  # 源网站已撤稿，Pixiv 单篇有原文
+	# d4 = PixivFactory("https://furrynovel.ink/pixiv/novel/21954460").save()
+	# d4 = PixivFactory("https://furrynovel.com/zh/novel/6").save()  # Pixiv 系列有原文
+	# d4 = PixivFactory("https://furrynovel.com/zh/novel/8247").save()  # Pixiv 单篇有原文
+	# d4 = PixivFactory("https://furrynovel.com/zh/novel/501").save()  # bilibili 小说 ，Pixiv 无原文
+	# d4 = PixivFactory("https://furrynovel.com/zh/novel/827").save()  # 源网站已撤稿，Pixiv 单篇有原文
 	
 	
 	
 if True:
 	tokenPoolInit()
-	
+
 	
 if __name__ == "__main__":
 	testMode = 1

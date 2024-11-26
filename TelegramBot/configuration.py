@@ -28,8 +28,15 @@ def monthNow() -> str:
 # 是否再路径中加入时间
 setTimeInDefaultPath = 1
 if setTimeInDefaultPath:  # Linux
-	novel_path = os.path.join(novel_folder, monthNow())
-	illust_path = os.path.join(illust_folder, monthNow())
+	novel_folder = os.path.join(novel_folder, monthNow())
+	illust_folder = os.path.join(illust_folder, monthNow())
+
+
+# Downloader 设置
+# Downloader 下载器使用 Pixiv 下载
+USE_Pixiv = True
+# LinpxClass 下载输出 Linpx 链接（而不是 Pixiv 链接）
+OUTPUT_LINPX_LINK = False
 
 
 # 项目代理设置
@@ -78,6 +85,12 @@ else:
 	
 WEB_HOOK = f""
 TEST_CHANNEL = ""
+ADMIN = []
+
+
+# 默认密码
+PASSWORD = "furry"
+
 
 
 # Webdav 配置

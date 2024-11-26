@@ -150,7 +150,7 @@ def formatPixivText(text: str) -> str:
 	
 	# [chapter: 章节名称]
 	if "[chapter:" in text:
-		a = re.findall(r"\[chapter:(.*)]", text)
+		a = re.findall(r"\[chapter:(.*?)]", text)
 		for i in range(len(a)):
 			string = a[i]
 			if "第" in string and "章" in string:
@@ -161,7 +161,7 @@ def formatPixivText(text: str) -> str:
 				string = f"第{string}节"
 			else:
 				string = f"第{i + 1}节 {string}"
-			text = re.sub(r"\[chapter:(.*)]", string, text, 1)
+			text = re.sub(r"\[chapter:(.*?)]", string, text, 1)
 	
 	# [jump: 链接目标的页面编号]
 	if "[jump:" in text:
@@ -169,11 +169,11 @@ def formatPixivText(text: str) -> str:
 		for i in range(len(a)):
 			string = a[i]
 			string = f"跳转至第{string}节"
-			text = re.sub(r"\[jump:(.*)]", string, text, 1)
+			text = re.sub(r"\[jump:(.*?)]", string, text, 1)
 	
 	# [pixivimage: 插画ID]
 	if "[pixivimage:" in text:
-		a = re.findall(r"\[pixivimage: (.*)]", text)
+		a = re.findall(r"\[pixivimage: (.*?)]", text)
 		for i in range(len(a)):
 			string = a[i].strip(" ")
 			string = f"插图：https://www.pixiv.net/artworks/{string}"
@@ -181,15 +181,15 @@ def formatPixivText(text: str) -> str:
 	
 	# [[jumpuri: 标题 > 链接目标的URL]]
 	if "[jumpuri:" in text:
-		a = re.findall(r"\[{2}jumpuri: *(.*) *> *(.*)]{2}", text)
+		a = re.findall(r"\[{2}jumpuri: *(.*?) *> *(.*?)]{2}", text)
 		for i in range(len(a)):
 			name = a[i][0]
 			link = a[i][1]
 			if link in name:
-				text = re.sub(r"\[{2}jumpuri: *(.*) *> *(.*)]{2}", link, text, 1)
+				text = re.sub(r"\[{2}jumpuri: *(.*?) *> *(.*?)]{2}", link, text, 1)
 			else:
 				string = f"{name}【{link}】"
-				text = re.sub(r"\[{2}jumpuri: *(.*) *> *(.*)]{2}", string, text, 1)
+				text = re.sub(r"\[{2}jumpuri: *(.*?) *> *(.*?)]{2}", string, text, 1)
 				
 	# [uploadedimage: 上传图片自动生成的ID] 会被 pixivpy 转换
 	if "If you would like to view illustrations" in text:
@@ -199,11 +199,11 @@ def formatPixivText(text: str) -> str:
 	
 	# [[rb: 汉字 > 假名]]  # 汉字《假名》 错误转换
 	if "[rb:" in text:
-		a = re.findall(r"\[{2}rb: *(.*) *> *(.*)]{2}", text)
+		a = re.findall(r"\[{2}rb: *(.*?) *> *(.*?)]{2}", text)
 		for i in range(len(a)):
 			# text0 = f"{a[i][0]}{a[i][1]}"
 			text0 = f"{a[i][0]}《{a[i][1]}》"  # 被Pixiv 误导后转换
-			text = re.sub(r"\[{2}rb: *(.*) *> *(.*)]{2}", text0, text, 1)
+			text = re.sub(r"\[{2}rb: *(.*?) *> *(.*?)]{2}", text0, text, 1)
 			
 	# print(text)
 	return text

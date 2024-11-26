@@ -3,11 +3,13 @@
 import os
 import time
 
-from PixivClass import PixivObject, PixivSeries
+from LinpxClass import LinpxFactory, LinpxSeries
 from FileOperate import readFile, saveFile, findFile, copyFile, openFile, unzipFile
 from FurryNovelWeb import getUrl
 
-from configuration import novel_folder, down_folder
+from configuration import novel_folder, down_folder, USE_Pixiv
+if USE_Pixiv:
+	from PixivClass import PixivFactory, PixivSeries
 
 
 def saveLinksToFile():
@@ -33,8 +35,7 @@ def getPixivLinks(path) -> list:  # 读取 links.txt 文件；每行都是一个
 	links = sorted(links_set, key=links.index)  # 去重，按原顺序排序
 
 	if not links:
-		file = os.path.basename(path)
-		raise AttributeError(f"{file}内无连接")
+		raise AttributeError(f"{os.path.basename(path)}内无连接")
 	return links
 
 
@@ -45,22 +46,31 @@ def download(path):  # 下载小说，保存错误信息
 	error_links = []
 	for link in links:
 		try:
-			pixiv_obj = PixivObject(link)
-			if isinstance(pixiv_obj.obj, PixivSeries):
-				pixiv_obj.obj.commission = False  # 默认视为长篇小说，下载为 txt 合集
+			if USE_Pixiv:
+				pixiv_obj = PixivFactory(link)
+				if pixiv_obj.obj.series_id:
+					pixiv_obj = PixivFactory(pixiv_obj.obj.series_url)
+				if isinstance(pixiv_obj.obj, PixivSeries):
+					pixiv_obj.obj.commission = False  # 默认视为长篇小说，下载为 txt 合集
+					
+			else:
+				pixiv_obj = LinpxFactory(link)
+				if pixiv_obj.obj.series_id:
+					pixiv_obj = LinpxFactory(pixiv_obj.obj.series_url)
+				if isinstance(pixiv_obj.obj, LinpxSeries):
+					pixiv_obj.obj.commission = False  # 默认视为长篇小说，下载为 txt 合集
+					
 			pixiv_obj.save()
 			links2.remove(link)
 		except Exception as e:
 			error_links.append({link: e.__str__()})
 			print(f"{e}\n{link} 可能未能完成下载")
-		else:
-			print("全部完成下载")
 	
-	if links2:  # 保存1次错误信息
-		path = os.path.join(folder, "links.txt")
-		saveFile(path, "\n".join(links2))
-		path = os.path.join(folder, "links.failure.json")
-		saveFile(path, error_links)
+	if True:
+		file = os.path.join(folder, "links.txt")
+		saveFile(file, "\n".join(links2))
+		file = os.path.join(folder, "links.failure.json")
+		saveFile(file, error_links)
 	
 	
 def downloader(path=""):  # 循环下载未完成下载的小说

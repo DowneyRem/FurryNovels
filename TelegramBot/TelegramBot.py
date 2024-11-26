@@ -17,7 +17,7 @@ import telegram.utils.request
 import telegram.error
 
 from FileOperate import readJson, removeFile, makeFile, timer
-from PixivClass import getUrl, PixivObject
+from PixivClass import getUrl, PixivFactory
 from PrintInfo import printInfo
 # from PixivSearch import PixivSearch
 # from Recommend import do_recommend, url_init_recommend
@@ -141,7 +141,7 @@ def downIllust(update: Update, context: ContextTypes):
 		username = username * 4
 	
 	if link:
-		obj = PixivObject(link)
+		obj = PixivFactory(link)
 		info = obj.setLinkInfo()
 		update.message.reply_text(info)
 		
@@ -175,7 +175,7 @@ def inlineIllust(update: Update, context: ContextTypes) -> None:
 	
 	result = []
 	if "artwork" in query:
-		illust = PixivObject(query)
+		illust = PixivFactory(query)
 		title = illust.obj.title
 		info = illust.obj.setLinkInfo()
 		for i in range(len(illust.obj.original_urls)):
@@ -237,7 +237,7 @@ def downNovelsList(update, context):
 	myprint(update, "正在按顺序下载当前小说，即将上传TXT合集")
 	links = getLink(update)
 	# myprint(update, links)
-	obj = PixivObject(links)
+	obj = PixivFactory(links)
 	paths = obj.saveAsTxt(language)
 	infos = obj.obj.setFileInfo(language)
 	share = f"\n\n来自 {username} 的分享\n"  # info 后半部分
@@ -277,7 +277,7 @@ def chooseFilter(update, context, link):
 	userid = update.message.from_user.id
 	username = update.message.from_user.first_name
 	
-	obj = PixivObject(link)
+	obj = PixivFactory(link)
 	info = obj.setLinkInfo()
 	if "furrynovel.com" in link:
 		link = getOriginalLink(link)
@@ -392,7 +392,7 @@ def savePixiv(update: Update, context: ContextTypes):
 	
 	def saveNovels(query: update.callback_query):
 		method, url = int(query.data[0]), query.data[2:]
-		obj = PixivObject(url)
+		obj = PixivFactory(url)
 		if method == 1:
 			myprint("正在下载当前章节……")
 			result = obj.saveNovel(lang2=language)
@@ -464,7 +464,7 @@ def savePixiv(update: Update, context: ContextTypes):
 			if "zh" in info and score >= 6:  # 中文优秀非机翻小说
 				uploadToChannel("@FurryReading", path1, info)
 				uploadToWebdav(path1, "小说")
-				uploadToWebSite(info)   # 上传至 www.novel.com
+				uploadToWebSite(info)   # 上传至 www.furrynovel.com
 				
 			if "#Transfur" in info:  # 中文优秀非机翻小说
 				uploadToChannel("@TransfurNovels", path1, info)

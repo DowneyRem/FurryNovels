@@ -1,9 +1,11 @@
-.idea
-__pycache__
 .pytest_cache
+__pycache__
+.idea
 /Novels
-/Photos
+/Illusts
 /Translation
+/ZipFiles
 /test
+/downInfo
 *.zip
 
