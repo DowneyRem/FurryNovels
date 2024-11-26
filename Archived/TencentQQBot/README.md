@@ -27,8 +27,9 @@ https://github.com/DowneyRem/FurryNovels/tree/main/TencentQQBot
 | config.py       | nonebot 配置文件 |
 | QQbot.bat       | 启动GOCPHTTP，启动 bot.py |
 
-#### /plguins 目录：
-几个简单的小插件
+
+#### /plguins目录：
+
 | 文件(夹)名        | 功能                       |
 | :--------------  | :------------------------- |
 | NovelsDownloader | 下载小说；翻译小说         |
@@ -37,10 +38,12 @@ https://github.com/DowneyRem/FurryNovels/tree/main/TencentQQBot
 | notice.py        | 消息群发                   |
 | request.py | 通过好友验证，接受入群邀请 |
 
+
 #### /plguins/NovelsDownloader 目录：
 除了加粗部分，其他都一样
+
 | 文件名           | 功能                       |
-| :-------------- | :------------------------- |
+| -------------- | ------------------------- |
 | FileOperate     | 文件读写、压缩、解压       |
 | GetLanguage     | 获取文本语言               |
 | MakeTags        | 生成标签、读取标签         |
@@ -55,8 +58,10 @@ https://github.com/DowneyRem/FurryNovels/tree/main/TencentQQBot
 | Translate       | 翻译标签，翻译文档         |
 | configuration   | 配置文件                   |
 
+
 ####  /plguins/NovelsDownloader/data 目录：
 这里完全一样。但是为了避免你再翻一次，就直接抄过来了
+
 | 文件名            | 功能                         |
 | ---------------- | ---------------------------- |
 | hashtag.json     | 【供龙类编辑的】小说标签     |
@@ -73,11 +78,13 @@ https://github.com/DowneyRem/FurryNovels/tree/main/TencentQQBot
 3. Webdav 的 token
 4. QQ 号码，QQ 的 token
 
+
 ### 部署指南
 1. 下载 GoCQhttp 
 2. 克隆 QQbot 代码
 3. 装好第三方库，
 4. 双击运行` QQbot.bat ` 
+
 
 **Python 310 下可用**【2022-11-22】
 
