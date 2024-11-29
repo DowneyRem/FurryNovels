@@ -1,0 +1,11 @@
+[
+    {
+        "https://www.pixiv.net/novel/show.php?id=21641007": "小说ID不存在，或已被删除"
+    },
+    {
+        "https://furrynovel.com/zh/novel/827": "源网站已撤稿，无法获取其 Pixiv 小说 id"
+    },
+    {
+        "https://furrynovel.com/zh/novel/501": "暂不支持 bilibili 小说，请去源网站阅读\nhttps://furrynovel.com/zh/novel/501"
+    }
+]
