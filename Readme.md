@@ -1,4 +1,5 @@
 ## 兽人小说系列频道 [@FurryReading](https://t.me/FurryReading)
+> 源 https://github.com/DowneyRem/FurryNovelsBot 
 
 ### [成立宗旨](./doc/Channel.md)
 - 丰富 Telegram 中文兽圈内容，补齐小说-漫画-影视-游戏链条上缺少的一环
