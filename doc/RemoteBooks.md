@@ -17,11 +17,12 @@
 
 ![img](./pic/RemoteBooksSettings4.png)
 
-> 地址 `url` 填入 Webdav 服务器地址
->
-> 账户 `username` 填入注册邮箱
->
-> 密码 `password` 填入 **应用密码（非账户密码）**
+### 2.兽人小说服务器配置
+| 配置 | 内容                                   |
+| --- | -------------------------------------- | 
+| 地址 | https://webdav.yandex.ru/兽人小说/小说/ |
+| 账户 | danielsmith12138@yandex.com           |
+| 密码 | mbatorsztocorhay                      |
 
 保存，选择添加的服务器
 
