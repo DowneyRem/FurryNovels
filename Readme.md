@@ -1,5 +1,5 @@
 ## 兽人小说系列频道 [@FurryReading](https://t.me/FurryReading)
-> 源 https://github.com/DowneyRem/FurryNovelsBot 
+> https://github.com/DowneyRem/FurryNovelsBot
 
 ### [成立宗旨](./doc/Channel.md)
 - 丰富 Telegram 中文兽圈内容，补齐小说-漫画-影视-游戏链条上缺少的一环
@@ -8,9 +8,9 @@
 - 为兽人小说作者，增加一个宣发平台
 
 
-### 分享小说
-分享小说，可以参看
-[@FurryNovelsBot 的使用方法](https://telegra.ph/FurryNovelsReading-04-04-07)
+### 参与分享
+- 快用 [@FurryNovelsBot](https://t.me/FurryNovelsBot) 向我们分享你喜爱的兽人小说吧！
+- 不清楚怎么用？来看看 [使用方法](https://telegra.ph/FurryNovelsReading-04-04-07) 吧
 
 
 ### 资源分享
@@ -20,11 +20,9 @@
   - 兽化小说 [@TransfurNovels](https://t.me/TransfurNovels)
 - 网盘分享
   - [Yandex Disk](https://disk.yandex.com/d/VEM1-GmZbzwzQw)
-  - ~~MEGA~~(暂不支持)
+- [开源阅读](https://github.com/gedoor/legado) 远程书籍
+  - [远程书籍 配置教程](./doc/RemoteBooks.md)
 
-### [推荐指数](./Recommend/ReadMe.md)
-> 推荐指数：为区分优质小说，使用 Pixiv 数据进行计算的一个非官方标准。
-> 具体详见：[推荐指数](./Recommend/ReadMe.md)
 
 ### [版权投诉](./DMCA.md)
 以下为【简述版】，详见：[版权投诉](DMCA.md)
@@ -34,7 +32,13 @@
 > **我们将永久撤下您所有的（包括未来的）作品。**
 
 
-### 如何支持/加入我们？
+### [推荐指数](./Recommend/ReadMe.md)
+> 推荐指数：为区分优质小说，使用 Pixiv 数据进行计算后的一个非官方标准。
+> 
+> 具体详见：[推荐指数](./Recommend/ReadMe.md)
+
+
+### 支持/加入我们？
 1. 分享本频道所推荐的小说 
 2. 使用 [@FurryNovelsBot](https://t.me/FurryNovelsBot) ，向我们分享你喜欢的小说
 3. 为我们提供技术或其他支持

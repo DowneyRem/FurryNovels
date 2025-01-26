@@ -7,20 +7,27 @@
 多个单词标签如 `#AppleBanana` 每个单词首字母大写  
 
 ### 举例：
-[这不仅仅是一个龙奴的故事.txt](https://t.me/FurryNovels/46)  
-` BY #Zoroaio #幽幽子`  
-` #TXT #Finshed #zh_hans `  
-` #R18 #R18G #General #Gay #Lesbian `   
-` #anthro #dragon `   
-` #Uncest #BDSM #Slave #Tragedy `  
-` https://www.pixiv.net/novel/show.php?id=12172396 `  
+[这不仅仅是一个龙奴的故事.txt](https://t.me/FurryNovels/46)
+```
+這不僅僅是一個龍奴的故事
+BY #Zoroaio #幽幽子
+#TXT #Finshed #zh_hans
+#R18 #R18G #General #Gay #Lesbian
+#anthro #dragon
+#Uncest #BDSM #Slave #Tragedy
+https://www.pixiv.net/novel/show.php?id=12172396
+```
 
 ### 第〇行：作品名 & 作者名
-` 這不僅僅是一個龍奴的故事`  
-` BY #Zoroaio #幽幽子 `  
+```
+這不僅僅是一個龍奴的故事
+BY #Zoroaio #幽幽子
+```
 
 ### 第一行：杂类
-` #TXT #finished #zh_cn`
+```
+#TXT #finished #zh_cn
+```
 
 #### 1. 文件格式
 - ` #TXT ` TXT 格式，通常采用 UTF-8 编码
@@ -69,7 +76,6 @@
 - ` #BodyModification #machine` 机械化改造后的生化人  
 - 变形，变身 Transformation 不视为身体改造，不视为R18G  
 - 兽化 Transfur 不视为身体改造不视为R18G    
-
 
 
 ### 第三行：种族标签
@@ -227,5 +233,7 @@
 ` #AnalBirth ` 肛门出产  
 
 ### 第五行：网址
-可以阅读该小说网址  
+可以阅读该小说网址
+```
 https://www.pixiv.net/novel/show.php?id=12172396
+```
