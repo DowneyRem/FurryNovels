@@ -4,3 +4,4 @@ config.py
 configuration.py
 Novels/
 Translation/
+*.pdf
