@@ -10,6 +10,5 @@
 | ![img](pic/WhyLegado.png)　　  | ![img](pic/UseLinpx.png)　　　 |
 | 　　　　　　　　　　　　　　　　  　 | 　　　　　　　　　　　　　　　       |
 | **3. 开源阅读远程书籍配置** | **4. Webdav 备份恢复数据** |
-| ![img](pic/RemoteBooks.png) | ![img](pic/UseLinpx.png)      |
-
+| ![img](pic/RemoteBooks.png) | ![img](pic/WebdavBackup.png)    |
 
