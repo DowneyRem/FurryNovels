@@ -1,9 +1,0 @@
-.idea
-__pycache__
-.pytest_cache
-/Novels
-/Photos
-/Translation
-/test
-*.zip
-
