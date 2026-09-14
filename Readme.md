@@ -16,13 +16,7 @@
 ### 资源分享
 - Telegram 频道
   - 精品小说 [@FurryReading](https://t.me/FurryReading) 
-  - 兽人小说 [@FurryNovels](https://t.me/FurryNovels)
-  - 兽化小说 [@TransfurNovels](https://t.me/TransfurNovels)
-- 网盘分享
-  - [Yandex Disk](https://disk.yandex.com/d/VEM1-GmZbzwzQw)
-- [开源阅读](https://github.com/gedoor/legado) 远程书籍
-  - [远程书籍 配置教程](./doc/RemoteBooks.md)
-
+  - 兽人小说 [@FurryNovels](https://t.me/FurryNovelsRE)
 
 ### [版权投诉](./DMCA.md)
 以下为【简述版】，详见：[版权投诉](DMCA.md)
@@ -40,7 +34,7 @@
 
 ### 支持/加入我们？
 1. 分享本频道所推荐的小说 
-2. 使用 [@FurryNovelsBot](https://t.me/FurryNovelsBot) ，向我们分享你喜欢的小说
+2. 使用 [@FurryReadingBot](https://t.me/FurryReadingBot) ，向我们分享你喜欢的小说
 3. 为我们提供技术或其他支持
 4. 提出具有建设性的意见或规划
 
