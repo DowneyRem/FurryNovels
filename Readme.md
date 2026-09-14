@@ -9,7 +9,7 @@
 
 
 ### 参与分享
-- 快用 [@FurryNovelsBot](https://t.me/FurryNovelsBot) 向我们分享你喜爱的兽人小说吧！
+- 快用 [@FurryReadingBot](https://t.me/FurryReadingBot) 向我们分享你喜爱的兽人小说吧！
 - 不清楚怎么用？来看看 [使用方法](https://telegra.ph/FurryNovelsReading-04-04-07) 吧
 
 
